@@ -1,0 +1,194 @@
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { MapPin, Phone, Globe, CheckCircle, Star, Building2, Clock } from 'lucide-react'
+import { Listing } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
+import FavoriteButton from './FavoriteButton'
+
+interface ListingCardProps {
+  listing: Listing
+}
+
+export default function ListingCard({ listing }: ListingCardProps) {
+  const [avgRating, setAvgRating] = useState<number | null>(null)
+  const [reviewCount, setReviewCount] = useState(0)
+
+  // Check if business is currently open
+  const isOpen = () => {
+    if (!listing.business_hours) return null
+    
+    const now = new Date()
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+    const currentDay = days[now.getDay()]
+    const currentTime = now.getHours() * 60 + now.getMinutes()
+    
+    const todayHours = listing.business_hours[currentDay]
+    if (!todayHours || todayHours.closed) return false
+    
+    const [openHour, openMin] = todayHours.open.split(':').map(Number)
+    const [closeHour, closeMin] = todayHours.close.split(':').map(Number)
+    
+    const openTime = openHour * 60 + openMin
+    const closeTime = closeHour * 60 + closeMin
+    
+    return currentTime >= openTime && currentTime < closeTime
+  }
+
+  useEffect(() => {
+    fetchRatingData()
+  }, [listing.id])
+
+  async function fetchRatingData() {
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('rating')
+        .eq('listing_id', listing.id)
+
+      if (error) throw error
+
+      if (data && data.length > 0) {
+        const average = data.reduce((sum, review) => sum + review.rating, 0) / data.length
+        setAvgRating(average)
+        setReviewCount(data.length)
+      }
+    } catch (error) {
+      console.error('Error fetching rating:', error)
+    }
+  }
+  return (
+    <div className="card h-full hover:shadow-lg hover:shadow-gunsmith-gold/10 transition-all duration-300 relative">
+      {/* Featured Badge */}
+      {(listing.is_featured || listing.is_featured_in_state) && (
+        <div className="absolute top-4 right-4 bg-gunsmith-gold text-gunsmith-black px-3 py-1 rounded font-bebas text-sm tracking-wider z-10 flex items-center gap-1">
+          <Star className="h-3 w-3 fill-current" />
+          <span>FEATURED</span>
+        </div>
+      )}
+
+      {/* Favorite Button */}
+      <div className="absolute top-4 left-4 z-10">
+        <FavoriteButton listingId={listing.id} size="md" />
+      </div>
+
+      <Link href={`/listings/${listing.slug}`} className="block">
+        {/* Cover Image or Logo */}
+        {listing.cover_image_url || listing.logo_url ? (
+          <div className="h-48 -mx-6 -mt-6 mb-4 overflow-hidden rounded-t-lg">
+            <img 
+              src={listing.cover_image_url || listing.logo_url || ''} 
+              alt={listing.business_name}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div className="h-48 -mx-6 -mt-6 mb-4 bg-gunsmith-accent flex items-center justify-center rounded-t-lg">
+            <div className="text-gunsmith-gold/20">
+              <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+              </svg>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          {/* Business Name & Verification */}
+          <div>
+            <h3 className="font-bebas text-2xl text-gunsmith-gold flex items-center gap-2">
+              {listing.business_name}
+              {listing.is_verified && (
+                <CheckCircle className="h-5 w-5 text-gunsmith-gold" />
+              )}
+            </h3>
+            {listing.category && (
+              <p className="text-sm text-gunsmith-text-secondary">{listing.category}</p>
+            )}
+          </div>
+
+          {/* Rating */}
+          {avgRating !== null && (
+            <div className="flex items-center gap-2">
+              <div className="flex">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${
+                      i < Math.round(avgRating)
+                        ? 'text-gunsmith-gold fill-gunsmith-gold'
+                        : 'text-gunsmith-gold/30'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-sm text-gunsmith-text-secondary">
+                {avgRating.toFixed(1)} ({reviewCount})
+              </span>
+            </div>
+          )}
+
+          {/* Short Description */}
+          {listing.short_description && (
+            <p className="text-gunsmith-text-secondary line-clamp-2">
+              {listing.short_description}
+            </p>
+          )}
+
+          {/* Location */}
+          {listing.city && listing.state_province && (
+            <div className="flex items-center gap-2 text-sm text-gunsmith-text-secondary">
+              <MapPin className="h-4 w-4 text-gunsmith-gold" />
+              <span>{listing.city}, {listing.state_province}</span>
+            </div>
+          )}
+
+          {/* Open/Closed Status */}
+          {listing.business_hours && (
+            <div className="flex items-center gap-2 text-sm">
+              <Clock className="h-4 w-4 text-gunsmith-gold" />
+              {isOpen() ? (
+                <span className="text-green-500 font-medium">Open Now</span>
+              ) : (
+                <span className="text-gunsmith-error font-medium">Closed</span>
+              )}
+            </div>
+          )}
+
+          {/* Contact Info */}
+          <div className="space-y-1">
+            {listing.phone && (
+              <div className="flex items-center gap-2 text-sm text-gunsmith-text-secondary">
+                <Phone className="h-4 w-4 text-gunsmith-gold" />
+                <span>{listing.phone}</span>
+              </div>
+            )}
+            {listing.website && (
+              <div className="flex items-center gap-2 text-sm text-gunsmith-text-secondary">
+                <Globe className="h-4 w-4 text-gunsmith-gold" />
+                <span className="truncate">{listing.website.replace(/^https?:\/\//, '')}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Tags */}
+          {listing.tags && listing.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {listing.tags.slice(0, 3).map((tag, index) => (
+                <span 
+                  key={index}
+                  className="text-xs bg-gunsmith-accent text-gunsmith-gold px-2 py-1 rounded"
+                >
+                  {tag}
+                </span>
+              ))}
+              {listing.tags.length > 3 && (
+                <span className="text-xs text-gunsmith-text-secondary">
+                  +{listing.tags.length - 3} more
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </Link>
+    </div>
+  )
+}

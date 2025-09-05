@@ -1,0 +1,76 @@
+@import 'leaflet/dist/leaflet.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #1a1a1a;
+    --foreground: #F5F5F5;
+    --card: #2a2a2a;
+    --card-foreground: #F5F5F5;
+    --primary: #FFD700;
+    --primary-foreground: #1a1a1a;
+    --secondary: #3a3a3a;
+    --secondary-foreground: #F5F5F5;
+    --muted: #3a3a3a;
+    --muted-foreground: rgba(255, 255, 255, 0.6);
+    --accent: #FFD700;
+    --accent-foreground: #1a1a1a;
+    --destructive: #d4183d;
+    --destructive-foreground: #F5F5F5;
+    --border: rgba(255, 215, 0, 0.2);
+    --input: rgba(255, 215, 0, 0.3);
+    --ring: #FFD700;
+  }
+
+  * {
+    @apply border-gunsmith-border;
+  }
+
+  body {
+    @apply bg-gunsmith-black text-gunsmith-text;
+    font-family: var(--font-oswald), sans-serif;
+    line-height: 1.5;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-bebas), sans-serif;
+    @apply tracking-wide;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-gunsmith-gold text-gunsmith-black font-oswald font-medium py-2 px-6 rounded hover:bg-gunsmith-goldenrod transition-colors duration-200;
+  }
+
+  .btn-secondary {
+    @apply border border-gunsmith-gold text-gunsmith-gold bg-transparent font-oswald font-medium py-2 px-6 rounded hover:bg-gunsmith-hover transition-colors duration-200;
+  }
+
+  .btn-ghost {
+    @apply text-gunsmith-gold font-oswald font-medium py-2 px-6 rounded hover:bg-gunsmith-hover transition-colors duration-200;
+  }
+
+  .card {
+    @apply bg-gunsmith-card border border-gunsmith-border rounded-lg p-6 hover:border-gunsmith-gold/40 transition-all duration-200;
+  }
+
+  .input {
+    @apply bg-gunsmith-card border border-gunsmith-border rounded px-4 py-2 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gunsmith-gold focus:border-gunsmith-gold transition-all duration-200;
+  }
+
+  .label {
+    @apply text-gunsmith-text font-oswald font-medium mb-2 block;
+  }
+
+  /* Custom checkbox styling */
+  input[type="checkbox"] {
+    @apply cursor-pointer accent-gunsmith-gold;
+  }
+
+  input[type="checkbox"]:focus {
+    @apply outline-none ring-2 ring-gunsmith-gold;
+  }
+}

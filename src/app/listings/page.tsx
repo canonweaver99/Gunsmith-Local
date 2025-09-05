@@ -1,0 +1,419 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import Header from '@/components/Header'
+import Footer from '@/components/Footer'
+import ListingCard from '@/components/ListingCard'
+import MapView from '@/components/MapView'
+import AdvancedFilters from '@/components/AdvancedFilters'
+import { useAnalytics } from '@/hooks/useAnalytics'
+import { supabase, Listing } from '@/lib/supabase'
+import { Search, Filter, MapPin, Loader2, Map as MapIcon, SlidersHorizontal } from 'lucide-react'
+
+export default function ListingsPage() {
+  const searchParams = useSearchParams()
+  const analytics = useAnalytics()
+  const [listings, setListings] = useState<Listing[]>([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '')
+  const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedState, setSelectedState] = useState('')
+  const [filteredListings, setFilteredListings] = useState<Listing[]>([])
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [advancedFilters, setAdvancedFilters] = useState<any>(null)
+  const [listingsWithRatings, setListingsWithRatings] = useState<any[]>([])
+  const [sortBy, setSortBy] = useState<'featured' | 'name' | 'rating' | 'newest'>('featured')
+
+  useEffect(() => {
+    fetchListings()
+  }, [])
+
+  useEffect(() => {
+    filterListings()
+  }, [listings, searchTerm, selectedCategory, selectedState, advancedFilters, listingsWithRatings, sortBy])
+
+  function handleSearch(e?: React.FormEvent) {
+    e?.preventDefault()
+    setSearchTerm(searchInput)
+  }
+
+  function handleKeyPress(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter') {
+      handleSearch()
+    }
+  }
+
+  async function fetchListings() {
+    try {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('status', 'active')
+        .order('is_featured', { ascending: false })
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      // Fetch ratings for each listing
+      const listingsData = data || []
+      const listingsWithRatingData = await Promise.all(
+        listingsData.map(async (listing) => {
+          const { data: reviews } = await supabase
+            .from('reviews')
+            .select('rating')
+            .eq('listing_id', listing.id)
+          
+          const avgRating = reviews && reviews.length > 0
+            ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+            : null
+          
+          return { ...listing, avgRating, reviewCount: reviews?.length || 0 }
+        })
+      )
+
+      setListings(listingsData)
+      setListingsWithRatings(listingsWithRatingData)
+    } catch (error) {
+      console.error('Error fetching listings:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  function filterListings() {
+    let filtered = [...listings]
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(listing => 
+        listing.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.postal_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.state_province?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        listing.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      )
+    }
+
+    // Category filter
+    if (selectedCategory) {
+      filtered = filtered.filter(listing => listing.category === selectedCategory)
+    }
+
+    // State filter
+    if (selectedState) {
+      filtered = filtered.filter(listing => listing.state_province === selectedState)
+    }
+
+    // Apply advanced filters if set
+    if (advancedFilters) {
+      // Categories filter (from advanced)
+      if (advancedFilters.categories.length > 0) {
+        filtered = filtered.filter(listing => 
+          listing.category && advancedFilters.categories.includes(listing.category)
+        )
+      }
+
+      // States filter (from advanced)
+      if (advancedFilters.states.length > 0) {
+        filtered = filtered.filter(listing => 
+          listing.state_province && advancedFilters.states.includes(listing.state_province)
+        )
+      }
+
+      // Minimum rating filter
+      if (advancedFilters.minRating !== null && listingsWithRatings.length > 0) {
+        const ratingsMap = new Map(listingsWithRatings.map(l => [l.id, l.avgRating]))
+        filtered = filtered.filter(listing => {
+          const rating = ratingsMap.get(listing.id)
+          return rating !== null && rating >= advancedFilters.minRating
+        })
+      }
+
+      // Services filter
+      if (advancedFilters.services.length > 0) {
+        filtered = filtered.filter(listing => 
+          listing.tags && listing.tags.some(tag => 
+            advancedFilters.services.includes(tag)
+          )
+        )
+      }
+
+      // Verified filter
+      if (advancedFilters.isVerified === true) {
+        filtered = filtered.filter(listing => listing.is_verified === true)
+      }
+
+      // Featured filter
+      if (advancedFilters.isFeatured === true) {
+        filtered = filtered.filter(listing => listing.is_featured === true)
+      }
+
+      // Open now filter
+      if (advancedFilters.isOpen === true) {
+        const now = new Date()
+        const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
+        const currentDay = days[now.getDay()]
+        const currentTime = now.getHours() * 60 + now.getMinutes()
+
+        filtered = filtered.filter(listing => {
+          if (!listing.business_hours) return false
+          const todayHours = listing.business_hours[currentDay]
+          if (!todayHours || todayHours.closed) return false
+          
+          const [openHour, openMin] = todayHours.open.split(':').map(Number)
+          const [closeHour, closeMin] = todayHours.close.split(':').map(Number)
+          
+          const openTime = openHour * 60 + openMin
+          const closeTime = closeHour * 60 + closeMin
+          
+          return currentTime >= openTime && currentTime < closeTime
+        })
+      }
+
+      // Has images filter
+      if (advancedFilters.hasImages === true) {
+        filtered = filtered.filter(listing => 
+          listing.logo_url || listing.cover_image_url || 
+          (listing.image_gallery && listing.image_gallery.length > 0)
+        )
+      }
+
+      // Year established filter
+      if (advancedFilters.yearEstablishedMin !== null) {
+        filtered = filtered.filter(listing => 
+          listing.year_established && listing.year_established >= advancedFilters.yearEstablishedMin
+        )
+      }
+      if (advancedFilters.yearEstablishedMax !== null) {
+        filtered = filtered.filter(listing => 
+          listing.year_established && listing.year_established <= advancedFilters.yearEstablishedMax
+        )
+      }
+    }
+
+    // Apply sorting
+    const ratingsMap = new Map(listingsWithRatings.map(l => [l.id, l.avgRating]))
+    
+    switch (sortBy) {
+      case 'name':
+        filtered.sort((a, b) => a.business_name.localeCompare(b.business_name))
+        break
+      case 'rating':
+        filtered.sort((a, b) => {
+          const ratingA = ratingsMap.get(a.id) || 0
+          const ratingB = ratingsMap.get(b.id) || 0
+          return ratingB - ratingA
+        })
+        break
+      case 'newest':
+        filtered.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+        break
+      case 'featured':
+      default:
+        // Keep the default sorting (featured first, then by date)
+        break
+    }
+
+    setFilteredListings(filtered)
+    
+    // Track search if there's a search term or filters
+    if (searchTerm || selectedCategory || selectedState || (advancedFilters && Object.values(advancedFilters).some(v => v !== null && v !== '' && (Array.isArray(v) ? v.length > 0 : true)))) {
+      const activeFilters = []
+      if (selectedCategory) activeFilters.push(`category:${selectedCategory}`)
+      if (selectedState) activeFilters.push(`state:${selectedState}`)
+      if (advancedFilters?.categories?.length) activeFilters.push(`categories:${advancedFilters.categories.join(',')}`)
+      if (advancedFilters?.states?.length) activeFilters.push(`states:${advancedFilters.states.join(',')}`)
+      if (advancedFilters?.minRating) activeFilters.push(`minRating:${advancedFilters.minRating}`)
+      if (advancedFilters?.isVerified) activeFilters.push('verified:true')
+      if (advancedFilters?.isFeatured) activeFilters.push('featured:true')
+      if (advancedFilters?.isOpen) activeFilters.push('open:true')
+      
+      analytics.trackSearch(searchTerm || 'browse', filtered.length, activeFilters)
+    }
+  }
+
+  // Get unique categories and states for filters
+  const categories = [...new Set(listings.map(l => l.category).filter(Boolean))]
+  const states = [...new Set(listings.map(l => l.state_province).filter(Boolean))]
+  
+  // Get unique services/tags
+  const allTags = listings.flatMap(l => l.tags || [])
+  const services = [...new Set(allTags)].sort()
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Header />
+      
+      <main className="flex-grow">
+        {/* Page Header */}
+        <section className="bg-gunsmith-accent/20 py-12 px-4">
+          <div className="container mx-auto">
+            <h1 className="font-bebas text-5xl md:text-6xl text-gunsmith-gold mb-4 text-center">
+              FIND A GUNSMITH
+            </h1>
+            <p className="text-center text-gunsmith-text-secondary max-w-2xl mx-auto">
+              Browse our directory of professional gunsmiths across the country. 
+              Find the right expert for your firearm needs.
+            </p>
+          </div>
+        </section>
+
+        {/* Search and Filters */}
+        <section className="py-8 px-4 bg-gunsmith-black sticky top-0 z-10 border-b border-gunsmith-border">
+          <div className="container mx-auto">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Search Bar */}
+              <form onSubmit={handleSearch} className="relative flex-grow flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gunsmith-gold" />
+                  <input
+                    type="text"
+                    placeholder="Search by name, city, or service..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="input pl-10 w-full"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="btn-primary px-6"
+                >
+                  Search
+                </button>
+              </form>
+
+              {/* Category Filter */}
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="input min-w-[200px]"
+              >
+                <option value="">All Categories</option>
+                {categories.map(category => (
+                  <option key={category} value={category}>{category}</option>
+                ))}
+              </select>
+
+              {/* State Filter */}
+              <select
+                value={selectedState}
+                onChange={(e) => setSelectedState(e.target.value)}
+                className="input min-w-[150px]"
+              >
+                <option value="">All States</option>
+                {states.map(state => (
+                  <option key={state} value={state}>{state}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Results Count and View Toggle */}
+            <div className="mt-4 flex flex-wrap justify-between items-center gap-4">
+              <div className="text-sm text-gunsmith-text-secondary">
+                Showing {filteredListings.length} of {listings.length} listings
+              </div>
+              
+              <div className="flex items-center gap-4">
+                {/* Sort Dropdown */}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gunsmith-text-secondary">Sort by:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="input text-sm py-1 px-3"
+                  >
+                    <option value="featured">Featured</option>
+                    <option value="name">Name (A-Z)</option>
+                    <option value="rating">Highest Rated</option>
+                    <option value="newest">Newest First</option>
+                  </select>
+                </div>
+                
+                {/* View Toggle */}
+                <div className="flex gap-2">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-4 py-2 rounded font-oswald font-medium transition-colors flex items-center gap-2 ${
+                    viewMode === 'list' 
+                      ? 'bg-gunsmith-gold text-gunsmith-black' 
+                      : 'bg-gunsmith-accent text-gunsmith-text hover:bg-gunsmith-gold hover:text-gunsmith-black'
+                  }`}
+                >
+                  <MapPin className="h-4 w-4" />
+                  List
+                </button>
+                <button
+                  onClick={() => setViewMode('map')}
+                  className={`px-4 py-2 rounded font-oswald font-medium transition-colors flex items-center gap-2 ${
+                    viewMode === 'map' 
+                      ? 'bg-gunsmith-gold text-gunsmith-black' 
+                      : 'bg-gunsmith-accent text-gunsmith-text hover:bg-gunsmith-gold hover:text-gunsmith-black'
+                  }`}
+                >
+                  <MapIcon className="h-4 w-4" />
+                  Map
+                </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Advanced Filters */}
+        <section className="py-6 px-4 border-b border-gunsmith-border">
+          <div className="container mx-auto">
+            <AdvancedFilters
+              onFiltersChange={setAdvancedFilters}
+              availableCategories={categories}
+              availableStates={states}
+              availableServices={services}
+            />
+          </div>
+        </section>
+
+        {/* Listings Grid */}
+        <section className="py-12 px-4">
+          <div className="container mx-auto">
+            {loading ? (
+              <div className="flex justify-center items-center py-20">
+                <Loader2 className="h-8 w-8 text-gunsmith-gold animate-spin" />
+              </div>
+            ) : filteredListings.length === 0 ? (
+              <div className="text-center py-20">
+                <MapPin className="h-16 w-16 text-gunsmith-gold/30 mx-auto mb-4" />
+                <h3 className="font-bebas text-2xl text-gunsmith-gold mb-2">
+                  NO LISTINGS FOUND
+                </h3>
+                <p className="text-gunsmith-text-secondary">
+                  Try adjusting your search criteria or filters
+                </p>
+              </div>
+            ) : viewMode === 'list' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredListings.map(listing => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+            ) : (
+              <div className="card p-0 overflow-hidden">
+                <MapView
+                  listings={filteredListings}
+                  height="h-[600px]"
+                />
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  )
+}
