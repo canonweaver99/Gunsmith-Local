@@ -2,6 +2,8 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { Shield, Target, Users, Award } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col">

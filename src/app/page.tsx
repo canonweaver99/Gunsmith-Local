@@ -2,6 +2,8 @@ import { Metadata } from 'next'
 import { generateMetadata } from '@/lib/seo'
 import HomePageClient from './home-client'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = generateMetadata({
   title: 'GunsmithLocal - Find Trusted Gunsmiths Near You | Professional Firearm Services',
   description: 'Find verified local gunsmiths for firearm repairs, customization, Cerakoting, and maintenance. Browse reviews, compare services, and connect with skilled professionals in your area.',
