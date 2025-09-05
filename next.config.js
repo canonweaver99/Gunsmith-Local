@@ -9,8 +9,17 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  trailingSlash: false,
-  generateBuildId: () => 'build'
+  experimental: {
+    appDir: true,
+  },
+  async rewrites() {
+    return []
+  },
+  async redirects() {
+    return []
+  },
+  poweredByHeader: false,
+  reactStrictMode: false,
 }
 
 module.exports = nextConfig
