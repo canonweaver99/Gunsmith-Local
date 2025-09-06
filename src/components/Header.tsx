@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { Menu, X, Crosshair, User, LogOut, Star, Map, Shield } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Menu, X, Crosshair, User, LogOut, Star, Map, Shield, ChevronDown, Settings, Bell, Building2, HelpCircle, Lock, MapPin, CreditCard } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 
@@ -10,6 +10,8 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [hasListing, setHasListing] = useState(false)
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
+  const [showUserDropdown, setShowUserDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const { user, loading, signOut, isAdmin } = useAuth()
 
   useEffect(() => {
@@ -34,6 +36,18 @@ export default function Header() {
 
     checkUserListing()
   }, [user])
+
+  // Click outside handler for dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowUserDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <header className="bg-gunsmith-header border-b border-gunsmith-border">
@@ -89,13 +103,92 @@ export default function Header() {
                   <User className="h-4 w-4" />
                   Dashboard
                 </Link>
-                <button
-                  onClick={() => setShowSignOutConfirm(true)}
-                  className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors flex items-center gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </button>
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setShowUserDropdown(!showUserDropdown)}
+                    className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors flex items-center gap-2"
+                  >
+                    <Settings className="h-4 w-4" />
+                    Settings
+                    <ChevronDown className={`h-4 w-4 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {showUserDropdown && (
+                    <div className="absolute right-0 mt-2 w-64 bg-gunsmith-card border border-gunsmith-border rounded-lg shadow-lg z-50">
+                      <div className="py-2">
+                        {/* Account Section */}
+                        <div className="px-4 py-2 border-b border-gunsmith-border">
+                          <p className="text-xs font-bebas text-gunsmith-gold uppercase tracking-wider">Account</p>
+                        </div>
+                        <Link href="/settings/profile" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
+                          <User className="inline-block h-4 w-4 mr-2" />
+                          Profile
+                        </Link>
+                        <Link href="/settings/password" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
+                          <Lock className="inline-block h-4 w-4 mr-2" />
+                          Password
+                        </Link>
+                        
+                        {/* Preferences Section */}
+                        <div className="px-4 py-2 border-b border-t border-gunsmith-border mt-2">
+                          <p className="text-xs font-bebas text-gunsmith-gold uppercase tracking-wider">Preferences</p>
+                        </div>
+                        <Link href="/settings/location" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
+                          <MapPin className="inline-block h-4 w-4 mr-2" />
+                          Location
+                        </Link>
+                        <Link href="/settings/notifications" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
+                          <Bell className="inline-block h-4 w-4 mr-2" />
+                          Notifications
+                        </Link>
+                        
+                        {/* Gunsmith Only Section */}
+                        {hasListing && (
+                          <>
+                            <div className="px-4 py-2 border-b border-t border-gunsmith-border mt-2">
+                              <p className="text-xs font-bebas text-gunsmith-gold uppercase tracking-wider">Business</p>
+                            </div>
+                            <Link href="/settings/business" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
+                              <Building2 className="inline-block h-4 w-4 mr-2" />
+                              Business Info
+                            </Link>
+                            <Link href="/settings/services" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
+                              <Settings className="inline-block h-4 w-4 mr-2" />
+                              Services
+                            </Link>
+                            <Link href="/settings/billing" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
+                              <CreditCard className="inline-block h-4 w-4 mr-2" />
+                              Billing
+                            </Link>
+                          </>
+                        )}
+                        
+                        {/* General Section */}
+                        <div className="px-4 py-2 border-b border-t border-gunsmith-border mt-2">
+                          <p className="text-xs font-bebas text-gunsmith-gold uppercase tracking-wider">General</p>
+                        </div>
+                        <Link href="/settings/privacy" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
+                          <Shield className="inline-block h-4 w-4 mr-2" />
+                          Privacy
+                        </Link>
+                        <Link href="/help" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
+                          <HelpCircle className="inline-block h-4 w-4 mr-2" />
+                          Help
+                        </Link>
+                        <button
+                          onClick={() => {
+                            setShowUserDropdown(false)
+                            setShowSignOutConfirm(true)
+                          }}
+                          className="block w-full text-left px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors border-t border-gunsmith-border"
+                        >
+                          <LogOut className="inline-block h-4 w-4 mr-2" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </>
             ) : (
               <>
@@ -192,9 +285,68 @@ export default function Header() {
                   >
                     Dashboard
                   </Link>
+                  
+                  {/* Settings Menu Items for Mobile */}
+                  <div className="space-y-1 py-2">
+                    <p className="text-xs font-bebas text-gunsmith-gold uppercase tracking-wider px-2">Settings</p>
+                    <Link
+                      href="/settings/profile"
+                      className="block py-2 pl-4 text-sm text-gunsmith-text hover:text-gunsmith-gold transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Profile
+                    </Link>
+                    <Link
+                      href="/settings/password"
+                      className="block py-2 pl-4 text-sm text-gunsmith-text hover:text-gunsmith-gold transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Password
+                    </Link>
+                    <Link
+                      href="/settings/location"
+                      className="block py-2 pl-4 text-sm text-gunsmith-text hover:text-gunsmith-gold transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Location
+                    </Link>
+                    <Link
+                      href="/settings/notifications"
+                      className="block py-2 pl-4 text-sm text-gunsmith-text hover:text-gunsmith-gold transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Notifications
+                    </Link>
+                    {hasListing && (
+                      <>
+                        <Link
+                          href="/settings/business"
+                          className="block py-2 pl-4 text-sm text-gunsmith-text hover:text-gunsmith-gold transition-colors"
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          Business Info
+                        </Link>
+                      </>
+                    )}
+                    <Link
+                      href="/settings/privacy"
+                      className="block py-2 pl-4 text-sm text-gunsmith-text hover:text-gunsmith-gold transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Privacy
+                    </Link>
+                    <Link
+                      href="/help"
+                      className="block py-2 pl-4 text-sm text-gunsmith-text hover:text-gunsmith-gold transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Help
+                    </Link>
+                  </div>
+                  
                   <button
                     onClick={() => setShowSignOutConfirm(true)}
-                    className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors w-full text-left"
+                    className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors w-full text-left border-t border-gunsmith-border mt-2"
                   >
                     Sign Out
                   </button>
