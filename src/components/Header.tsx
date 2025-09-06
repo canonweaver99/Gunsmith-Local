@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
-import { Menu, X, Crosshair, User, LogOut, Star, Map, Shield, ChevronDown, Settings, Bell, Building2, HelpCircle, Lock, MapPin, CreditCard } from 'lucide-react'
+import { Menu, X, Crosshair, User, LogOut, Star, Map, Shield, ChevronDown, Settings, Bell, Building2, HelpCircle, Lock, MapPin, CreditCard, Heart } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 
@@ -123,6 +123,10 @@ export default function Header() {
                         <Link href="/settings/profile" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
                           <User className="inline-block h-4 w-4 mr-2" />
                           Profile
+                        </Link>
+                        <Link href="/favorites" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
+                          <Heart className="inline-block h-4 w-4 mr-2" />
+                          Saved Gunsmiths
                         </Link>
                         <Link href="/settings/password" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
                           <Lock className="inline-block h-4 w-4 mr-2" />
@@ -295,6 +299,13 @@ export default function Header() {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Profile
+                    </Link>
+                    <Link
+                      href="/favorites"
+                      className="block py-2 pl-4 text-sm text-gunsmith-text hover:text-gunsmith-gold transition-colors"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Saved Gunsmiths
                     </Link>
                     <Link
                       href="/settings/password"

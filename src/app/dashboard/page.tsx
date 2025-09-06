@@ -8,22 +8,20 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
-import { useFavorites } from '@/contexts/FavoritesContext'
 import { supabase, Listing } from '@/lib/supabase'
 import { Plus, Edit, Eye, Trash2, Loader2, Building2, Star, MapPin, Phone, Mail, Globe, User, MessageSquare, Sparkles, Heart } from 'lucide-react'
+import FeaturedCheckout from '@/components/FeaturedCheckout'
 import FeaturedSection from '@/components/dashboard/FeaturedSection'
 import ListingCard from '@/components/ListingCard'
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
-  const { favorites } = useFavorites()
   const router = useRouter()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
   const [unreadMessages, setUnreadMessages] = useState(0)
-  const [favoriteListings, setFavoriteListings] = useState<Listing[]>([])
-  const [loadingFavorites, setLoadingFavorites] = useState(true)
   const [mounted, setMounted] = useState(false)
+  const [showFeaturedCheckout, setShowFeaturedCheckout] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -41,33 +39,6 @@ export default function DashboardPage() {
     }
   }, [user, authLoading, router, mounted])
 
-  // Fetch favorite listings when favorites change
-  useEffect(() => {
-    if (favorites.length > 0) {
-      fetchFavoriteListings()
-    } else {
-      setFavoriteListings([])
-      setLoadingFavorites(false)
-    }
-  }, [favorites])
-
-  async function fetchFavoriteListings() {
-    setLoadingFavorites(true)
-    try {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .in('id', favorites)
-        .eq('status', 'active')
-
-      if (error) throw error
-      setFavoriteListings(data || [])
-    } catch (error) {
-      console.error('Error fetching favorite listings:', error)
-    } finally {
-      setLoadingFavorites(false)
-    }
-  }
 
   async function fetchUserListings() {
     setLoading(true)
@@ -145,34 +116,6 @@ export default function DashboardPage() {
         </section>
 
 
-        {/* Favorites Section */}
-        {favorites.length > 0 && (
-          <section className="py-12 px-4 bg-gunsmith-accent/10">
-            <div className="container mx-auto">
-              <div className="mb-8">
-                <h2 className="font-bebas text-3xl text-gunsmith-gold flex items-center gap-2">
-                  <Heart className="h-6 w-6" />
-                  MY FAVORITES
-                </h2>
-                <p className="text-gunsmith-text-secondary">
-                  Gunsmiths you've saved for quick access
-                </p>
-              </div>
-              
-              {loadingFavorites ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="h-8 w-8 text-gunsmith-gold animate-spin" />
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {favoriteListings.map((listing) => (
-                    <ListingCard key={listing.id} listing={listing} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-        )}
 
         {/* Business Profile Section */}
         <section className="py-12 px-4">
@@ -315,10 +258,13 @@ export default function DashboardPage() {
                           <p className="text-gunsmith-text mb-6 max-w-md mx-auto">
                             Get featured in your state for premium placement and increased customer inquiries
                           </p>
-                          <Link href="/featured" className="btn-primary inline-flex items-center gap-2">
+                          <button 
+                            onClick={() => setShowFeaturedCheckout(listing.id)}
+                            className="btn-primary inline-flex items-center gap-2"
+                          >
                             <Sparkles className="h-5 w-5" />
                             Get Featured Now
-                          </Link>
+                          </button>
                         </div>
                       </div>
                     )}
@@ -331,6 +277,15 @@ export default function DashboardPage() {
       </main>
 
       <Footer />
+      
+      {/* Featured Checkout Modal */}
+      {showFeaturedCheckout && (
+        <FeaturedCheckout
+          listingId={showFeaturedCheckout}
+          businessName={listings.find(l => l.id === showFeaturedCheckout)?.business_name || 'Your Business'}
+          onClose={() => setShowFeaturedCheckout(null)}
+        />
+      )}
     </div>
   )
 }
