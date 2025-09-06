@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase'
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [hasListing, setHasListing] = useState(false)
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
   const { user, loading, signOut, isAdmin } = useAuth()
 
   useEffect(() => {
@@ -89,7 +90,7 @@ export default function Header() {
                   Dashboard
                 </Link>
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => setShowSignOutConfirm(true)}
                   className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors flex items-center gap-2"
                 >
                   <LogOut className="h-4 w-4" />
@@ -192,10 +193,7 @@ export default function Header() {
                     Dashboard
                   </Link>
                   <button
-                    onClick={() => {
-                      signOut()
-                      setIsMenuOpen(false)
-                    }}
+                    onClick={() => setShowSignOutConfirm(true)}
                     className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors w-full text-left"
                   >
                     Sign Out
@@ -223,6 +221,38 @@ export default function Header() {
           </nav>
         )}
       </div>
+
+      {/* Sign Out Confirmation Popup */}
+      {showSignOutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-gunsmith-card border border-gunsmith-border rounded-xl p-8 m-4 max-w-md w-full">
+            <h3 className="font-bebas text-2xl text-gunsmith-gold mb-4 text-center">
+              CONFIRM SIGN OUT
+            </h3>
+            <p className="text-gunsmith-text text-center mb-6">
+              Are you sure you want to sign out?
+            </p>
+            <div className="flex gap-4">
+              <button
+                onClick={() => setShowSignOutConfirm(false)}
+                className="btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  signOut()
+                  setShowSignOutConfirm(false)
+                  setIsMenuOpen(false)
+                }}
+                className="btn-primary flex-1"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MapPin, Wrench, Package, ChevronRight, ChevronLeft, Loader2, CheckCircle, Truck, Users, Target } from 'lucide-react'
 
 interface WizardData {
   location: string
-  gunType: string
+  gunTypes: string[]
   customGunType: string
   services: string[]
   deliveryMethod: 'in-person' | 'shipping' | 'both'
@@ -29,7 +29,7 @@ export default function GunsmithWizard() {
   const [loading, setLoading] = useState(false)
   const [wizardData, setWizardData] = useState<WizardData>({
     location: '',
-    gunType: '',
+    gunTypes: [],
     customGunType: '',
     services: [],
     deliveryMethod: 'both'
@@ -46,6 +46,13 @@ export default function GunsmithWizard() {
     setWizardData({ ...wizardData, services: updated })
   }
 
+  const toggleGunType = (gunType: string) => {
+    const updated = wizardData.gunTypes.includes(gunType)
+      ? wizardData.gunTypes.filter(type => type !== gunType)
+      : [...wizardData.gunTypes, gunType]
+    setWizardData({ ...wizardData, gunTypes: updated })
+  }
+
   const handleDeliveryMethod = (method: 'in-person' | 'shipping' | 'both') => {
     setWizardData({ ...wizardData, deliveryMethod: method })
   }
@@ -55,8 +62,8 @@ export default function GunsmithWizard() {
       case 1:
         return wizardData.location.trim() !== ''
       case 2:
-        return wizardData.gunType !== '' && 
-               (wizardData.gunType !== 'other' || wizardData.customGunType.trim() !== '')
+        return wizardData.gunTypes.length > 0 && 
+               (!wizardData.gunTypes.includes('other') || wizardData.customGunType.trim() !== '')
       case 3:
         return wizardData.services.length > 0
       case 4:
@@ -90,8 +97,11 @@ export default function GunsmithWizard() {
       params.append('location', wizardData.location)
     }
     
-    if (wizardData.gunType && wizardData.gunType !== 'other') {
-      params.append('gunType', wizardData.gunType)
+    if (wizardData.gunTypes.length > 0) {
+      const nonOtherTypes = wizardData.gunTypes.filter(type => type !== 'other')
+      if (nonOtherTypes.length > 0) {
+        params.append('gunTypes', nonOtherTypes.join(','))
+      }
     }
     
     if (wizardData.services.length > 0) {
@@ -108,6 +118,18 @@ export default function GunsmithWizard() {
     // Navigate to listings page with filters
     router.push(`/listings?${params.toString()}`)
   }
+
+  // Handle Enter key press for navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && canProceed() && !loading) {
+        handleNext()
+      }
+    }
+
+    window.addEventListener('keypress', handleKeyPress)
+    return () => window.removeEventListener('keypress', handleKeyPress)
+  }, [step, wizardData, loading])
 
 
   return (
@@ -166,7 +188,7 @@ export default function GunsmithWizard() {
                 WHAT TYPE OF FIREARM?
               </h3>
               <p className="text-gunsmith-text-secondary">
-                Select the type of gun that needs work
+                Select all types that need work (you can choose multiple)
               </p>
             </div>
             
@@ -181,9 +203,9 @@ export default function GunsmithWizard() {
                 ].map((type) => (
                   <button
                     key={type.id}
-                    onClick={() => setWizardData({ ...wizardData, gunType: type.id })}
+                    onClick={() => toggleGunType(type.id)}
                     className={`wizard-button ${
-                      wizardData.gunType === type.id ? 'selected' : ''
+                      wizardData.gunTypes.includes(type.id) ? 'selected' : ''
                     }`}
                   >
                     <span className="text-lg font-medium">{type.label}</span>
@@ -194,9 +216,9 @@ export default function GunsmithWizard() {
               {/* Other button centered */}
               <div className="flex justify-center">
                 <button
-                  onClick={() => setWizardData({ ...wizardData, gunType: 'other' })}
+                  onClick={() => toggleGunType('other')}
                   className={`wizard-button w-1/2 ${
-                    wizardData.gunType === 'other' ? 'selected' : ''
+                    wizardData.gunTypes.includes('other') ? 'selected' : ''
                   }`}
                 >
                   <span className="text-lg font-medium">Other</span>
@@ -204,7 +226,7 @@ export default function GunsmithWizard() {
               </div>
               
               {/* Text input for custom gun type */}
-              {wizardData.gunType === 'other' && (
+              {wizardData.gunTypes.includes('other') && (
                 <div className="mt-4">
                   <input
                     type="text"
