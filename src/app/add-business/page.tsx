@@ -8,7 +8,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ImageUpload from '@/components/ImageUpload'
 import BusinessHoursEditor from '@/components/BusinessHoursEditor'
-// import VerificationPopup from '@/components/VerificationPopup'
+import VerificationPopup from '@/components/VerificationPopup'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAnalytics } from '@/hooks/useAnalytics'
@@ -79,6 +79,7 @@ export default function AddBusinessPage() {
     if (!authLoading) {
       if (!user) {
         // Redirect to login if not authenticated
+        setCheckingVerification(false)
         router.push('/auth/login?redirect=/add-business')
       } else {
         // Check email verification status
