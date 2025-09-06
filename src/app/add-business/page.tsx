@@ -8,7 +8,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ImageUpload from '@/components/ImageUpload'
 import BusinessHoursEditor from '@/components/BusinessHoursEditor'
-import VerificationPopup from '@/components/VerificationPopup'
+// import VerificationPopup from '@/components/VerificationPopup'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAnalytics } from '@/hooks/useAnalytics'
@@ -177,7 +177,7 @@ export default function AddBusinessPage() {
         input.parentNode?.replaceChild(newInput, input)
       }
     }
-  }, [mounted])
+  }, [])
 
   function generateSlug(name: string) {
     return name
@@ -266,6 +266,7 @@ export default function AddBusinessPage() {
         year_established: formData.year_established ? parseInt(formData.year_established) : null,
         status: 'active', // For development - auto-approve listings
         is_verified: false,
+        verification_status: formData.ffl_license_number.trim() ? 'pending' : 'pending',
         is_featured: false,
         view_count: 0,
         owner_id: user?.id || null, // Associate with logged-in user
@@ -984,14 +985,27 @@ export default function AddBusinessPage() {
       <Footer />
       
       {/* FFL Verification Popup */}
-      <VerificationPopup
-        isOpen={showVerificationPopup}
-        onClose={() => {
-          setShowVerificationPopup(false)
-          router.push('/listings')
-        }}
-        businessName={formData.business_name}
-      />
+      {showVerificationPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-gunsmith-card border border-gunsmith-gold rounded-xl p-8 m-4 max-w-md w-full">
+            <h3 className="font-bebas text-2xl text-gunsmith-gold mb-4 text-center">
+              FFL VERIFICATION SUBMITTED
+            </h3>
+            <p className="text-gunsmith-text text-center mb-6">
+              Thank you! Your FFL license will be reviewed and verified shortly.
+            </p>
+            <button
+              onClick={() => {
+                setShowVerificationPopup(false)
+                router.push('/listings')
+              }}
+              className="btn-primary w-full"
+            >
+              Continue to Listings
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
