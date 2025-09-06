@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Target circles -->
+  <circle cx="16" cy="16" r="14" stroke="#FFE55C" stroke-width="2" fill="none"/>
+  <circle cx="16" cy="16" r="10" stroke="#FFE55C" stroke-width="2" fill="none"/>
+  <circle cx="16" cy="16" r="6" stroke="#FFE55C" stroke-width="2" fill="none"/>
+  <circle cx="16" cy="16" r="2" fill="#FFE55C"/>
+  
+  <!-- Crosshairs -->
+  <line x1="2" y1="16" x2="6" y2="16" stroke="#FFE55C" stroke-width="2"/>
+  <line x1="26" y1="16" x2="30" y2="16" stroke="#FFE55C" stroke-width="2"/>
+  <line x1="16" y1="2" x2="16" y2="6" stroke="#FFE55C" stroke-width="2"/>
+  <line x1="16" y1="26" x2="16" y2="30" stroke="#FFE55C" stroke-width="2"/>
+</svg>
