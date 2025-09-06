@@ -63,7 +63,7 @@ export default function Header() {
               <Star className="h-4 w-4" />
               Featured
             </Link>
-            {user && !hasListing && (
+            {user && (!hasListing || isAdmin) && (
               <Link href="/add-business" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
                 Add Business
               </Link>
@@ -151,7 +151,7 @@ export default function Header() {
               <Star className="h-4 w-4" />
               Featured
             </Link>
-            {user && !hasListing && (
+            {user && (!hasListing || isAdmin) && (
               <Link
                 href="/add-business"
                 className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors"
