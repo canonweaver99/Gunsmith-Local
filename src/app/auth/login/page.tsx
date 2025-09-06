@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
@@ -11,8 +11,9 @@ import { signIn } from '@/lib/auth'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { Loader2, Mail, Lock, AlertCircle } from 'lucide-react'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
@@ -169,5 +170,17 @@ export default function LoginPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   )
 }

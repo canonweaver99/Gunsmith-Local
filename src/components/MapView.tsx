@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import { Listing } from '@/lib/supabase'
 import { MapPin, Navigation, Loader2 } from 'lucide-react'
-import L from 'leaflet'
-import '@/lib/leaflet-icon-fix'
 
 // Dynamically import the map component to avoid SSR issues
 const MapContainer = dynamic(() => import('react-leaflet').then((mod) => mod.MapContainer), {
@@ -46,42 +44,11 @@ export default function MapView({
 }: MapViewProps) {
   const [isClient, setIsClient] = useState(false)
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
-  const [customIcon, setCustomIcon] = useState<L.Icon | null>(null)
-  const [userIcon, setUserIcon] = useState<L.Icon | null>(null)
+  const [customIcon, setCustomIcon] = useState<any>(null)
+  const [userIcon, setUserIcon] = useState<any>(null)
 
   useEffect(() => {
     setIsClient(true)
-    
-    // Create custom marker icons
-    if (typeof window !== 'undefined') {
-      const icon = L.icon({
-        iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-          <svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 0C7.16 0 0 7.16 0 16C0 24.84 16 40 16 40C16 40 32 24.84 32 16C32 7.16 24.84 0 16 0Z" fill="#d4af37"/>
-            <path d="M16 4C11.58 4 8 7.58 8 12C8 16.42 16 24 16 24C16 24 24 16.42 24 12C24 7.58 20.42 4 16 4Z" fill="#0a0a0a"/>
-            <circle cx="16" cy="12" r="3" fill="#d4af37"/>
-          </svg>
-        `),
-        iconSize: [32, 40],
-        iconAnchor: [16, 40],
-        popupAnchor: [0, -40]
-      })
-      setCustomIcon(icon)
-      
-      const userLocationIcon = L.icon({
-        iconUrl: 'data:image/svg+xml;base64,' + btoa(`
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="8" fill="#3b82f6" opacity="0.3"/>
-            <circle cx="12" cy="12" r="4" fill="#3b82f6"/>
-            <circle cx="12" cy="12" r="10" stroke="#3b82f6" stroke-width="2" fill="none"/>
-          </svg>
-        `),
-        iconSize: [24, 24],
-        iconAnchor: [12, 12],
-        popupAnchor: [0, -12]
-      })
-      setUserIcon(userLocationIcon)
-    }
     
     // Get user's current location
     if (navigator.geolocation) {
@@ -94,55 +61,92 @@ export default function MapView({
         }
       )
     }
+
+    // Only create icons on client side
+    if (typeof window !== 'undefined') {
+      import('leaflet').then((L) => {
+        // Import the fix
+        import('@/lib/leaflet-icon-fix')
+
+        // Create custom icon
+        const icon = new L.Icon({
+          iconUrl: '/leaflet/marker-icon.png',
+          iconRetinaUrl: '/leaflet/marker-icon-2x.png',
+          shadowUrl: '/leaflet/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        })
+        setCustomIcon(icon)
+
+        // Create user location icon
+        const userLocationIcon = new L.Icon({
+          iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="8" fill="#3B82F6" stroke="white" stroke-width="2"/>
+              <circle cx="12" cy="12" r="3" fill="white"/>
+            </svg>
+          `),
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+          popupAnchor: [0, -12]
+        })
+        setUserIcon(userLocationIcon)
+      })
+    }
   }, [])
 
-  // Filter listings that have coordinates
+  // Filter listings with valid coordinates
   const listingsWithCoords = listings.filter(
     listing => listing.latitude && listing.longitude
   )
 
-  // Calculate center of map
+  // Calculate map center based on listings
   const getMapCenter = (): [number, number] => {
-    if (selectedListing?.latitude && selectedListing?.longitude) {
+    if (selectedListing && selectedListing.latitude && selectedListing.longitude) {
       return [selectedListing.latitude, selectedListing.longitude]
     }
     
-    if (userLocation) {
-      return userLocation
-    }
-
     if (listingsWithCoords.length > 0) {
-      const avgLat = listingsWithCoords.reduce((sum, listing) => sum + (listing.latitude || 0), 0) / listingsWithCoords.length
-      const avgLng = listingsWithCoords.reduce((sum, listing) => sum + (listing.longitude || 0), 0) / listingsWithCoords.length
+      const avgLat = listingsWithCoords.reduce((sum, l) => sum + l.latitude!, 0) / listingsWithCoords.length
+      const avgLng = listingsWithCoords.reduce((sum, l) => sum + l.longitude!, 0) / listingsWithCoords.length
       return [avgLat, avgLng]
     }
 
-    // Default to center of US
+    if (userLocation) return userLocation
+    
+    // Default to US center
     return [39.8283, -98.5795]
   }
 
-  // Calculate zoom level
-  const getZoomLevel = (): number => {
-    if (selectedListing) return 15
-    if (listingsWithCoords.length === 1) return 12
-    if (listingsWithCoords.length <= 5) return 10
+  // Calculate appropriate zoom level
+  const getZoomLevel = () => {
+    if (selectedListing) return 14
+    if (listingsWithCoords.length === 1) return 13
+    if (listingsWithCoords.length > 1) {
+      // Calculate bounds
+      const lats = listingsWithCoords.map(l => l.latitude!)
+      const lngs = listingsWithCoords.map(l => l.longitude!)
+      const latDiff = Math.max(...lats) - Math.min(...lats)
+      const lngDiff = Math.max(...lngs) - Math.min(...lngs)
+      const maxDiff = Math.max(latDiff, lngDiff)
+      
+      if (maxDiff > 10) return 5
+      if (maxDiff > 5) return 7
+      if (maxDiff > 2) return 9
+      if (maxDiff > 0.5) return 11
+      return 12
+    }
     return 8
   }
 
   if (!isClient) {
     return (
       <div className={`${height} bg-gunsmith-accent/20 rounded-lg flex items-center justify-center ${className}`}>
-        <Loader2 className="h-8 w-8 text-gunsmith-gold animate-spin" />
-      </div>
-    )
-  }
-
-  if (listingsWithCoords.length === 0) {
-    return (
-      <div className={`${height} bg-gunsmith-accent/20 rounded-lg flex items-center justify-center ${className}`}>
         <div className="text-center">
-          <MapPin className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
-          <p className="text-gunsmith-text-secondary">No locations available to display on map</p>
+          <Loader2 className="h-8 w-8 text-gunsmith-gold animate-spin mx-auto mb-2" />
+          <p className="text-gunsmith-text-secondary">Loading map...</p>
         </div>
       </div>
     )
@@ -174,11 +178,11 @@ export default function MapView({
         )}
 
         {/* Listing markers */}
-        {listingsWithCoords.map((listing) => (
+        {customIcon && listingsWithCoords.map((listing) => (
           <Marker
             key={listing.id}
             position={[listing.latitude!, listing.longitude!]}
-            icon={customIcon || undefined}
+            icon={customIcon}
             eventHandlers={{
               click: () => onListingSelect?.(listing),
             }}
@@ -198,7 +202,8 @@ export default function MapView({
                 <div className="space-y-1 text-sm">
                   {listing.street_address && (
                     <p className="text-gunsmith-text">
-                      📍 {listing.street_address}
+                      <MapPin className="inline h-3 w-3 mr-1" />
+                      {listing.street_address}
                       {listing.city && `, ${listing.city}`}
                       {listing.state_province && `, ${listing.state_province}`}
                     </p>

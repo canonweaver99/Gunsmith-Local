@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -12,8 +12,9 @@ import AdvancedFilters from '@/components/AdvancedFilters'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { supabase, Listing } from '@/lib/supabase'
 import { Search, Filter, MapPin, Loader2, Map as MapIcon, SlidersHorizontal } from 'lucide-react'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
-export default function ListingsPage() {
+function ListingsContent() {
   const searchParams = useSearchParams()
   const analytics = useAnalytics()
   const [listings, setListings] = useState<Listing[]>([])
@@ -417,5 +418,17 @@ export default function ListingsPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function ListingsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    }>
+      <ListingsContent />
+    </Suspense>
   )
 }

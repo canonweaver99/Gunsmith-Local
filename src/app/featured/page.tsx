@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -10,6 +10,7 @@ import ListingCard from '@/components/ListingCard'
 import { supabase, Listing, FeaturedListing } from '@/lib/supabase'
 import { Star, Loader2, ChevronDown, Sparkles } from 'lucide-react'
 import Link from 'next/link'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 // US States
 const US_STATES = [
@@ -65,7 +66,7 @@ const US_STATES = [
   { code: 'WY', name: 'Wyoming' }
 ]
 
-export default function FeaturedPage() {
+function FeaturedContent() {
   const searchParams = useSearchParams()
   const [selectedState, setSelectedState] = useState(searchParams.get('state') || '')
   const [featuredListings, setFeaturedListings] = useState<Listing[]>([])
@@ -326,5 +327,17 @@ export default function FeaturedPage() {
 
       <Footer />
     </div>
+  )
+}
+
+export default function FeaturedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    }>
+      <FeaturedContent />
+    </Suspense>
   )
 }
