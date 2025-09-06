@@ -8,16 +8,21 @@ import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
+import { useFavorites } from '@/contexts/FavoritesContext'
 import { supabase, Listing } from '@/lib/supabase'
-import { Plus, Edit, Eye, Trash2, Loader2, Building2, Star } from 'lucide-react'
+import { Plus, Edit, Eye, Trash2, Loader2, Building2, Star, MapPin, Phone, Mail, Globe, User, MessageSquare, Sparkles, Heart } from 'lucide-react'
 import FeaturedSection from '@/components/dashboard/FeaturedSection'
+import ListingCard from '@/components/ListingCard'
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
+  const { favorites } = useFavorites()
   const router = useRouter()
   const [listings, setListings] = useState<Listing[]>([])
   const [loading, setLoading] = useState(true)
   const [unreadMessages, setUnreadMessages] = useState(0)
+  const [favoriteListings, setFavoriteListings] = useState<Listing[]>([])
+  const [loadingFavorites, setLoadingFavorites] = useState(true)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -35,6 +40,34 @@ export default function DashboardPage() {
       fetchUserListings()
     }
   }, [user, authLoading, router, mounted])
+
+  // Fetch favorite listings when favorites change
+  useEffect(() => {
+    if (favorites.length > 0) {
+      fetchFavoriteListings()
+    } else {
+      setFavoriteListings([])
+      setLoadingFavorites(false)
+    }
+  }, [favorites])
+
+  async function fetchFavoriteListings() {
+    setLoadingFavorites(true)
+    try {
+      const { data, error } = await supabase
+        .from('listings')
+        .select('*')
+        .in('id', favorites)
+        .eq('status', 'active')
+
+      if (error) throw error
+      setFavoriteListings(data || [])
+    } catch (error) {
+      console.error('Error fetching favorite listings:', error)
+    } finally {
+      setLoadingFavorites(false)
+    }
+  }
 
   async function fetchUserListings() {
     setLoading(true)
@@ -102,87 +135,73 @@ export default function DashboardPage() {
         {/* Dashboard Header */}
         <section className="bg-gunsmith-accent/20 py-12 px-4">
           <div className="container mx-auto">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="font-bebas text-5xl text-gunsmith-gold mb-2">
-                  MY DASHBOARD
-                </h1>
-                <p className="text-gunsmith-text-secondary">
-                  Welcome back, {user?.email}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Link href="/dashboard/messages" className="btn-secondary relative">
-                  Messages
-                  {unreadMessages > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-gunsmith-gold text-gunsmith-black text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                      {unreadMessages}
-                    </span>
-                  )}
-                </Link>
-                <Link href="/dashboard/profile" className="btn-secondary">
-                  Edit Profile
-                </Link>
-              </div>
-            </div>
+            <h1 className="font-bebas text-5xl text-gunsmith-gold mb-2">
+              MY BUSINESS
+            </h1>
+            <p className="text-gunsmith-text-secondary">
+              Manage your gunsmith business listing
+            </p>
           </div>
         </section>
 
-        {/* Featured Section */}
-        {listings.length > 0 && (
+
+        {/* Favorites Section */}
+        {favorites.length > 0 && (
           <section className="py-12 px-4 bg-gunsmith-accent/10">
             <div className="container mx-auto">
               <div className="mb-8">
-                <h2 className="font-bebas text-3xl text-gunsmith-gold mb-2 flex items-center gap-2">
-                  <Star className="h-6 w-6" />
-                  FEATURED LISTINGS
+                <h2 className="font-bebas text-3xl text-gunsmith-gold flex items-center gap-2">
+                  <Heart className="h-6 w-6" />
+                  MY FAVORITES
                 </h2>
                 <p className="text-gunsmith-text-secondary">
-                  Get premium placement in your state for increased visibility
+                  Gunsmiths you've saved for quick access
                 </p>
               </div>
-              <FeaturedSection listings={listings} />
+              
+              {loadingFavorites ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-8 w-8 text-gunsmith-gold animate-spin" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {favoriteListings.map((listing) => (
+                    <ListingCard key={listing.id} listing={listing} />
+                  ))}
+                </div>
+              )}
             </div>
           </section>
         )}
 
-        {/* Listings Section */}
+        {/* Business Profile Section */}
         <section className="py-12 px-4">
           <div className="container mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="font-bebas text-3xl text-gunsmith-gold">
-                MY LISTINGS ({listings.length})
-              </h2>
-              <Link href="/add-business" className="btn-primary">
-                <Plus className="h-5 w-5 mr-2" />
-                Add New Listing
-              </Link>
-            </div>
-
             {listings.length === 0 ? (
               <div className="card text-center py-20">
                 <Building2 className="h-16 w-16 text-gunsmith-gold/30 mx-auto mb-4" />
                 <h3 className="font-bebas text-2xl text-gunsmith-gold mb-2">
-                  NO LISTINGS YET
+                  NO BUSINESS LISTING YET
                 </h3>
                 <p className="text-gunsmith-text-secondary mb-6">
-                  Start by adding your first business listing
+                  Start by adding your business to GunsmithLocal
                 </p>
                 <Link href="/add-business" className="btn-primary inline-block">
-                  Add Your First Listing
+                  Add Your Business
                 </Link>
               </div>
             ) : (
-              <div className="grid gap-6">
+              <div className="max-w-4xl mx-auto">
                 {listings.map((listing) => (
-                  <div key={listing.id} className="card">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex-grow">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h3 className="font-bebas text-2xl text-gunsmith-gold">
-                            {listing.business_name}
-                          </h3>
-                          <span className={`px-2 py-1 text-xs rounded ${
+                  <div key={listing.id} className="space-y-8">
+                    {/* Business Info Card */}
+                    <div className="card">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="font-bebas text-3xl text-gunsmith-gold">
+                          {listing.business_name}
+                        </h2>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 text-sm rounded ${
                             listing.status === 'active' 
                               ? 'bg-green-500/20 text-green-400' 
                               : 'bg-yellow-500/20 text-yellow-400'
@@ -190,45 +209,119 @@ export default function DashboardPage() {
                             {listing.status}
                           </span>
                           {listing.is_verified && (
-                            <span className="px-2 py-1 text-xs rounded bg-gunsmith-gold/20 text-gunsmith-gold">
-                              Verified
+                            <span className="px-3 py-1 text-sm rounded bg-gunsmith-gold/20 text-gunsmith-gold">
+                              ✓ Verified
                             </span>
                           )}
                           {listing.is_featured && (
-                            <span className="px-2 py-1 text-xs rounded bg-gunsmith-gold text-gunsmith-black">
-                              Featured
+                            <span className="px-3 py-1 text-sm rounded bg-gunsmith-gold text-gunsmith-black font-medium">
+                              ★ Featured
                             </span>
                           )}
                         </div>
-                        <p className="text-sm text-gunsmith-text-secondary">
-                          {listing.city}, {listing.state_province} • Views: {listing.view_count || 0}
-                        </p>
                       </div>
-                      
-                      <div className="flex gap-2">
+
+                      <div className="grid md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="font-oswald text-gunsmith-gold mb-3">Business Details</h3>
+                          <div className="space-y-2 text-gunsmith-text">
+                            <p className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 text-gunsmith-gold" />
+                              {listing.street_address}, {listing.city}, {listing.state_province} {listing.postal_code}
+                            </p>
+                            {listing.phone && (
+                              <p className="flex items-center gap-2">
+                                <Phone className="h-4 w-4 text-gunsmith-gold" />
+                                {listing.phone}
+                              </p>
+                            )}
+                            {listing.email && (
+                              <p className="flex items-center gap-2">
+                                <Mail className="h-4 w-4 text-gunsmith-gold" />
+                                {listing.email}
+                              </p>
+                            )}
+                            {listing.website && (
+                              <p className="flex items-center gap-2">
+                                <Globe className="h-4 w-4 text-gunsmith-gold" />
+                                <a href={listing.website} target="_blank" rel="noopener noreferrer" className="hover:text-gunsmith-gold">
+                                  Visit Website
+                                </a>
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="font-oswald text-gunsmith-gold mb-3">Performance</h3>
+                          <div className="space-y-3">
+                            <div>
+                              <p className="text-gunsmith-text-secondary text-sm">Total Views</p>
+                              <p className="font-bebas text-2xl text-gunsmith-gold">{listing.view_count || 0}</p>
+                            </div>
+                            <div>
+                              <p className="text-gunsmith-text-secondary text-sm">Unread Messages</p>
+                              <p className="font-bebas text-2xl text-gunsmith-gold">{unreadMessages}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3 mt-6 pt-6 border-t border-gunsmith-border">
                         <Link 
                           href={`/listings/${listing.slug}`}
-                          className="btn-ghost text-sm flex items-center gap-1"
+                          className="btn-secondary flex items-center gap-2"
                         >
                           <Eye className="h-4 w-4" />
-                          View
+                          View Listing
                         </Link>
                         <Link 
                           href={`/dashboard/listings/${listing.id}/edit`}
-                          className="btn-ghost text-sm flex items-center gap-1"
+                          className="btn-secondary flex items-center gap-2"
                         >
                           <Edit className="h-4 w-4" />
-                          Edit
+                          Edit Details
                         </Link>
-                        <button
-                          onClick={() => deleteListing(listing.id)}
-                          className="btn-ghost text-sm flex items-center gap-1 text-gunsmith-error hover:text-gunsmith-error"
+                        <Link 
+                          href="/dashboard/profile"
+                          className="btn-secondary flex items-center gap-2"
                         >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </button>
+                          <User className="h-4 w-4" />
+                          Edit Profile
+                        </Link>
+                        <Link 
+                          href="/dashboard/messages"
+                          className="btn-secondary flex items-center gap-2 relative"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          Messages
+                          {unreadMessages > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-gunsmith-gold text-gunsmith-black text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                              {unreadMessages}
+                            </span>
+                          )}
+                        </Link>
                       </div>
                     </div>
+
+                    {/* Get Featured Card */}
+                    {!listing.is_featured && (
+                      <div className="card bg-gradient-to-br from-gunsmith-gold/10 to-transparent border-gunsmith-gold/30">
+                        <div className="text-center">
+                          <Star className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
+                          <h3 className="font-bebas text-2xl text-gunsmith-gold mb-2">
+                            BOOST YOUR VISIBILITY
+                          </h3>
+                          <p className="text-gunsmith-text mb-6 max-w-md mx-auto">
+                            Get featured in your state for premium placement and increased customer inquiries
+                          </p>
+                          <Link href="/featured" className="btn-primary inline-flex items-center gap-2">
+                            <Sparkles className="h-5 w-5" />
+                            Get Featured Now
+                          </Link>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

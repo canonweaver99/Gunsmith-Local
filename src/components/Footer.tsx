@@ -41,14 +41,20 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Services */}
+          {/* Legal */}
           <div>
-            <h3 className="font-bebas text-xl text-gunsmith-gold mb-4">SERVICES</h3>
-            <ul className="space-y-2 text-sm text-gunsmith-text-secondary">
-              <li>Repairs & Maintenance</li>
-              <li>Custom Work</li>
-              <li>Restoration</li>
-              <li>Cerakoting</li>
+            <h3 className="font-bebas text-xl text-gunsmith-gold mb-4">LEGAL</h3>
+            <ul className="space-y-2">
+              <li>
+                <Link href="/privacy-policy" className="text-gunsmith-text-secondary hover:text-gunsmith-gold transition-colors text-sm">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms-of-service" className="text-gunsmith-text-secondary hover:text-gunsmith-gold transition-colors text-sm">
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
           </div>
 

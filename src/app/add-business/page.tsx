@@ -96,24 +96,37 @@ export default function AddBusinessPage() {
 
   // Load Google Places API
   useEffect(() => {
+    if (!mounted) return
+
     const loadGoogleMapsScript = () => {
-      if (window.google) return
+      if (window.google && window.google.maps) {
+        initializeAutocomplete()
+        return
+      }
 
       const script = document.createElement('script')
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initAutocomplete`
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
       script.async = true
       script.defer = true
+      script.onload = initializeAutocomplete
       document.head.appendChild(script)
     }
 
-    window.initAutocomplete = () => {
-      const autocomplete = new window.google.maps.places.Autocomplete(
-        document.getElementById('main-address') as HTMLInputElement,
-        { 
-          types: ['address'],
-          componentRestrictions: { country: 'us' }
+    const initializeAutocomplete = () => {
+      const input = document.getElementById('main-address') as HTMLInputElement
+      if (!input) return
+
+      const autocomplete = new window.google.maps.places.Autocomplete(input, { 
+        types: ['address'],
+        componentRestrictions: { country: 'us' }
+      })
+
+      // Prevent form submission on Enter key in autocomplete
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault()
         }
-      )
+      })
 
       autocomplete.addListener('place_changed', () => {
         const place = autocomplete.getPlace()
@@ -151,7 +164,17 @@ export default function AddBusinessPage() {
     }
 
     loadGoogleMapsScript()
-  }, [])
+
+    // Cleanup function
+    return () => {
+      const input = document.getElementById('main-address') as HTMLInputElement
+      if (input) {
+        // Remove any event listeners
+        const newInput = input.cloneNode(true) as HTMLInputElement
+        input.parentNode?.replaceChild(newInput, input)
+      }
+    }
+  }, [mounted])
 
   function generateSlug(name: string) {
     return name

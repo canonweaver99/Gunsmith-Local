@@ -15,11 +15,13 @@ const config: Config = {
         'gunsmith-card': '#2a2a2a',
         'gunsmith-accent': '#3a3a3a',
         
-        // Gold variants
-        'gunsmith-gold': '#FFD700',
+        // Gold variants - Enhanced and more vibrant
+        'gunsmith-gold': '#FFE55C',
+        'gunsmith-gold-bright': '#FFED4E',
+        'gunsmith-gold-deep': '#E6CC00',
         'gunsmith-sandy': '#F4A460',
-        'gunsmith-goldenrod': '#DAA520',
-        'gunsmith-dark-gold': '#B8860B',
+        'gunsmith-goldenrod': '#E6B800',
+        'gunsmith-dark-gold': '#CC9900',
         'gunsmith-peru': '#CD853F',
         
         // Text colors
@@ -28,8 +30,8 @@ const config: Config = {
         'gunsmith-error': '#d4183d',
       },
       fontFamily: {
-        'bebas': ['Bebas Neue', 'sans-serif'],
-        'oswald': ['Oswald', 'sans-serif'],
+        'bebas': ['var(--font-bebas)', 'Bebas Neue', 'sans-serif'],
+        'oswald': ['var(--font-oswald)', 'Oswald', 'sans-serif'],
       },
       borderColor: {
         'gunsmith-border': 'rgba(255, 215, 0, 0.2)',

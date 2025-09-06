@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { Listing } from '@/lib/supabase'
 import { MapPin, Navigation, Loader2 } from 'lucide-react'
@@ -42,6 +43,7 @@ export default function MapView({
   className = '',
   height = 'h-96'
 }: MapViewProps) {
+  const router = useRouter()
   const [isClient, setIsClient] = useState(false)
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [customIcon, setCustomIcon] = useState<any>(null)
@@ -68,10 +70,9 @@ export default function MapView({
         // Import the fix
         import('@/lib/leaflet-icon-fix')
 
-        // Create custom icon
+        // Create custom icon using SVG
         const icon = new L.Icon({
-          iconUrl: '/leaflet/marker-icon.png',
-          iconRetinaUrl: '/leaflet/marker-icon-2x.png',
+          iconUrl: '/leaflet-svg/marker.svg',
           shadowUrl: '/leaflet/marker-shadow.png',
           iconSize: [25, 41],
           iconAnchor: [12, 41],
@@ -222,14 +223,14 @@ export default function MapView({
                   )}
                 </div>
                 
-                {onListingSelect && (
-                  <button
-                    onClick={() => onListingSelect(listing)}
-                    className="mt-3 w-full bg-gunsmith-gold text-gunsmith-black px-3 py-1 rounded text-sm font-medium hover:bg-gunsmith-goldenrod transition-colors"
-                  >
-                    View Details
-                  </button>
-                )}
+                <button
+                  onClick={() => {
+                    router.push(`/listings/${listing.slug}`)
+                  }}
+                  className="mt-3 w-full bg-gunsmith-gold text-gunsmith-black px-3 py-1 rounded text-sm font-medium hover:bg-gunsmith-goldenrod transition-colors"
+                >
+                  View Profile
+                </button>
               </div>
             </Popup>
           </Marker>

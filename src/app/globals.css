@@ -42,19 +42,47 @@
 
 @layer components {
   .btn-primary {
-    @apply bg-gunsmith-gold text-gunsmith-black font-oswald font-medium py-2 px-6 rounded hover:bg-gunsmith-goldenrod transition-colors duration-200;
+    @apply bg-gradient-to-b from-gunsmith-gold-bright to-gunsmith-gold text-gunsmith-black font-oswald font-medium py-2 px-6 rounded-lg 
+           shadow-lg hover:from-gunsmith-gold hover:to-gunsmith-gold-deep hover:shadow-xl 
+           transform hover:scale-105 transition-all duration-200 
+           border border-gunsmith-gold-deep/30;
+    box-shadow: 0 4px 15px rgba(255, 229, 92, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
   }
 
   .btn-secondary {
-    @apply border border-gunsmith-gold text-gunsmith-gold bg-transparent font-oswald font-medium py-2 px-6 rounded hover:bg-gunsmith-hover transition-colors duration-200;
+    @apply border-2 border-gunsmith-gold text-gunsmith-gold bg-gradient-to-b from-transparent to-gunsmith-gold/5 
+           font-oswald font-medium py-2 px-6 rounded-lg 
+           hover:from-gunsmith-gold/10 hover:to-gunsmith-gold/20 hover:border-gunsmith-gold-bright
+           shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200;
+    box-shadow: 0 2px 10px rgba(255, 229, 92, 0.2), inset 0 1px 0 rgba(255, 229, 92, 0.1);
   }
 
   .btn-ghost {
-    @apply text-gunsmith-gold font-oswald font-medium py-2 px-6 rounded hover:bg-gunsmith-hover transition-colors duration-200;
+    @apply text-gunsmith-gold font-oswald font-medium py-2 px-6 rounded-lg 
+           hover:bg-gradient-to-b hover:from-gunsmith-gold/10 hover:to-gunsmith-gold/20
+           transform hover:scale-105 transition-all duration-200;
   }
 
   .card {
     @apply bg-gunsmith-card border border-gunsmith-border rounded-lg p-6 hover:border-gunsmith-gold/40 transition-all duration-200;
+  }
+
+  /* Glossy wizard buttons */
+  .wizard-button {
+    @apply p-4 rounded-lg border-2 transition-all duration-200 transform hover:scale-105
+           bg-gradient-to-b from-gunsmith-card to-gunsmith-black/50
+           shadow-md hover:shadow-lg;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .wizard-button.selected {
+    @apply border-gunsmith-gold bg-gradient-to-b from-gunsmith-gold/20 to-gunsmith-gold/10
+           shadow-lg;
+    box-shadow: 0 4px 12px rgba(255, 229, 92, 0.3), inset 0 1px 0 rgba(255, 229, 92, 0.2);
+  }
+
+  .wizard-button:not(.selected) {
+    @apply border-gunsmith-border hover:border-gunsmith-gold/50;
   }
 
   .input {

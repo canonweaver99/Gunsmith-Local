@@ -67,11 +67,20 @@ export default function ListingDetailPage({ params }: PageProps) {
         is_verified: data.is_verified || false,
       })
 
-      // Increment view count
-      await supabase
-        .from('listings')
-        .update({ view_count: (data.view_count || 0) + 1 })
-        .eq('id', data.id)
+      // Track view via API for better accuracy
+      try {
+        await fetch(`/api/listings/${data.id}/track-view`, {
+          method: 'POST',
+          credentials: 'include'
+        })
+      } catch (error) {
+        console.error('Error tracking view:', error)
+        // Fallback to direct increment
+        await supabase
+          .from('listings')
+          .update({ view_count: (data.view_count || 0) + 1 })
+          .eq('id', data.id)
+      }
 
     } catch (error) {
       console.error('Error fetching listing:', error)

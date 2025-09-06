@@ -10,7 +10,7 @@ import NotificationSettings from '@/components/NotificationSettings'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { updatePassword } from '@/lib/auth'
-import { Loader2, Save, User as UserIcon, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react'
+import { Loader2, Save, User as UserIcon, Mail, Lock, AlertCircle, CheckCircle, MapPin, Plus, X } from 'lucide-react'
 
 interface UserProfile {
   id: string
@@ -43,6 +43,11 @@ export default function ProfilePage() {
     newPassword: '',
     confirmPassword: '',
   })
+
+  const [hasListing, setHasListing] = useState(false)
+  const [listing, setListing] = useState<any>(null)
+  const [additionalLocations, setAdditionalLocations] = useState<any[]>([])
+  const [savingLocations, setSavingLocations] = useState(false)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -100,6 +105,19 @@ export default function ProfilePage() {
           bio: '',
           website: '',
         })
+      }
+
+      // Fetch user's listing
+      const { data: userListing, error: listingError } = await supabase
+        .from('listings')
+        .select('*')
+        .eq('owner_id', user!.id)
+        .single()
+      
+      if (userListing && !listingError) {
+        setHasListing(true)
+        setListing(userListing)
+        setAdditionalLocations(userListing.additional_locations || [])
       }
     } catch (error) {
       console.error('Error fetching profile:', error)
@@ -186,6 +204,47 @@ export default function ProfilePage() {
       setError(err.message || 'Failed to update password')
     } finally {
       setSaving(false)
+    }
+  }
+
+  // Location management functions
+  const addLocation = () => {
+    setAdditionalLocations(prev => [...prev, {
+      street_address: '',
+      city: '',
+      state_province: '',
+      postal_code: ''
+    }])
+  }
+
+  const removeLocation = (index: number) => {
+    setAdditionalLocations(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const updateLocation = (index: number, field: string, value: string) => {
+    setAdditionalLocations(prev => prev.map((loc, i) => 
+      i === index ? { ...loc, [field]: value } : loc
+    ))
+  }
+
+  async function handleLocationsUpdate(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingLocations(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ additional_locations: additionalLocations })
+        .eq('id', listing.id)
+
+      if (error) throw error
+      setSuccess('Locations updated successfully!')
+    } catch (err: any) {
+      setError(err.message || 'Failed to update locations')
+    } finally {
+      setSavingLocations(false)
     }
   }
 
@@ -329,6 +388,111 @@ export default function ProfilePage() {
 
             {/* Notification Settings */}
             <NotificationSettings />
+
+            {/* Additional Business Locations */}
+            {hasListing && (
+              <div className="card mb-8">
+                <h2 className="font-bebas text-2xl text-gunsmith-gold mb-6">ADDITIONAL BUSINESS LOCATIONS</h2>
+                
+                <form onSubmit={handleLocationsUpdate} className="space-y-6">
+                  {additionalLocations.map((location, index) => (
+                    <div key={index} className="p-4 bg-gunsmith-accent/20 rounded space-y-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <h3 className="font-oswald text-gunsmith-gold">Location {index + 1}</h3>
+                        <button
+                          type="button"
+                          onClick={() => removeLocation(index)}
+                          className="text-gunsmith-error hover:text-gunsmith-error/80 transition-colors"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                          <label className="label">Street Address</label>
+                          <input
+                            type="text"
+                            value={location.street_address}
+                            onChange={(e) => updateLocation(index, 'street_address', e.target.value)}
+                            className="input w-full"
+                            placeholder="123 Main St"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="label">City</label>
+                          <input
+                            type="text"
+                            value={location.city}
+                            onChange={(e) => updateLocation(index, 'city', e.target.value)}
+                            className="input w-full"
+                            placeholder="Springfield"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="label">State</label>
+                          <select
+                            value={location.state_province}
+                            onChange={(e) => updateLocation(index, 'state_province', e.target.value)}
+                            className="input w-full"
+                          >
+                            <option value="">Select State</option>
+                            {['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+                              'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+                              'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+                              'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+                              'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'
+                            ].map(state => (
+                              <option key={state} value={state}>{state}</option>
+                            ))}
+                          </select>
+                        </div>
+                        
+                        <div>
+                          <label className="label">ZIP Code</label>
+                          <input
+                            type="text"
+                            value={location.postal_code}
+                            onChange={(e) => updateLocation(index, 'postal_code', e.target.value)}
+                            className="input w-full"
+                            placeholder="12345"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <button
+                    type="button"
+                    onClick={addLocation}
+                    className="flex items-center gap-2 text-gunsmith-gold hover:text-gunsmith-goldenrod transition-colors"
+                  >
+                    <Plus className="h-5 w-5" />
+                    Add Another Location
+                  </button>
+                  
+                  <button
+                    type="submit"
+                    disabled={savingLocations}
+                    className="btn-primary w-full flex items-center justify-center gap-2"
+                  >
+                    {savingLocations ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-5 w-5" />
+                        Save Locations
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            )}
 
             {/* Change Password */}
             <div className="card">

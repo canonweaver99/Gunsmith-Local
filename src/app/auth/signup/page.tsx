@@ -21,6 +21,8 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [checkingVerification, setCheckingVerification] = useState(false)
+  const [verificationEmail, setVerificationEmail] = useState('')
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -34,6 +36,40 @@ export default function SignupPage() {
       router.push('/dashboard')
     }
   }, [user, router])
+
+  // Check email verification status
+  useEffect(() => {
+    if (!success || !verificationEmail) return
+
+    const checkVerification = async () => {
+      setCheckingVerification(true)
+      try {
+        // Try to sign in with the credentials to check if email is verified
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: verificationEmail,
+          password: formData.password
+        })
+
+        if (data?.user?.email_confirmed_at) {
+          // Email is verified, redirect to login
+          await supabase.auth.signOut() // Sign out since they should login properly
+          router.push('/auth/login')
+        }
+      } catch (error) {
+        // Ignore errors, just keep checking
+      } finally {
+        setCheckingVerification(false)
+      }
+    }
+
+    // Check immediately
+    checkVerification()
+
+    // Then check every 3 seconds
+    const interval = setInterval(checkVerification, 3000)
+
+    return () => clearInterval(interval)
+  }, [success, verificationEmail, formData.password, router])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -67,15 +103,11 @@ export default function SignupPage() {
         // Don't fail signup if email fails
       }
       
-                    setSuccess(true)
-              
-              // Track successful registration
-              analytics.trackUserRegistration('email')
-              
-              // Redirect after 2 seconds
-              setTimeout(() => {
-                router.push('/auth/login')
-              }, 2000)
+      setSuccess(true)
+      setVerificationEmail(formData.email)
+      
+      // Track successful registration
+      analytics.trackUserRegistration('email')
     } catch (err: any) {
       setError(err.message || 'Failed to create account')
     } finally {
@@ -96,16 +128,38 @@ export default function SignupPage() {
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow flex items-center justify-center px-4">
-          <div className="text-center">
+          <div className="text-center max-w-md">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gunsmith-gold rounded-full mb-4">
-              <CheckCircle className="h-8 w-8 text-gunsmith-black" />
+              <Mail className="h-8 w-8 text-gunsmith-black" />
             </div>
             <h1 className="font-bebas text-4xl text-gunsmith-gold mb-2">
-              ACCOUNT CREATED!
+              VERIFY YOUR EMAIL
             </h1>
-            <p className="text-gunsmith-text-secondary">
-              Check your email to verify your account, then sign in.
+            <p className="text-gunsmith-text-secondary mb-6">
+              We've sent a verification email to <span className="text-gunsmith-gold font-medium">{verificationEmail}</span>
             </p>
+            
+            <div className="bg-gunsmith-card rounded-lg p-6 mb-6">
+              <p className="text-gunsmith-text mb-4">
+                Please check your inbox and click the verification link to activate your account.
+              </p>
+              
+              {checkingVerification ? (
+                <div className="flex items-center justify-center gap-2 text-gunsmith-gold">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  <span>Checking verification status...</span>
+                </div>
+              ) : (
+                <p className="text-sm text-gunsmith-text-secondary">
+                  This page will automatically redirect once your email is verified.
+                </p>
+              )}
+            </div>
+            
+            <div className="text-sm text-gunsmith-text-secondary">
+              <p>Didn't receive the email?</p>
+              <p>Check your spam folder or contact support.</p>
+            </div>
           </div>
         </main>
         <Footer />

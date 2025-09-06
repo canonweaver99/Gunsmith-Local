@@ -22,16 +22,50 @@ function ListingsContent() {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '')
   const [searchInput, setSearchInput] = useState(searchParams.get('search') || '')
   const [selectedCategory, setSelectedCategory] = useState('')
-  const [selectedState, setSelectedState] = useState('')
+  const [selectedState, setSelectedState] = useState(searchParams.get('state') || '')
   const [filteredListings, setFilteredListings] = useState<Listing[]>([])
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list')
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [advancedFilters, setAdvancedFilters] = useState<any>(null)
   const [listingsWithRatings, setListingsWithRatings] = useState<any[]>([])
   const [sortBy, setSortBy] = useState<'featured' | 'name' | 'rating' | 'newest'>('featured')
+  const [showWizardMessage, setShowWizardMessage] = useState(false)
 
   useEffect(() => {
     fetchListings()
+    
+    // Process wizard parameters
+    if (searchParams.get('fromWizard') === 'true') {
+      setShowWizardMessage(true)
+      
+      // Set location search
+      const location = searchParams.get('location')
+      if (location) {
+        setSearchTerm(location)
+        setSearchInput(location)
+      }
+      
+      // Set gun type filter
+      const gunType = searchParams.get('gunType')
+      
+      // Set services filter
+      const services = searchParams.get('services')
+      if (services) {
+        const servicesList = services.split(',')
+        setAdvancedFilters({
+          categories: [],
+          states: [],
+          services: servicesList,
+          minRating: null,
+          isVerified: false,
+          isOpenNow: false
+        })
+      }
+      
+      // Set delivery method filter
+      const delivery = searchParams.get('delivery')
+      // Note: We'll handle delivery method in filtering logic
+    }
   }, [])
 
   useEffect(() => {
@@ -261,8 +295,10 @@ function ListingsContent() {
               FIND A GUNSMITH
             </h1>
             <p className="text-center text-gunsmith-text-secondary max-w-2xl mx-auto">
-              Browse our directory of professional gunsmiths across the country. 
-              Find the right expert for your firearm needs.
+              {showWizardMessage 
+                ? "Here are the gunsmiths that match your requirements. You can adjust the filters below to refine your search."
+                : "Browse our directory of professional gunsmiths across the country. Find the right expert for your firearm needs."
+              }
             </p>
           </div>
         </section>

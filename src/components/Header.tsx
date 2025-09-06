@@ -1,13 +1,38 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, X, Crosshair, User, LogOut, Star, Map, Shield } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [hasListing, setHasListing] = useState(false)
   const { user, loading, signOut, isAdmin } = useAuth()
+
+  useEffect(() => {
+    async function checkUserListing() {
+      if (!user) {
+        setHasListing(false)
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('listings')
+          .select('id')
+          .eq('owner_id', user.id)
+          .single()
+        
+        setHasListing(!!data && !error)
+      } catch (error) {
+        setHasListing(false)
+      }
+    }
+
+    checkUserListing()
+  }, [user])
 
   return (
     <header className="bg-gunsmith-header border-b border-gunsmith-border">
@@ -37,7 +62,7 @@ export default function Header() {
               <Star className="h-4 w-4" />
               Featured
             </Link>
-            {user && (
+            {user && !hasListing && (
               <Link href="/add-business" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
                 Add Business
               </Link>
@@ -125,7 +150,7 @@ export default function Header() {
               <Star className="h-4 w-4" />
               Featured
             </Link>
-            {user && (
+            {user && !hasListing && (
               <Link
                 href="/add-business"
                 className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors"

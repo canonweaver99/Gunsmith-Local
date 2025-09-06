@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
+import GunsmithWizard from '@/components/GunsmithWizard'
 import { MapPin, Shield, Wrench, Star, Search } from 'lucide-react'
 import { useState } from 'react'
 
@@ -23,34 +24,28 @@ export default function HomePageClient() {
       <Header />
       
       <main className="flex-grow">
-        {/* Hero Section */}
+        {/* Hero Section with Wizard */}
         <section className="relative bg-gunsmith-black py-20 px-4">
-          <div className="container mx-auto text-center">
-            <h1 className="font-bebas text-5xl md:text-7xl text-gunsmith-gold mb-4 tracking-wider">
-              FIND TRUSTED GUNSMITHS NEAR YOU
-            </h1>
-            <p className="font-oswald text-xl text-gunsmith-text-secondary mb-8 max-w-2xl mx-auto">
-              Connect with professional gunsmiths for repairs, customization, and expert firearms services
-            </p>
+          <div className="container mx-auto">
+            <div className="text-center mb-12">
+              <h1 className="font-bebas text-5xl md:text-7xl text-gunsmith-gold mb-4 tracking-wider">
+                FIND THE PERFECT GUNSMITH
+              </h1>
+              <p className="font-oswald text-xl text-gunsmith-text-secondary max-w-2xl mx-auto">
+                Answer a few quick questions and we'll match you with the best gunsmiths for your needs
+              </p>
+            </div>
             
-            {/* Search Bar */}
-            <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Search by location, service, or gunsmith name..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-6 py-4 pr-12 bg-gunsmith-card border border-gunsmith-border rounded-lg text-gunsmith-text placeholder-gunsmith-text-secondary focus:outline-none focus:border-gunsmith-gold transition-colors"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gunsmith-gold hover:text-gunsmith-goldenrod transition-colors"
-                >
-                  <Search className="h-6 w-6" />
-                </button>
-              </div>
-            </form>
+            {/* Gunsmith Wizard */}
+            <GunsmithWizard />
+            
+            {/* Or Browse All Link */}
+            <div className="text-center mt-8">
+              <p className="text-gunsmith-text-secondary mb-2">Not sure what you need?</p>
+              <Link href="/listings" className="text-gunsmith-gold hover:text-gunsmith-goldenrod font-medium">
+                Browse all gunsmiths →
+              </Link>
+            </div>
           </div>
         </section>
 
