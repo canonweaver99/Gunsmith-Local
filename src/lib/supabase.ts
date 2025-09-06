@@ -10,6 +10,7 @@ export interface Listing {
   email?: string
   phone?: string
   website?: string
+  ffl_license_number?: string
   street_address?: string
   street_address_2?: string
   city?: string
@@ -33,6 +34,9 @@ export interface Listing {
   image_gallery?: string[]
   status?: string
   is_verified?: boolean
+  verification_status?: 'pending' | 'verified' | 'rejected'
+  verified_at?: string
+  verified_by?: string
   is_featured?: boolean
   is_featured_in_state?: string
   featured_until?: string

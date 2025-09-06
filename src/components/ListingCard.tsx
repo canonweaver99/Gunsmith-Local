@@ -4,6 +4,7 @@ import { MapPin, Phone, Globe, CheckCircle, Star, Building2, Clock } from 'lucid
 import { Listing } from '@/lib/supabase'
 import { supabase } from '@/lib/supabase'
 import FavoriteButton from './FavoriteButton'
+import VerificationBadge from './VerificationBadge'
 
 interface ListingCardProps {
   listing: Listing
@@ -94,12 +95,17 @@ export default function ListingCard({ listing }: ListingCardProps) {
         <div className="space-y-3">
           {/* Business Name & Verification */}
           <div>
-            <h3 className="font-bebas text-2xl text-gunsmith-gold flex items-center gap-2">
-              {listing.business_name}
-              {listing.is_verified && (
-                <CheckCircle className="h-5 w-5 text-gunsmith-gold" />
-              )}
-            </h3>
+            <div className="flex items-center justify-between gap-2 mb-1">
+              <h3 className="font-bebas text-2xl text-gunsmith-gold">
+                {listing.business_name}
+              </h3>
+              <VerificationBadge 
+                isVerified={listing.is_verified || false}
+                verificationStatus={listing.verification_status || 'pending'}
+                showLabel={false}
+                size="sm"
+              />
+            </div>
             {listing.category && (
               <p className="text-sm text-gunsmith-text-secondary">{listing.category}</p>
             )}

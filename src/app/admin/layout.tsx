@@ -55,6 +55,11 @@ export default function AdminLayout({
       icon: Building2,
     },
     {
+      href: '/admin/verification',
+      label: 'FFL Verification',
+      icon: Shield,
+    },
+    {
       href: '/admin/users',
       label: 'Manage Users',
       icon: Users,

@@ -8,6 +8,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import ImageUpload from '@/components/ImageUpload'
 import BusinessHoursEditor from '@/components/BusinessHoursEditor'
+import VerificationPopup from '@/components/VerificationPopup'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAnalytics } from '@/hooks/useAnalytics'
@@ -29,6 +30,7 @@ export default function AddBusinessPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+  const [showVerificationPopup, setShowVerificationPopup] = useState(false)
   const [checkingVerification, setCheckingVerification] = useState(true)
   const [emailVerified, setEmailVerified] = useState(false)
   const [selectedTags, setSelectedTags] = useState<string[]>([])
@@ -42,6 +44,7 @@ export default function AddBusinessPage() {
     email: '',
     phone: '',
     website: '',
+    ffl_license_number: '',
     street_address: '',
     street_address_2: '',
     city: '',
@@ -286,19 +289,24 @@ export default function AddBusinessPage() {
 
       if (error) throw error
 
-                    setSuccess(true)
-              
-              // Track business addition
-              analytics.trackBusinessAdd(
-                formData.business_name,
-                formData.category || 'Unknown',
-                `${formData.city}, ${formData.state_province}`
-              )
-              
-              // Redirect after 2 seconds
-              setTimeout(() => {
-                router.push('/listings')
-              }, 2000)
+      setSuccess(true)
+      
+      // Track business addition
+      analytics.trackBusinessAdd(
+        formData.business_name,
+        formData.category || 'Unknown',
+        `${formData.city}, ${formData.state_province}`
+      )
+      
+      // Show verification popup if FFL license was provided
+      if (formData.ffl_license_number.trim()) {
+        setShowVerificationPopup(true)
+      } else {
+        // Redirect after 2 seconds if no FFL verification needed
+        setTimeout(() => {
+          router.push('/listings')
+        }, 2000)
+      }
 
     } catch (err: any) {
       console.error('Error submitting listing:', err)
@@ -528,6 +536,21 @@ export default function AddBusinessPage() {
                       className="input w-full text-lg"
                       placeholder="Smith's Gunsmithing"
                     />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="label">FFL License Number</label>
+                    <input
+                      type="text"
+                      name="ffl_license_number"
+                      value={formData.ffl_license_number}
+                      onChange={handleInputChange}
+                      className="input w-full text-lg"
+                      placeholder="1-12-345-67-8A-12345"
+                      maxLength={20}
+                    />
+                    <p className="text-sm text-gunsmith-text-secondary mt-1">
+                      Enter your Federal Firearms License number for verification. This helps customers trust your business.
+                    </p>
                   </div>
                   <div>
                     <label className="label">Phone Number</label>
@@ -959,6 +982,16 @@ export default function AddBusinessPage() {
       </main>
 
       <Footer />
+      
+      {/* FFL Verification Popup */}
+      <VerificationPopup
+        isOpen={showVerificationPopup}
+        onClose={() => {
+          setShowVerificationPopup(false)
+          router.push('/listings')
+        }}
+        businessName={formData.business_name}
+      />
     </div>
   )
 }
