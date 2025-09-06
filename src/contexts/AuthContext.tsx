@@ -30,23 +30,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        // Only allow specific email to be admin
-        if (user.email === 'canonweaver@loopline.design') {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', user.id)
-            .single()
-          
-          if (error) {
-            console.error('Error checking admin status:', error)
-            setIsAdmin(false)
-          } else {
-            setIsAdmin(profile?.is_admin ?? false)
-          }
-        } else {
-          // All other users are not admin, regardless of database value
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single()
+        
+        if (error) {
+          console.error('Error checking admin status:', error)
           setIsAdmin(false)
+        } else {
+          setIsAdmin(profile?.is_admin ?? false)
         }
       } catch (err) {
         console.error('Unexpected error checking admin status:', err)
