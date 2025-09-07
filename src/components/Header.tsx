@@ -77,11 +77,16 @@ export default function Header() {
               <Star className="h-4 w-4" />
               Featured
             </Link>
-            {user && (!hasListing || isAdmin) && (
-              <Link href="/add-business" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
-                Add Business
-              </Link>
-            )}
+                {user && (!hasListing || isAdmin) && (
+                  <>
+                    <Link href="/add-business" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
+                      Add Business
+                    </Link>
+                    <Link href="/claim-business" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
+                      Claim Business
+                    </Link>
+                  </>
+                )}
             <Link href="/about" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
               About
             </Link>
@@ -162,7 +167,7 @@ export default function Header() {
                             </Link>
                             <Link href="/settings/billing" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
                               <CreditCard className="inline-block h-4 w-4 mr-2" />
-                              Billing
+                              Billing & Featured
                             </Link>
                           </>
                         )}
@@ -249,13 +254,22 @@ export default function Header() {
               Featured
             </Link>
             {user && (!hasListing || isAdmin) && (
-              <Link
-                href="/add-business"
-                className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Add Business
-              </Link>
+              <>
+                <Link
+                  href="/add-business"
+                  className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Add Business
+                </Link>
+                <Link
+                  href="/claim-business"
+                  className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Claim Business
+                </Link>
+              </>
             )}
             <Link
               href="/about"
