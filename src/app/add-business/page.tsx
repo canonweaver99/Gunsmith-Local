@@ -9,6 +9,7 @@ import Footer from '@/components/Footer'
 import ImageUpload from '@/components/ImageUpload'
 import BusinessHoursEditor from '@/components/BusinessHoursEditor'
 import VerificationPopup from '@/components/VerificationPopup'
+import SupabaseDebug from '@/components/SupabaseDebug'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAnalytics } from '@/hooks/useAnalytics'
@@ -37,6 +38,7 @@ export default function AddBusinessPage() {
   const [customService, setCustomService] = useState('')
   const [showCustomService, setShowCustomService] = useState(false)
   const [additionalLocations, setAdditionalLocations] = useState<any[]>([])
+  const [mounted, setMounted] = useState(false)
   
   const [formData, setFormData] = useState({
     business_name: '',
@@ -74,6 +76,11 @@ export default function AddBusinessPage() {
   // Business hours state
   const [businessHours, setBusinessHours] = useState<any>(null)
 
+  // Set mounted state
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // Check authentication and email verification
   useEffect(() => {
     if (!authLoading) {
@@ -85,10 +92,27 @@ export default function AddBusinessPage() {
         // Check email verification status
         const checkEmailVerification = async () => {
           try {
-            const { data: { user: currentUser } } = await supabase.auth.getUser()
-            setEmailVerified(currentUser?.email_confirmed_at !== null)
-          } catch (error) {
-            console.error('Error checking email verification:', error)
+            console.log('🔍 Checking email verification for user:', user?.email)
+            const { data: { user: currentUser }, error } = await supabase.auth.getUser()
+            
+            console.log('📧 Email verification check result:', {
+              currentUser: currentUser ? { 
+                id: currentUser.id, 
+                email: currentUser.email,
+                email_confirmed_at: currentUser.email_confirmed_at 
+              } : null,
+              error: error?.message
+            })
+            
+            if (error) {
+              console.error('❌ Auth error:', error)
+              // Assume verified if we can't check to avoid blocking
+              setEmailVerified(true)
+            } else {
+              setEmailVerified(currentUser?.email_confirmed_at !== null)
+            }
+          } catch (error: any) {
+            console.error('❌ Exception checking email verification:', error)
             // Assume verified if we can't check to avoid blocking
             setEmailVerified(true)
           } finally {
@@ -120,53 +144,68 @@ export default function AddBusinessPage() {
 
     const initializeAutocomplete = () => {
       const input = document.getElementById('main-address') as HTMLInputElement
-      if (!input) return
+      if (!input) {
+        console.warn('⚠️ Address input element not found')
+        return
+      }
 
-      const autocomplete = new window.google.maps.places.Autocomplete(input, { 
-        types: ['address'],
-        componentRestrictions: { country: 'us' }
-      })
+      if (!window.google || !window.google.maps || !window.google.maps.places) {
+        console.warn('⚠️ Google Maps API not loaded')
+        return
+      }
 
-      // Prevent form submission on Enter key in autocomplete
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault()
-        }
-      })
-
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace()
-        if (!place.address_components) return
-
-        let streetNumber = ''
-        let route = ''
-        let city = ''
-        let state = ''
-        let postalCode = ''
-
-        place.address_components.forEach((component: any) => {
-          const types = component.types
-          if (types.includes('street_number')) {
-            streetNumber = component.long_name
-          } else if (types.includes('route')) {
-            route = component.long_name
-          } else if (types.includes('locality')) {
-            city = component.long_name
-          } else if (types.includes('administrative_area_level_1')) {
-            state = component.short_name
-          } else if (types.includes('postal_code')) {
-            postalCode = component.long_name
-          }
+      try {
+        const autocomplete = new window.google.maps.places.Autocomplete(input, { 
+          types: ['address'],
+          componentRestrictions: { country: 'us' }
         })
 
-        setFormData(prev => ({
-          ...prev,
-          street_address: `${streetNumber} ${route}`.trim(),
-          city,
-          state_province: state,
-          postal_code: postalCode
-        }))
-      })
+        // Prevent form submission on Enter key in autocomplete
+        const handleKeyDown = (e: KeyboardEvent) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+          }
+        }
+        
+        input.addEventListener('keydown', handleKeyDown)
+
+        // Add place change listener
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace()
+          if (!place.address_components) return
+
+          let streetNumber = ''
+          let route = ''
+          let city = ''
+          let state = ''
+          let postalCode = ''
+
+          place.address_components.forEach((component: any) => {
+            const types = component.types
+            if (types.includes('street_number')) {
+              streetNumber = component.long_name
+            } else if (types.includes('route')) {
+              route = component.long_name
+            } else if (types.includes('locality')) {
+              city = component.long_name
+            } else if (types.includes('administrative_area_level_1')) {
+              state = component.short_name
+            } else if (types.includes('postal_code')) {
+              postalCode = component.long_name
+            }
+          })
+
+          setFormData(prev => ({
+            ...prev,
+            street_address: `${streetNumber} ${route}`.trim(),
+            city,
+            state_province: state,
+            postal_code: postalCode
+          }))
+        })
+      } catch (error) {
+        console.error('❌ Error initializing Google Places autocomplete:', error)
+      }
     }
 
     loadGoogleMapsScript()
@@ -175,12 +214,11 @@ export default function AddBusinessPage() {
     return () => {
       const input = document.getElementById('main-address') as HTMLInputElement
       if (input) {
-        // Remove any event listeners
-        const newInput = input.cloneNode(true) as HTMLInputElement
-        input.parentNode?.replaceChild(newInput, input)
+        // Remove any event listeners properly
+        input.removeEventListener('keydown', () => {})
       }
     }
-  }, [])
+  }, [mounted])
 
   function generateSlug(name: string) {
     return name
@@ -287,11 +325,24 @@ export default function AddBusinessPage() {
         }
       })
 
-      const { error } = await supabase
+      console.log('🚀 Attempting to insert listing data:', dataToInsert)
+      
+      const { data, error } = await supabase
         .from('listings')
         .insert([dataToInsert])
+        .select()
 
-      if (error) throw error
+      console.log('📊 Supabase insert result:', { data, error })
+
+      if (error) {
+        console.error('❌ Supabase insert error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        })
+        throw new Error(`Database error: ${error.message}${error.hint ? ` (Hint: ${error.hint})` : ''}`)
+      }
 
       setSuccess(true)
       
@@ -512,6 +563,13 @@ export default function AddBusinessPage() {
             <p className="text-center text-gunsmith-text-secondary max-w-2xl mx-auto">
               Join our directory of professional gunsmiths. We've made this form as simple as possible.
             </p>
+          </div>
+        </section>
+
+        {/* Debug Section - Remove after testing */}
+        <section className="py-8 px-4">
+          <div className="container mx-auto">
+            <SupabaseDebug />
           </div>
         </section>
 

@@ -19,10 +19,17 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
     headers: {
       'x-application-name': 'gunsmithlocal',
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
     },
   },
   db: {
     schema: 'public',
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
+    },
   },
 })
 
