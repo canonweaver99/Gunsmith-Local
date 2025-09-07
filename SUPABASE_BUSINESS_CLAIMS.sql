@@ -80,14 +80,14 @@ ORDER BY bc.submitted_at DESC;
 GRANT SELECT ON public.admin_business_claims TO authenticated;
 
 -- Add constraint to prevent multiple pending claims for same listing
-ALTER TABLE public.business_claims 
-ADD CONSTRAINT unique_pending_claim_per_listing 
-UNIQUE (listing_id) WHERE (status = 'pending');
+CREATE UNIQUE INDEX idx_unique_pending_claim_per_listing
+ON public.business_claims (listing_id)
+WHERE (status = 'pending');
 
 -- Add constraint to prevent users from claiming multiple times
-ALTER TABLE public.business_claims 
-ADD CONSTRAINT unique_pending_claim_per_user_listing 
-UNIQUE (listing_id, claimer_id) WHERE (status = 'pending');
+CREATE UNIQUE INDEX idx_unique_pending_claim_per_user_listing
+ON public.business_claims (listing_id, claimer_id)
+WHERE (status = 'pending');
 
 -- Function to approve business claim
 CREATE OR REPLACE FUNCTION public.approve_business_claim(
