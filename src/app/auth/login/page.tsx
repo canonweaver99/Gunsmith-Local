@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { Loader2, Mail, Lock, AlertCircle } from 'lucide-react'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { supabase } from '@/lib/supabase'
 
 function LoginContent() {
   const router = useRouter()
@@ -27,7 +27,6 @@ function LoginContent() {
     password: '',
   })
   const [rememberMe, setRememberMe] = useState(false)
-  const supabase = createClientComponentClient()
   
   const redirect = searchParams.get('redirect') || '/dashboard'
 

@@ -12,7 +12,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import { notificationService } from '@/lib/notifications'
 import { Loader2, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { supabase } from '@/lib/supabase'
 
 export default function SignupPage() {
@@ -31,7 +30,6 @@ export default function SignupPage() {
     confirmPassword: '',
     fullName: '',
   })
-  const supabaseClient = createClientComponentClient()
 
   useEffect(() => {
     setMounted(true)
@@ -120,7 +118,7 @@ export default function SignupPage() {
 
   async function signInWithGoogle() {
     try {
-      const { data, error } = await supabaseClient.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`
