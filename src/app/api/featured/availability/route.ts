@@ -1,41 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { NextResponse } from 'next/server'
+import { createClient } from '@supabase/supabase-js'
 
-export const dynamic = 'force-dynamic'
-
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const searchParams = request.nextUrl.searchParams
-    const stateCode = searchParams.get('state')
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
 
-    if (!stateCode) {
-      return NextResponse.json(
-        { error: 'State code is required' },
-        { status: 400 }
-      )
+    // Count current active featured listings
+    const { data: featuredListings, error } = await supabase
+      .from('listings')
+      .select('id')
+      .eq('is_featured', true)
+      .gt('featured_until', new Date().toISOString())
+
+    if (error) {
+      console.error('Error checking featured listings:', error)
+      return NextResponse.json({ available: 0, total: 3 })
     }
 
-    // Count active featured listings in the state
-    const { count, error } = await supabase
-      .from('featured_listings')
-      .select('*', { count: 'exact', head: true })
-      .eq('state_code', stateCode)
-      .eq('status', 'active')
-      .gte('end_date', new Date().toISOString())
-
-    if (error) throw error
-
-    const availableSlots = 3 - (count || 0)
+    const currentFeatured = featuredListings?.length || 0
+    const maxFeatured = 3
+    const available = Math.max(0, maxFeatured - currentFeatured)
 
     return NextResponse.json({
-      stateCode,
-      totalSlots: 3,
-      usedSlots: count || 0,
-      availableSlots,
-      available: availableSlots > 0
+      available,
+      total: maxFeatured,
+      current: currentFeatured
     })
   } catch (error) {
-    console.error('Error checking availability:', error)
+    console.error('Error in availability API:', error)
     return NextResponse.json(
       { error: 'Failed to check availability' },
       { status: 500 }

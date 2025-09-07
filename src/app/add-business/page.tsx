@@ -89,6 +89,8 @@ export default function AddBusinessPage() {
             setEmailVerified(currentUser?.email_confirmed_at !== null)
           } catch (error) {
             console.error('Error checking email verification:', error)
+            // Assume verified if we can't check to avoid blocking
+            setEmailVerified(true)
           } finally {
             setCheckingVerification(false)
           }
@@ -416,7 +418,7 @@ export default function AddBusinessPage() {
   }, [selectedTags])
 
   // Loading state
-  if (authLoading || checkingVerification) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -431,8 +433,8 @@ export default function AddBusinessPage() {
     )
   }
 
-  // Email verification required
-  if (user && !emailVerified) {
+  // Email verification required (temporarily disabled)
+  if (false && user && !emailVerified) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />

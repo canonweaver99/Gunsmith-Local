@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Star, Loader2, CreditCard } from 'lucide-react'
 
@@ -15,28 +15,36 @@ interface FeaturedCheckoutProps {
 export default function FeaturedCheckout({ listingId, businessName, onClose }: FeaturedCheckoutProps) {
   const [loading, setLoading] = useState(false)
   const [selectedDuration, setSelectedDuration] = useState<string>('30')
+  const [availableSlots, setAvailableSlots] = useState<number>(3)
+  const [loadingSlots, setLoadingSlots] = useState(true)
 
   const pricingOptions = [
     {
-      duration: '7',
-      name: '7 Days',
-      price: '$29.99',
-      description: 'Perfect for short-term promotion'
-    },
-    {
       duration: '30',
-      name: '30 Days',
-      price: '$99.99',
-      description: 'Most popular option',
+      name: 'Monthly Featured',
+      price: '$50.00',
+      description: 'Premium placement for 30 days',
       popular: true
-    },
-    {
-      duration: '90',
-      name: '90 Days',
-      price: '$249.99',
-      description: 'Best value for long-term visibility'
     }
   ]
+
+  // Check available featured slots
+  useEffect(() => {
+    const checkAvailableSlots = async () => {
+      try {
+        const response = await fetch('/api/featured/availability')
+        const data = await response.json()
+        setAvailableSlots(data.available || 0)
+      } catch (error) {
+        console.error('Error checking availability:', error)
+        setAvailableSlots(0)
+      } finally {
+        setLoadingSlots(false)
+      }
+    }
+    
+    checkAvailableSlots()
+  }, [])
 
   const handleCheckout = async () => {
     if (!selectedDuration) return
@@ -141,38 +149,55 @@ export default function FeaturedCheckout({ listingId, businessName, onClose }: F
             </div>
           </div>
 
+          {/* Availability Notice */}
+          <div className="mb-6 p-4 bg-gunsmith-gold/10 border border-gunsmith-gold/30 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bebas text-lg text-gunsmith-gold">LIMITED AVAILABILITY</h3>
+                <p className="text-gunsmith-text-secondary text-sm">
+                  Only 3 featured slots available at any time
+                </p>
+              </div>
+              <div className="text-right">
+                {loadingSlots ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-gunsmith-gold" />
+                ) : (
+                  <>
+                    <p className="font-bebas text-2xl text-gunsmith-gold">{availableSlots}</p>
+                    <p className="text-xs text-gunsmith-text-secondary">slots left</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Pricing Options */}
           <div className="mb-8">
-            <h3 className="font-bebas text-xl text-gunsmith-gold mb-4">CHOOSE YOUR PLAN</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <h3 className="font-bebas text-xl text-gunsmith-gold mb-4">FEATURED LISTING</h3>
+            <div className="max-w-md mx-auto">
               {pricingOptions.map((option) => (
                 <div
                   key={option.duration}
-                  className={`relative border rounded-lg p-4 cursor-pointer transition-all ${
-                    selectedDuration === option.duration
-                      ? 'border-gunsmith-gold bg-gunsmith-gold/10'
-                      : 'border-gunsmith-border hover:border-gunsmith-gold/50'
+                  className={`relative border rounded-lg p-6 ${
+                    availableSlots > 0 
+                      ? 'border-gunsmith-gold bg-gunsmith-gold/10' 
+                      : 'border-gunsmith-border bg-gunsmith-border/10 opacity-50'
                   }`}
-                  onClick={() => setSelectedDuration(option.duration)}
                 >
-                  {option.popular && (
+                  {option.popular && availableSlots > 0 && (
                     <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
                       <span className="bg-gunsmith-gold text-gunsmith-black text-xs font-bold px-2 py-1 rounded">
-                        POPULAR
+                        AVAILABLE
                       </span>
                     </div>
                   )}
                   <div className="text-center">
-                    <h4 className="font-bebas text-lg text-gunsmith-gold mb-1">{option.name}</h4>
-                    <p className="text-2xl font-bold text-gunsmith-text mb-2">{option.price}</p>
-                    <p className="text-sm text-gunsmith-text-secondary">{option.description}</p>
-                  </div>
-                  <div className="mt-3 flex justify-center">
-                    <div className={`w-4 h-4 rounded-full border-2 ${
-                      selectedDuration === option.duration
-                        ? 'border-gunsmith-gold bg-gunsmith-gold'
-                        : 'border-gunsmith-border'
-                    }`} />
+                    <h4 className="font-bebas text-xl text-gunsmith-gold mb-2">{option.name}</h4>
+                    <p className="text-3xl font-bold text-gunsmith-text mb-3">{option.price}<span className="text-lg">/month</span></p>
+                    <p className="text-sm text-gunsmith-text-secondary mb-4">{option.description}</p>
+                    {availableSlots === 0 && (
+                      <p className="text-sm text-red-400 font-medium">All slots currently taken</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -192,18 +217,27 @@ export default function FeaturedCheckout({ listingId, businessName, onClose }: F
             )}
             <button
               onClick={handleCheckout}
-              disabled={loading}
-              className="btn-primary flex items-center gap-2"
+              disabled={loading || availableSlots === 0 || loadingSlots}
+              className={`flex items-center gap-2 ${
+                availableSlots === 0 || loadingSlots
+                  ? 'btn-secondary opacity-50 cursor-not-allowed'
+                  : 'btn-primary'
+              }`}
             >
               {loading ? (
                 <>
                   <Loader2 className="h-5 w-5 animate-spin" />
                   Processing...
                 </>
+              ) : availableSlots === 0 ? (
+                <>
+                  <CreditCard className="h-5 w-5" />
+                  No Slots Available
+                </>
               ) : (
                 <>
                   <CreditCard className="h-5 w-5" />
-                  Proceed to Checkout
+                  Get Featured - $50/month
                 </>
               )}
             </button>

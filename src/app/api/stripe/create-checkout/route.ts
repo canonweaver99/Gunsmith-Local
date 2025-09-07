@@ -38,15 +38,13 @@ export async function POST(request: NextRequest) {
 
     // Define pricing based on duration
     const pricing = {
-      '7': { amount: 2999, name: '7 Days Featured' }, // $29.99
-      '30': { amount: 9999, name: '30 Days Featured' }, // $99.99
-      '90': { amount: 24999, name: '90 Days Featured' } // $249.99
+      '30': { amount: 5000, name: 'Monthly Featured' }, // $50.00
     }
 
     const selectedPricing = pricing[duration as keyof typeof pricing]
     if (!selectedPricing) {
       return NextResponse.json(
-        { error: 'Invalid duration. Must be 7, 30, or 90 days' },
+        { error: 'Invalid duration. Must be 30 days' },
         { status: 400 }
       )
     }
