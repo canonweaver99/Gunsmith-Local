@@ -9,8 +9,10 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase, Listing } from '@/lib/supabase'
-import { Plus, Edit, Eye, Trash2, Loader2, Building2, Star, MapPin, Phone, Mail, Globe, User, MessageSquare, Sparkles } from 'lucide-react'
+import { Plus, Edit, Eye, Trash2, Loader2, Building2, Star, MapPin, Phone, Mail, Globe, User, MessageSquare, Sparkles, Heart } from 'lucide-react'
 import FeaturedCheckout from '@/components/FeaturedCheckout'
+import FeaturedSection from '@/components/dashboard/FeaturedSection'
+import ListingCard from '@/components/ListingCard'
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
