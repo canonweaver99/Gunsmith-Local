@@ -417,8 +417,8 @@ export default function AddBusinessPage() {
     }))
   }, [selectedTags])
 
-  // Loading state
-  if (authLoading) {
+  // Loading state (temporarily disabled for debugging)
+  if (false && authLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
