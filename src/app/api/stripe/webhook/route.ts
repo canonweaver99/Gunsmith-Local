@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder', {
   apiVersion: '2024-06-20'
 })
 
-const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET!
+const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder'
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
 
         // Create service role client (bypasses RLS)
         const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
+          process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+          process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key'
         )
         
         // Update the listing to be featured

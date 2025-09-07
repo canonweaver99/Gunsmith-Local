@@ -1,14 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Validate environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Validate environment variables with graceful fallback for build time
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables')
-  throw new Error(
-    'Missing Supabase environment variables. Please check your .env.local file.'
-  )
+// Warn about missing environment variables but don't fail during build
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+  console.warn('⚠️  Supabase environment variables not found. Using placeholder values for build.')
 }
 
 // Create a more robust Supabase client with retry logic
