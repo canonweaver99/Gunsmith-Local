@@ -1,5 +1,7 @@
 # GunsmithLocal
 
+> Professional gunsmith directory with FFL verification and featured listings
+
 A Western-themed directory for finding professional gunsmiths in your area.
 
 ## Setup
