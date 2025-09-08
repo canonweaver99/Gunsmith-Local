@@ -53,6 +53,10 @@ export default function BusinessRegistrationForm() {
     let cancelled = false
     const init = async () => {
       try {
+        if (process.env.NODE_ENV !== 'production') {
+          const masked = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? `${String(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).slice(0,4)}...${String(process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).slice(-4)}` : 'undefined'
+          console.debug('[Maps] Using key:', masked)
+        }
         await loadGoogleMapsScript()
         if (!cancelled) initializeAutocomplete()
       } catch (e) {

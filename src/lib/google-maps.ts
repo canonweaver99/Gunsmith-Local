@@ -37,6 +37,11 @@ export function loadGoogleMapsScript(apiKey?: string): Promise<any> {
     }
 
     const key = apiKey || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    // Safe debug (masked)
+    if (process.env.NODE_ENV !== 'production') {
+      const masked = key ? `${String(key).slice(0, 4)}...${String(key).slice(-4)}` : 'undefined'
+      console.debug('[Maps] API key present:', !!key, masked)
+    }
     if (!key) {
       reject(new Error('Missing NEXT_PUBLIC_GOOGLE_MAPS_API_KEY'))
       return
