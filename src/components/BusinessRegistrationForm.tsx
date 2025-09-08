@@ -86,10 +86,19 @@ export default function BusinessRegistrationForm() {
         }
       })
 
-      setValue('street_address', street.trim())
-      setValue('city', city)
-      setValue('state_province', state as any)
-      setValue('postal_code', zip)
+      // Use setValue with shouldValidate and shouldDirty to properly update form state
+      setValue('street_address', street.trim(), { shouldValidate: true, shouldDirty: true })
+      setValue('city', city, { shouldValidate: true, shouldDirty: true })
+      setValue('state_province', state as any, { shouldValidate: true, shouldDirty: true })
+      setValue('postal_code', zip, { shouldValidate: true, shouldDirty: true })
+      
+      // Trigger validation for all updated fields
+      setTimeout(() => {
+        const form = document.querySelector('form')
+        if (form) {
+          form.dispatchEvent(new Event('input', { bubbles: true }))
+        }
+      }, 100)
     })
   }
 
