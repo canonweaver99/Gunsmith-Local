@@ -35,3 +35,5 @@ Please provide the structure of your `listings` table so I can properly integrat
 ## Deployment
 
 This project is configured for deployment on Vercel with GitHub integration.
+
+Note: After changing Google Maps API settings or Vercel env vars (e.g. `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`), trigger a new deploy so the client bundle receives the updated value. Use `/maps-test` for quick diagnostics in production.
