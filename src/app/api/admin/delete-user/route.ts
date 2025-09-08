@@ -31,8 +31,12 @@ export async function POST(request: NextRequest) {
     // Clean up dependent records to avoid FK violations
     const cleanupSteps = [
       () => adminClient.from('favorites').delete().eq('user_id', userId),
+      () => adminClient.from('reviews').delete().eq('user_id', userId),
+      () => adminClient.from('notification_settings').delete().eq('user_id', userId),
+      () => adminClient.from('featured_transactions').delete().eq('user_id', userId),
       () => adminClient.from('business_claims').delete().eq('claimer_id', userId),
       () => adminClient.from('listings').update({ owner_id: null }).eq('owner_id', userId),
+      () => adminClient.from('profiles').delete().eq('id', userId),
     ]
 
     for (const step of cleanupSteps) {
