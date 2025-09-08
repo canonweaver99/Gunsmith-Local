@@ -1,12 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { businessFormSchema, type BusinessFormValues, STATES } from '@/lib/validations/businessForm'
 import { supabase } from '@/lib/supabase'
 import ImageUpload from '@/components/ImageUpload'
 import { HelpCircle, CheckCircle, Clock, Upload, MapPin } from 'lucide-react'
+
+declare global {
+  interface Window {
+    google: any
+  }
+}
 
 const SERVICES = [
   'Custom Rifle Builds','Custom Pistol Builds','AR-15 Builds','Bolt Action Rifle Work','Trigger Installation/Tuning','Barrel Threading','Muzzle Device Installation','Scope Mounting','Sight Installation','Cerakote Coating','Bluing/Refinishing','Stock Work/Bedding','Action Blueprinting','Barrel Installation','Recoil Pad Installation','Sling Swivel Installation','Safety Repairs','Feed Ramp Polishing','Chamber Work','Headspace Checking','Trigger Guard Installation','Magazine Well Work','Checkering','Engraving','Parts Fabrication','Restoration Work','Competition Prep','Hunting Rifle Setup','Tactical Modifications','General Repairs'
@@ -29,6 +35,7 @@ export default function BusinessRegistrationForm() {
   const [businessHours, setBusinessHours] = useState<{[key: string]: {open: string, close: string, closed: boolean}}>({})
   const [message, setMessage] = useState<string | null>(null)
   const [showHelp, setShowHelp] = useState<{[key: string]: boolean}>({})
+  const addressInputRef = useRef<HTMLInputElement | null>(null)
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<BusinessFormValues>({
     resolver: zodResolver(businessFormSchema),
@@ -39,6 +46,53 @@ export default function BusinessRegistrationForm() {
 
   const watchedZip = watch('postal_code')
 
+  // Load Google Places API
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !window.google && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+      const script = document.createElement('script')
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
+      script.async = true
+      script.onload = initializeAutocomplete
+      document.head.appendChild(script)
+    } else if (window.google) {
+      initializeAutocomplete()
+    }
+  }, [])
+
+  function initializeAutocomplete() {
+    if (!addressInputRef.current || !window.google) return
+
+    const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+      types: ['establishment', 'geocode'],
+      componentRestrictions: { country: 'us' }
+    })
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace()
+      if (!place.address_components) return
+
+      let street = '', city = '', state = '', zip = ''
+      
+      place.address_components.forEach((component: any) => {
+        const types = component.types
+        if (types.includes('street_number') || types.includes('route')) {
+          street += component.long_name + ' '
+        } else if (types.includes('locality')) {
+          city = component.long_name
+        } else if (types.includes('administrative_area_level_1')) {
+          state = component.short_name
+        } else if (types.includes('postal_code')) {
+          zip = component.long_name
+        }
+      })
+
+      setValue('street_address', street.trim())
+      setValue('city', city)
+      setValue('state_province', state as any)
+      setValue('postal_code', zip)
+    })
+  }
+
   // Auto-format phone number
   const formatPhoneNumber = (value: string) => {
     const cleaned = value.replace(/\D/g, '')
@@ -47,6 +101,20 @@ export default function BusinessRegistrationForm() {
       return `(${match[1]}) ${match[2]}-${match[3]}`
     }
     return value
+  }
+
+  // Format social media URLs
+  function formatWebsiteUrl(value: string) {
+    if (!value) return value
+    if (value.startsWith('http')) return value
+    return `https://${value}`
+  }
+
+  function formatSocialUrl(platform: string, username: string) {
+    if (!username) return username
+    if (username.startsWith('http')) return username
+    const cleanUsername = username.replace('@', '')
+    return `https://${platform}.com/${cleanUsername}`
   }
 
   // Initialize business hours with common defaults
@@ -134,9 +202,9 @@ export default function BusinessRegistrationForm() {
         postal_code: values.postal_code,
         email: values.email,
         phone: values.phone,
-        website: values.website_url,
-        facebook_url: values.facebook_url,
-        instagram_url: values.instagram_url,
+        website: formatWebsiteUrl(values.website_url || ''),
+        facebook_url: formatSocialUrl('facebook', values.facebook_url || ''),
+        instagram_url: formatSocialUrl('instagram', values.instagram_url || ''),
         business_hours: businessHours,
         tags: selectedServices.length ? selectedServices : [],
         description: values.specialties || '',
@@ -258,7 +326,17 @@ export default function BusinessRegistrationForm() {
             </div>
 
             <div>
-              <label className="block text-xl font-medium text-gunsmith-text mb-3">Contact Name *</label>
+              <label className="block text-xl font-medium text-gunsmith-text mb-3">
+                Contact Name *
+                <button type="button" onClick={() => toggleHelp('contact_name')} className="ml-2 text-gunsmith-gold">
+                  <HelpCircle className="h-5 w-5 inline" />
+                </button>
+              </label>
+              {showHelp.contact_name && (
+                <p className="text-gunsmith-text-secondary mb-3 p-3 bg-gunsmith-accent rounded">
+                  The main person customers should contact (usually the owner or manager).
+                </p>
+              )}
               <input 
                 className="input text-lg p-4 h-14" 
                 {...register('contact_name')} 
@@ -309,8 +387,13 @@ export default function BusinessRegistrationForm() {
               </label>
               <input 
                 className="input text-lg p-4 h-14" 
-                {...register('street_address')} 
-                placeholder="e.g., 123 Main Street"
+                {...register('street_address', {
+                  required: 'Street address is required'
+                })} 
+                ref={(e) => {
+                  if (e) addressInputRef.current = e
+                }}
+                placeholder="🔍 Start typing your address..."
               />
               {errors.street_address && <p className="text-red-400 text-lg mt-2">⚠️ {errors.street_address.message}</p>}
             </div>
@@ -530,28 +613,70 @@ export default function BusinessRegistrationForm() {
           
           <div className="grid md:grid-cols-3 gap-6">
             <div>
-              <label className="block text-xl font-medium text-gunsmith-text mb-3">Website</label>
+              <label className="block text-xl font-medium text-gunsmith-text mb-3">
+                Website
+                <button type="button" onClick={() => toggleHelp('website')} className="ml-2 text-gunsmith-gold">
+                  <HelpCircle className="h-5 w-5 inline" />
+                </button>
+              </label>
+              {showHelp.website && (
+                <p className="text-gunsmith-text-secondary mb-3 p-3 bg-gunsmith-accent rounded">
+                  Just type your website name (we'll add https:// automatically).
+                </p>
+              )}
               <input 
                 className="input text-lg p-4 h-14" 
                 {...register('website_url')} 
-                placeholder="https://yourwebsite.com"
+                placeholder="e.g., smithgunsmithing.com"
+                onBlur={(e) => {
+                  const formatted = formatWebsiteUrl(e.target.value)
+                  setValue('website_url', formatted)
+                }}
               />
               {errors.website_url && <p className="text-red-400 text-lg mt-2">⚠️ {errors.website_url.message as string}</p>}
             </div>
             <div>
-              <label className="block text-xl font-medium text-gunsmith-text mb-3">Facebook</label>
+              <label className="block text-xl font-medium text-gunsmith-text mb-3">
+                Facebook Username
+                <button type="button" onClick={() => toggleHelp('facebook')} className="ml-2 text-gunsmith-gold">
+                  <HelpCircle className="h-5 w-5 inline" />
+                </button>
+              </label>
+              {showHelp.facebook && (
+                <p className="text-gunsmith-text-secondary mb-3 p-3 bg-gunsmith-accent rounded">
+                  Just your Facebook page name (we'll create the full link).
+                </p>
+              )}
               <input 
                 className="input text-lg p-4 h-14" 
                 {...register('facebook_url')} 
-                placeholder="https://facebook.com/yourpage"
+                placeholder="e.g., smithgunsmithing"
+                onBlur={(e) => {
+                  const formatted = formatSocialUrl('facebook', e.target.value)
+                  setValue('facebook_url', formatted)
+                }}
               />
             </div>
             <div>
-              <label className="block text-xl font-medium text-gunsmith-text mb-3">Instagram</label>
+              <label className="block text-xl font-medium text-gunsmith-text mb-3">
+                Instagram Username
+                <button type="button" onClick={() => toggleHelp('instagram')} className="ml-2 text-gunsmith-gold">
+                  <HelpCircle className="h-5 w-5 inline" />
+                </button>
+              </label>
+              {showHelp.instagram && (
+                <p className="text-gunsmith-text-secondary mb-3 p-3 bg-gunsmith-accent rounded">
+                  Just your Instagram username (we'll create the full link).
+                </p>
+              )}
               <input 
                 className="input text-lg p-4 h-14" 
                 {...register('instagram_url')} 
-                placeholder="https://instagram.com/yourpage"
+                placeholder="e.g., @smithgunsmithing"
+                onBlur={(e) => {
+                  const formatted = formatSocialUrl('instagram', e.target.value)
+                  setValue('instagram_url', formatted)
+                }}
               />
             </div>
           </div>
@@ -569,9 +694,9 @@ export default function BusinessRegistrationForm() {
               What makes your gunsmith business special? (Optional)
             </label>
             <textarea 
-              className="input text-lg p-4 min-h-32" 
+              className="input text-lg p-6 min-h-48 w-full resize-none" 
               {...register('specialties')} 
-              placeholder="e.g., 30+ years experience, specialize in vintage rifles, custom engraving, etc."
+              placeholder="e.g., 30+ years experience, specialize in vintage rifles, custom engraving, work with collectors, etc."
             />
           </div>
         </div>
