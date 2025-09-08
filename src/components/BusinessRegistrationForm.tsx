@@ -5,18 +5,20 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { businessFormSchema, type BusinessFormValues, STATES } from '@/lib/validations/businessForm'
 import { supabase } from '@/lib/supabase'
+import ImageUpload from '@/components/ImageUpload'
+import BusinessHoursEditor from '@/components/BusinessHoursEditor'
 
 const SERVICES = [
   'Custom Rifle Builds','Custom Pistol Builds','AR-15 Builds','Bolt Action Rifle Work','Trigger Installation/Tuning','Barrel Threading','Muzzle Device Installation','Scope Mounting','Sight Installation','Cerakote Coating','Bluing/Refinishing','Stock Work/Bedding','Action Blueprinting','Barrel Installation','Recoil Pad Installation','Sling Swivel Installation','Safety Repairs','Feed Ramp Polishing','Chamber Work','Headspace Checking','Trigger Guard Installation','Magazine Well Work','Checkering','Engraving','Parts Fabrication','Restoration Work','Competition Prep','Hunting Rifle Setup','Tactical Modifications','General Repairs'
 ]
 
-type UploadPreview = { file: File, url: string }
-
 export default function BusinessRegistrationForm() {
   const [submitting, setSubmitting] = useState(false)
-  const [logoPreview, setLogoPreview] = useState<UploadPreview | null>(null)
-  const [coverPreview, setCoverPreview] = useState<UploadPreview | null>(null)
-  const [projectPreviews, setProjectPreviews] = useState<UploadPreview[]>([])
+  const [logoUrl, setLogoUrl] = useState<string>('')
+  const [coverUrl, setCoverUrl] = useState<string>('')
+  const [galleryUrls, setGalleryUrls] = useState<string[]>([])
+  const [businessHours, setBusinessHours] = useState<any>({})
+  const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [message, setMessage] = useState<string | null>(null)
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<BusinessFormValues>({
@@ -26,52 +28,20 @@ export default function BusinessRegistrationForm() {
     },
   })
 
-  function validateAndPreview(file: File, maxMB: number, set: (p: UploadPreview) => void) {
-    const ok = ['image/jpeg','image/png'].includes(file.type) && file.size <= maxMB * 1024 * 1024
-    if (!ok) { setMessage(`Invalid file. JPG/PNG up to ${maxMB}MB.`); return }
-    const url = URL.createObjectURL(file)
-    set({ file, url })
-  }
-
-  function handleProjects(files: FileList | null) {
-    if (!files) return
-    const arr: UploadPreview[] = []
-    Array.from(files).slice(0, 10).forEach((f) => {
-      const ok = ['image/jpeg','image/png'].includes(f.type) && f.size <= 3 * 1024 * 1024
-      if (ok) arr.push({ file: f, url: URL.createObjectURL(f) })
+  function toggleService(service: string) {
+    setSelectedServices(prev => {
+      const updated = prev.includes(service) 
+        ? prev.filter(s => s !== service)
+        : [...prev, service]
+      setValue('services', updated)
+      return updated
     })
-    setProjectPreviews(arr)
-  }
-
-  async function uploadToStorage(bucket: string, path: string, file: File): Promise<string | null> {
-    const { data, error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true })
-    if (error) return null
-    const { data: pub } = supabase.storage.from(bucket).getPublicUrl(data.path)
-    return pub?.publicUrl || null
   }
 
   async function onSubmit(values: BusinessFormValues) {
     try {
       setSubmitting(true)
       setMessage(null)
-
-      // Upload media
-      const uploads: Record<string, string | null> = {}
-      const id = crypto.randomUUID()
-
-      if (logoPreview?.file) {
-        uploads.logo_url = await uploadToStorage('images', `logos/${id}-logo-${logoPreview.file.name}`, logoPreview.file)
-      }
-      if (coverPreview?.file) {
-        uploads.cover_image_url = await uploadToStorage('images', `covers/${id}-cover-${coverPreview.file.name}`, coverPreview.file)
-      }
-      let gallery: string[] = []
-      if (projectPreviews.length) {
-        for (const p of projectPreviews) {
-          const url = await uploadToStorage('images', `projects/${id}-${p.file.name}`, p.file)
-          if (url) gallery.push(url)
-        }
-      }
 
       const payload = {
         business_name: values.business_name,
@@ -86,17 +56,14 @@ export default function BusinessRegistrationForm() {
         website: values.website_url,
         facebook_url: values.facebook_url,
         instagram_url: values.instagram_url,
-        business_hours: {
-          mon_fri: values.hours_mon_fri || '',
-          sat: values.hours_sat || '',
-          sun: values.hours_sun || '',
-        },
-        tags: values.services && values.services.length ? values.services : [],
+        business_hours: businessHours,
+        tags: selectedServices.length ? selectedServices : [],
         description: values.specialties || '',
         status: 'pending',
         verification_status: 'pending',
-        ...uploads,
-        image_gallery: gallery,
+        logo_url: logoUrl || null,
+        cover_image_url: coverUrl || null,
+        image_gallery: galleryUrls.length ? galleryUrls : null,
       }
 
       const { error } = await supabase.from('listings').insert(payload)
@@ -125,7 +92,7 @@ export default function BusinessRegistrationForm() {
             {errors.business_name && <p className="error-text">{errors.business_name.message}</p>}
           </div>
           <div>
-            <label className="label">Year Started</label>
+            <label className="label">Year Founded</label>
             <input className="input" {...register('year_started')} placeholder="1999" />
             {errors.year_started && <p className="error-text">{errors.year_started.message}</p>}
           </div>
@@ -186,21 +153,10 @@ export default function BusinessRegistrationForm() {
 
       {/* Hours */}
       <div className="card">
-        <h3 className="font-bebas text-2xl text-gunsmith-gold mb-4">BUSINESS HOURS</h3>
-        <div className="grid md:grid-cols-3 gap-4">
-          <div>
-            <label className="label">Mon - Fri</label>
-            <input className="input" {...register('hours_mon_fri')} placeholder="9AM - 6PM" />
-          </div>
-          <div>
-            <label className="label">Saturday</label>
-            <input className="input" {...register('hours_sat')} placeholder="9AM - 4PM" />
-          </div>
-          <div>
-            <label className="label">Sunday</label>
-            <input className="input" {...register('hours_sun')} placeholder="Closed" />
-          </div>
-        </div>
+        <BusinessHoursEditor
+          value={businessHours}
+          onChange={setBusinessHours}
+        />
       </div>
 
       {/* Online */}
@@ -226,33 +182,35 @@ export default function BusinessRegistrationForm() {
       {/* Media */}
       <div className="card">
         <h3 className="font-bebas text-2xl text-gunsmith-gold mb-4">IMAGES & MEDIA</h3>
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="label">Business Logo (JPG/PNG, max 2MB)</label>
-            <input type="file" accept="image/jpeg,image/png" onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) validateAndPreview(f, 2, (p) => setLogoPreview(p))
-            }} />
-            {logoPreview && <img src={logoPreview.url} alt="logo preview" className="mt-2 h-16 w-16 object-cover rounded" />}
+            <ImageUpload
+              label="Business Logo"
+              value={logoUrl}
+              onChange={(url) => setLogoUrl(typeof url === 'string' ? url : '')}
+              maxSizeMB={2}
+              preview={true}
+            />
           </div>
           <div>
-            <label className="label">Cover Image (JPG/PNG, max 5MB)</label>
-            <input type="file" accept="image/jpeg,image/png" onChange={(e) => {
-              const f = e.target.files?.[0]
-              if (f) validateAndPreview(f, 5, (p) => setCoverPreview(p))
-            }} />
-            {coverPreview && <img src={coverPreview.url} alt="cover preview" className="mt-2 h-24 w-full object-cover rounded" />}
+            <ImageUpload
+              label="Cover Image"
+              value={coverUrl}
+              onChange={(url) => setCoverUrl(typeof url === 'string' ? url : '')}
+              maxSizeMB={5}
+              preview={true}
+            />
           </div>
           <div className="md:col-span-2">
-            <label className="label">Project Photos (JPG/PNG, up to 10)</label>
-            <input type="file" accept="image/jpeg,image/png" multiple onChange={(e) => handleProjects(e.target.files)} />
-            {projectPreviews.length > 0 && (
-              <div className="mt-3 grid grid-cols-3 md:grid-cols-6 gap-2">
-                {projectPreviews.map((p, i) => (
-                  <img key={i} src={p.url} className="h-20 w-full object-cover rounded" />
-                ))}
-              </div>
-            )}
+            <ImageUpload
+              label="Project Photos"
+              value={galleryUrls}
+              onChange={(urls) => setGalleryUrls(Array.isArray(urls) ? urls : [])}
+              multiple={true}
+              maxFiles={10}
+              maxSizeMB={3}
+              preview={true}
+            />
           </div>
         </div>
       </div>
@@ -260,18 +218,20 @@ export default function BusinessRegistrationForm() {
       {/* Services */}
       <div className="card">
         <h3 className="font-bebas text-2xl text-gunsmith-gold mb-4">SERVICES OFFERED</h3>
-        <div className="grid md:grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-2">
-          {SERVICES.map((s) => (
-            <label key={s} className="flex items-center gap-2 text-gunsmith-text">
-              <input type="checkbox" className="checkbox" value={s} onChange={(e) => {
-                setValue('services', (prev => {
-                  const p = prev || []
-                  if (e.target.checked) return [...p, s]
-                  return p.filter((x) => x !== s)
-                })())
-              }} />
-              <span>{s}</span>
-            </label>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-80 overflow-y-auto">
+          {SERVICES.map((service) => (
+            <button
+              key={service}
+              type="button"
+              onClick={() => toggleService(service)}
+              className={`p-3 rounded-lg border transition-all duration-200 text-sm text-left ${
+                selectedServices.includes(service)
+                  ? 'bg-gunsmith-gold text-gunsmith-black border-gunsmith-gold'
+                  : 'bg-gunsmith-accent border-gunsmith-border text-gunsmith-text hover:border-gunsmith-gold hover:bg-gunsmith-gold/10'
+              }`}
+            >
+              {service}
+            </button>
           ))}
         </div>
       </div>
@@ -291,5 +251,3 @@ export default function BusinessRegistrationForm() {
     </form>
   )
 }
-
-
