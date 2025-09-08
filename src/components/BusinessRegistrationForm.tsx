@@ -217,9 +217,9 @@ export default function BusinessRegistrationForm() {
 
       const { error } = await supabase.from('listings').insert(payload)
       if (error) throw error
-      setMessage('✅ SUCCESS! Your business has been submitted for review. We will contact you within 2-3 business days.')
+      setMessage('SUCCESS! Your business has been submitted for review. We will contact you within 2-3 business days.')
     } catch (e: any) {
-      setMessage(`❌ ERROR: ${e?.message || 'Failed to submit form. Please try again.'}`)
+      setMessage(`ERROR: ${e?.message || 'Failed to submit form. Please try again.'}`)
     } finally {
       setSubmitting(false)
     }
@@ -261,56 +261,54 @@ export default function BusinessRegistrationForm() {
             <h3 className="font-bebas text-3xl text-gunsmith-gold">BASIC INFORMATION</h3>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">
-                Business Name *
-              </label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">Business Name *</label>
               <input 
-                className="input text-base p-3 h-12" 
+                className="input text-sm p-3 h-11 w-full" 
                 {...register('business_name')} 
                 placeholder="e.g., Smith & Sons Gunsmithing"
               />
-              {errors.business_name && <p className="text-red-400 text-lg mt-2">⚠️ {errors.business_name.message}</p>}
+              {errors.business_name && <p className="text-red-400 text-sm mt-1">{errors.business_name.message}</p>}
             </div>
             
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">Year Founded *</label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">Year Founded *</label>
               <input 
-                className="input text-base p-3 h-12" 
+                className="input text-sm p-3 h-11 w-full" 
                 {...register('year_started')} 
                 placeholder="e.g., 1999"
                 type="number"
                 min="1900"
                 max="2024"
               />
-              {errors.year_started && <p className="text-red-400 text-base mt-2">⚠️ {errors.year_started.message}</p>}
+              {errors.year_started && <p className="text-red-400 text-sm mt-1">{errors.year_started.message}</p>}
             </div>
 
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">FFL License Number *</label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">FFL License Number *</label>
               <input 
-                className="input text-base p-3 h-12 font-mono" 
+                className="input text-sm p-3 h-11 w-full font-mono" 
                 {...register('ffl_license_number')} 
                 placeholder="e.g., 1-23-456-78-9A-12345"
               />
-              {errors.ffl_license_number && <p className="text-red-400 text-base mt-2">⚠️ {errors.ffl_license_number.message}</p>}
+              {errors.ffl_license_number && <p className="text-red-400 text-sm mt-1">{errors.ffl_license_number.message}</p>}
             </div>
 
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">Contact Name *</label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">Contact Name *</label>
               <input 
-                className="input text-base p-3 h-12" 
+                className="input text-sm p-3 h-11 w-full" 
                 {...register('contact_name')} 
                 placeholder="e.g., John Smith"
               />
-              {errors.contact_name && <p className="text-red-400 text-base mt-2">⚠️ {errors.contact_name.message}</p>}
+              {errors.contact_name && <p className="text-red-400 text-sm mt-1">{errors.contact_name.message}</p>}
             </div>
 
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">Phone Number *</label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">Phone Number *</label>
               <input 
-                className="input text-base p-3 h-12" 
+                className="input text-sm p-3 h-11 w-full" 
                 {...register('phone')} 
                 placeholder="(555) 123-4567"
                 onChange={(e) => {
@@ -318,18 +316,18 @@ export default function BusinessRegistrationForm() {
                   e.target.value = formatted
                 }}
               />
-              {errors.phone && <p className="text-red-400 text-base mt-2">⚠️ {errors.phone.message}</p>}
+              {errors.phone && <p className="text-red-400 text-sm mt-1">{errors.phone.message}</p>}
             </div>
 
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">Email Address *</label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">Email Address *</label>
               <input 
-                className="input text-base p-3 h-12" 
+                className="input text-sm p-3 h-11 w-full" 
                 {...register('email')} 
                 type="email"
                 placeholder="e.g., john@smithgunsmithing.com"
               />
-              {errors.email && <p className="text-red-400 text-base mt-2">⚠️ {errors.email.message}</p>}
+              {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>}
             </div>
           </div>
         </div>
@@ -341,11 +339,11 @@ export default function BusinessRegistrationForm() {
             <h3 className="font-bebas text-3xl text-gunsmith-gold">BUSINESS LOCATION</h3>
           </div>
           
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">Street Address *</label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">Street Address *</label>
               <input 
-                className="input text-base p-3 h-12" 
+                className="input text-sm p-3 h-11 w-full" 
                 {...register('street_address', {
                   required: 'Street address is required'
                 })} 
@@ -354,39 +352,39 @@ export default function BusinessRegistrationForm() {
                 }}
                 placeholder="Start typing your address..."
               />
-              {errors.street_address && <p className="text-red-400 text-base mt-2">⚠️ {errors.street_address.message}</p>}
+              {errors.street_address && <p className="text-red-400 text-sm mt-1">{errors.street_address.message}</p>}
             </div>
             
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">City *</label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">City *</label>
               <input 
-                className="input text-base p-3 h-12" 
+                className="input text-sm p-3 h-11 w-full" 
                 {...register('city')} 
                 placeholder="e.g., Denver"
               />
-              {errors.city && <p className="text-red-400 text-base mt-2">⚠️ {errors.city.message}</p>}
+              {errors.city && <p className="text-red-400 text-sm mt-1">{errors.city.message}</p>}
             </div>
 
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">State *</label>
-              <select className="input text-base p-3 h-12" {...register('state_province')} defaultValue="">
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">State *</label>
+              <select className="input text-sm p-3 h-11 w-full" {...register('state_province')} defaultValue="">
                 <option value="" disabled>Select Your State</option>
                 {STATES.map((s) => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
-              {errors.state_province && <p className="text-red-400 text-base mt-2">⚠️ {errors.state_province.message}</p>}
+              {errors.state_province && <p className="text-red-400 text-sm mt-1">{errors.state_province.message}</p>}
             </div>
 
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">ZIP Code *</label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">ZIP Code *</label>
               <input 
-                className="input text-base p-3 h-12" 
+                className="input text-sm p-3 h-11 w-full" 
                 {...register('postal_code')} 
                 placeholder="e.g., 80202"
                 maxLength={5}
               />
-              {errors.postal_code && <p className="text-red-400 text-base mt-2">⚠️ {errors.postal_code.message}</p>}
+              {errors.postal_code && <p className="text-red-400 text-sm mt-1">{errors.postal_code.message}</p>}
             </div>
           </div>
         </div>
@@ -452,11 +450,6 @@ export default function BusinessRegistrationForm() {
             })}
           </div>
 
-          <div className="mt-6 p-4 bg-gunsmith-gold/10 rounded-lg">
-            <p className="text-gunsmith-text text-lg">
-              💡 <strong>Tip:</strong> Set one day's hours, then click "Copy to All" to save time!
-            </p>
-          </div>
         </div>
 
         {/* Step 4: Services */}
@@ -470,42 +463,35 @@ export default function BusinessRegistrationForm() {
             <button
               type="button"
               onClick={selectAllServices}
-              className="btn-primary text-lg px-6 py-3"
+              className="btn-primary text-sm px-4 py-2"
             >
-              ✅ Select All Services
+              Select All Services
             </button>
             <button
               type="button"
               onClick={clearAllServices}
-              className="btn-secondary text-lg px-6 py-3"
+              className="btn-secondary text-sm px-4 py-2"
             >
-              ❌ Clear All
+              Clear All
             </button>
-            <p className="text-gunsmith-text-secondary text-lg flex items-center">
+            <p className="text-gunsmith-text-secondary text-sm flex items-center">
               Selected: <span className="text-gunsmith-gold font-bold ml-2">{selectedServices.length}</span>
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             {SERVICES.map((service) => (
               <button
                 key={service}
                 type="button"
                 onClick={() => toggleService(service)}
-                className={`p-6 rounded-lg border-2 transition-all duration-200 text-left min-h-[80px] flex items-center ${
+                className={`p-3 rounded-lg border transition-all duration-200 text-left min-h-[60px] flex items-center ${
                   selectedServices.includes(service)
-                    ? 'bg-gunsmith-gold text-gunsmith-black border-gunsmith-gold shadow-lg transform scale-105'
+                    ? 'bg-gunsmith-gold text-gunsmith-black border-gunsmith-gold'
                     : 'bg-gunsmith-accent border-gunsmith-border text-gunsmith-text hover:border-gunsmith-gold hover:bg-gunsmith-gold/10'
                 }`}
               >
-                <div className="flex items-center gap-4 w-full">
-                  <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                    selectedServices.includes(service) ? 'bg-gunsmith-black border-gunsmith-black' : 'border-gunsmith-gold'
-                  }`}>
-                    {selectedServices.includes(service) && <CheckCircle className="h-4 w-4 text-gunsmith-gold" />}
-                  </div>
-                  <span className="text-lg font-medium">{service}</span>
-                </div>
+                <span className="text-sm">{service}</span>
               </button>
             ))}
           </div>
@@ -568,11 +554,11 @@ export default function BusinessRegistrationForm() {
           
           <p className="text-gunsmith-text-secondary text-lg mb-6">All fields below are optional</p>
           
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">Website</label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">Website</label>
               <input 
-                className="input text-base p-3 h-12" 
+                className="input text-sm p-3 h-11 w-full" 
                 {...register('website_url')} 
                 placeholder="e.g., smithgunsmithing.com"
                 onBlur={(e) => {
@@ -580,12 +566,12 @@ export default function BusinessRegistrationForm() {
                   setValue('website_url', formatted)
                 }}
               />
-              {errors.website_url && <p className="text-red-400 text-base mt-2">⚠️ {errors.website_url.message as string}</p>}
+              {errors.website_url && <p className="text-red-400 text-sm mt-1">{errors.website_url.message as string}</p>}
             </div>
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">Facebook Username</label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">Facebook Username</label>
               <input 
-                className="input text-base p-3 h-12" 
+                className="input text-sm p-3 h-11 w-full" 
                 {...register('facebook_url')} 
                 placeholder="e.g., smithgunsmithing"
                 onBlur={(e) => {
@@ -595,11 +581,11 @@ export default function BusinessRegistrationForm() {
               />
             </div>
             <div>
-              <label className="block text-base font-medium text-gunsmith-text mb-2">Instagram Username</label>
+              <label className="block text-sm font-medium text-gunsmith-text mb-2">Instagram Username</label>
               <input 
-                className="input text-base p-3 h-12" 
+                className="input text-sm p-3 h-11 w-full" 
                 {...register('instagram_url')} 
-                placeholder="e.g., @smithgunsmithing"
+                placeholder="e.g., smithgunsmithing"
                 onBlur={(e) => {
                   const formatted = formatSocialUrl('instagram', e.target.value)
                   setValue('instagram_url', formatted)
@@ -640,24 +626,24 @@ export default function BusinessRegistrationForm() {
               <button 
                 type="submit" 
                 disabled={submitting} 
-                className="btn-primary text-xl px-8 py-4 min-h-[60px] min-w-[200px]"
+                className="btn-primary text-base px-6 py-3 min-h-[50px] min-w-[180px]"
               >
-                {submitting ? '⏳ Submitting...' : '🚀 Submit My Business'}
+                {submitting ? 'Submitting...' : 'Submit My Business'}
               </button>
               
               <button 
                 type="button" 
-                className="btn-secondary text-xl px-8 py-4 min-h-[60px] min-w-[200px]"
+                className="btn-secondary text-base px-6 py-3 min-h-[50px] min-w-[180px]"
                 onClick={() => {
                   localStorage.setItem('business-form-draft', JSON.stringify({
                     formData: watch(),
                     selectedServices,
                     businessHours
                   }))
-                  alert('✅ Your progress has been saved! You can return later to finish.')
+                  alert('Your progress has been saved! You can return later to finish.')
                 }}
               >
-                💾 Save & Continue Later
+                Save & Continue Later
               </button>
             </div>
             
