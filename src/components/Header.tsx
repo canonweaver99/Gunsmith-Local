@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState, useEffect, useRef } from 'react'
 import { Menu, X, Crosshair, User, LogOut, Star, Map, Shield, ChevronDown, Settings, Bell, Building2, HelpCircle, Lock, MapPin, CreditCard, Heart } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useFavorites } from '@/contexts/FavoritesContext'
 import { supabase } from '@/lib/supabase'
 
 export default function Header() {
@@ -13,6 +14,8 @@ export default function Header() {
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { user, loading, signOut, isAdmin } = useAuth()
+  const { favorites } = useFavorites()
+  const favoritePreview = favorites.slice(0, 3)
 
   useEffect(() => {
     async function checkUserListing() {
@@ -85,9 +88,9 @@ export default function Header() {
             </Link>
                 {user && (
                   <Link href="/business-portal" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
-                    Business Portal
-                  </Link>
-                )}
+                    {hasListing ? 'Business Portal' : 'Add Business'}
+              </Link>
+            )}
             <Link href="/about" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
               About
             </Link>
@@ -110,10 +113,10 @@ export default function Header() {
                   Dashboard
                 </Link>
                 <div className="relative" ref={dropdownRef}>
-                  <button
+                <button
                     onClick={() => setShowUserDropdown(!showUserDropdown)}
-                    className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors flex items-center gap-2"
-                  >
+                  className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors flex items-center gap-2"
+                >
                     <Settings className="h-4 w-4" />
                     Settings
                     <ChevronDown className={`h-4 w-4 transition-transform ${showUserDropdown ? 'rotate-180' : ''}`} />
@@ -134,6 +137,24 @@ export default function Header() {
                           <Heart className="inline-block h-4 w-4 mr-2" />
                           Saved Gunsmiths
                         </Link>
+                        {/* Favorites preview */}
+                        {favoritePreview.length > 0 && (
+                          <div className="px-4 pb-2">
+                            <ul className="space-y-1">
+                              {favoritePreview.map((fav) => (
+                                <li key={fav.id} className="text-xs">
+                                  {fav.listing ? (
+                                    <Link href={`/listings/${fav.listing.slug}`} className="text-gunsmith-text-secondary hover:text-gunsmith-gold">
+                                      {fav.listing.business_name}
+                                    </Link>
+                                  ) : (
+                                    <span className="text-gunsmith-text-secondary">Listing unavailable</span>
+                                  )}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
                         <Link href="/settings/password" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
                           <Lock className="inline-block h-4 w-4 mr-2" />
                           Password
@@ -193,8 +214,8 @@ export default function Header() {
                           className="block w-full text-left px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors border-t border-gunsmith-border"
                         >
                           <LogOut className="inline-block h-4 w-4 mr-2" />
-                          Sign Out
-                        </button>
+                  Sign Out
+                </button>
                       </div>
                     </div>
                   )}
@@ -260,7 +281,7 @@ export default function Header() {
                 className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Business Portal
+                {hasListing ? 'Business Portal' : 'Add Business'}
               </Link>
             )}
             <Link

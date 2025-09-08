@@ -140,15 +140,17 @@ function FeaturedContent() {
       setLoading(true)
       
       // Fetch top 3 listings for the selected state
-      // Prioritize: featured > verified > view count
+      // Rank by earliest featured purchase (featured_until farthest in future first implies earliest purchase if fixed duration)
+      // Fallback: verified, then created_at
       const { data: listings, error } = await supabase
         .from('listings')
         .select('*')
         .eq('state_province', stateCode)
         .eq('status', 'active')
         .order('is_featured', { ascending: false })
+        .order('featured_until', { ascending: true, nullsFirst: false })
         .order('is_verified', { ascending: false })
-        .order('view_count', { ascending: false })
+        .order('created_at', { ascending: true })
         .limit(3)
 
       if (error) throw error
@@ -256,9 +258,19 @@ function FeaturedContent() {
                   TOP 3 GUNSMITHS IN {US_STATES.find(s => s.code === selectedState)?.name.toUpperCase()}
                 </h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                {/* Arrange: center #1, left #2, right #3 */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 items-stretch">
                   {topListings.map((listing, index) => (
-                    <div key={listing.id} className="relative">
+                    <div
+                      key={listing.id}
+                      className={`relative ${
+                        index === 0
+                          ? 'lg:col-start-2'
+                          : index === 1
+                          ? 'lg:col-start-1'
+                          : 'lg:col-start-3'
+                      }`}
+                    >
                       {/* Position Badge */}
                       <div className="absolute -top-4 left-6 z-10">
                         <div className={`px-6 py-2 rounded-full flex items-center gap-2 shadow-xl ${
