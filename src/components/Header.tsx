@@ -34,6 +34,7 @@ export default function Header() {
           .from('listings')
           .select('id')
           .eq('owner_id', user.id)
+          .limit(1)
           .maybeSingle()
         
         if (error) {
