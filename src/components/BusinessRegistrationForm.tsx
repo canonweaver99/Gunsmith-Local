@@ -7,6 +7,7 @@ import { businessFormSchema, type BusinessFormValues, STATES } from '@/lib/valid
 import { supabase } from '@/lib/supabase'
 import ImageUpload from '@/components/ImageUpload'
 import { HelpCircle, CheckCircle, Clock, Upload, MapPin } from 'lucide-react'
+import { loadGoogleMapsScript } from '@/lib/google-maps'
 
 declare global {
   interface Window {
@@ -36,6 +37,7 @@ export default function BusinessRegistrationForm() {
   const [message, setMessage] = useState<string | null>(null)
   const [showHelp, setShowHelp] = useState<{[key: string]: boolean}>({})
   const addressInputRef = useRef<HTMLInputElement | null>(null)
+  const autocompleteRef = useRef<any | null>(null)
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<BusinessFormValues>({
     resolver: zodResolver(businessFormSchema),
@@ -46,32 +48,19 @@ export default function BusinessRegistrationForm() {
 
   const watchedZip = watch('postal_code')
 
-  // Load Google Places API
+  // Load Google Places API using Promise-based loader
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) return
-
-    if (!window.google) {
-      const script = document.createElement('script')
-      // Use callback to ensure readiness
-      ;(window as any).initMap = () => {
-        try {
-          window.dispatchEvent(new Event('google-maps-loaded'))
-          initializeAutocomplete()
-        } catch (e) {
-          console.error('Error running Google Maps init:', e)
-        }
+    let cancelled = false
+    const init = async () => {
+      try {
+        await loadGoogleMapsScript()
+        if (!cancelled) initializeAutocomplete()
+      } catch (e) {
+        console.error('Google Maps load/init failed:', e)
       }
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`
-      script.async = true
-      script.defer = true
-      script.onerror = () => {
-        console.error('Failed to load Google Maps script')
-      }
-      document.head.appendChild(script)
-    } else if (window.google?.maps?.places) {
-      initializeAutocomplete()
     }
+    init()
+    return () => { cancelled = true }
   }, [])
 
   function initializeAutocomplete() {
@@ -92,10 +81,17 @@ export default function BusinessRegistrationForm() {
     }
 
     try {
+      // Prevent duplicate listeners
+      if (autocompleteRef.current) {
+        autocompleteRef.current.unbindAll?.()
+        autocompleteRef.current = null
+      }
+
       const autocomplete = new window.google.maps.places.Autocomplete(inputEl, {
-        types: ['establishment', 'geocode'],
+        types: ['address'],
         componentRestrictions: { country: 'us' }
       })
+      autocompleteRef.current = autocomplete
 
       console.log('Autocomplete created successfully')
 
@@ -138,33 +134,10 @@ export default function BusinessRegistrationForm() {
     }
   }
 
-  // Fallback: retry initialization until Google Maps Places is ready
+  // Reinitialize when the input ref becomes available
   useEffect(() => {
-    const initializeWhenReady = () => {
-      if (window.google?.maps?.places) {
-        initializeAutocomplete()
-      } else {
-        console.log('Google Maps not ready, retrying in 500ms...')
-        setTimeout(initializeWhenReady, 500)
-      }
-    }
-    initializeWhenReady()
-  }, [])
-
-  // Also handle the case where Google script loads after mount
-  useEffect(() => {
-    const handleGoogleLoad = () => {
-      console.log('Google Maps loaded, initializing autocomplete')
+    if (window.google?.maps?.places && addressInputRef.current) {
       initializeAutocomplete()
-    }
-
-    if (window.google?.maps?.places) {
-      initializeAutocomplete()
-    } else {
-      window.addEventListener('google-maps-loaded', handleGoogleLoad)
-      return () => {
-        window.removeEventListener('google-maps-loaded', handleGoogleLoad)
-      }
     }
   }, [addressInputRef.current])
 
