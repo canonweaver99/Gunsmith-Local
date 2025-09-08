@@ -5,6 +5,7 @@ import { loadGoogleMapsScript } from '@/lib/google-maps'
 
 export default function MapsTestPage() {
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const [overrideKey, setOverrideKey] = useState<string | undefined>(undefined)
   const [status, setStatus] = useState<{
     keyPresent: boolean
     keyMasked: string
@@ -16,10 +17,20 @@ export default function MapsTestPage() {
   const [lastPlace, setLastPlace] = useState<any>(null)
 
   useEffect(() => {
+    // Read ?key= override for quick prod testing
+    try {
+      const sp = new URLSearchParams(window.location.search)
+      const k = sp.get('key') || sp.get('apiKey') || sp.get('apikey') || undefined
+      if (k) {
+        setOverrideKey(k)
+        setStatus(prev => ({ ...prev, keyPresent: true, keyMasked: mask(k) }))
+      }
+    } catch {}
+
     let cancelled = false
     async function init() {
       try {
-        await loadGoogleMapsScript()
+        await loadGoogleMapsScript(overrideKey)
         if (cancelled) return
         setStatus(prev => ({ ...prev, scriptLoaded: true, placesReady: !!window.google?.maps?.places }))
 
@@ -38,7 +49,7 @@ export default function MapsTestPage() {
     }
     init()
     return () => { cancelled = true }
-  }, [])
+  }, [overrideKey])
 
   return (
     <div className="max-w-2xl mx-auto p-6 space-y-6">
