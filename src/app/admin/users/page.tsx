@@ -132,16 +132,16 @@ export default function AdminUsersPage() {
       const res = await fetch('/api/admin/delete-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, requesterId }),
+        body: JSON.stringify({ userId }),
       })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error || 'Failed to delete user')
 
       // Update local state
       setUsers(prev => prev.filter(user => user.id !== userId))
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error)
-      alert('Failed to delete user.')
+      alert(`Failed to delete user: ${error?.message || 'Unknown error'}`)
     } finally {
       setActionLoading(null)
     }
