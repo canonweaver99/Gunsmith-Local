@@ -55,66 +55,116 @@ export default function BusinessRegistrationForm() {
       const script = document.createElement('script')
       script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
       script.async = true
-      script.onload = () => initializeAutocomplete()
+      script.onload = () => {
+        try {
+          window.dispatchEvent(new Event('google-maps-loaded'))
+          initializeAutocomplete()
+        } catch (e) {
+          console.error('Error running Google Maps init:', e)
+        }
+      }
       script.onerror = () => {
         console.error('Failed to load Google Maps script')
       }
       document.head.appendChild(script)
-    } else {
+    } else if (window.google?.maps?.places) {
       initializeAutocomplete()
     }
   }, [])
 
   function initializeAutocomplete() {
-    if (!addressInputRef.current || !window.google) return
+    console.log('Initializing autocomplete...', {
+      addressInputRef: !!addressInputRef.current,
+      googleMaps: !!window.google
+    })
+
+    if (!addressInputRef.current || !window.google?.maps?.places) {
+      console.log('Missing requirements for autocomplete')
+      return
+    }
 
     const inputEl = addressInputRef.current
-    if (!inputEl) return
+    if (!inputEl) {
+      console.log('No input element found')
+      return
+    }
 
-    const autocomplete = new window.google.maps.places.Autocomplete(inputEl, {
-      types: ['establishment', 'geocode'],
-      componentRestrictions: { country: 'us' }
-    })
-
-    if (!autocomplete) return
-
-    autocomplete.addListener('place_changed', () => {
-      const place = autocomplete.getPlace()
-      if (!place || !place.address_components) return
-
-      let street = '', city = '', state = '', zip = ''
-      
-      place.address_components.forEach((component: any) => {
-        const types = component.types
-        if (types.includes('street_number') || types.includes('route')) {
-          street += component.long_name + ' '
-        } else if (types.includes('locality')) {
-          city = component.long_name
-        } else if (types.includes('administrative_area_level_1')) {
-          state = component.short_name
-        } else if (types.includes('postal_code')) {
-          zip = component.long_name
-        }
+    try {
+      const autocomplete = new window.google.maps.places.Autocomplete(inputEl, {
+        types: ['establishment', 'geocode'],
+        componentRestrictions: { country: 'us' }
       })
 
-      // Use setValue with shouldValidate and shouldDirty to properly update form state
-      setValue('street_address', street.trim(), { shouldValidate: true, shouldDirty: true })
-      setValue('city', city, { shouldValidate: true, shouldDirty: true })
-      setValue('state_province', state as any, { shouldValidate: true, shouldDirty: true })
-      setValue('postal_code', zip, { shouldValidate: true, shouldDirty: true })
-      
-      // Trigger validation for all updated fields
-      // Trigger validation for fields explicitly
-      try {
-        ;['street_address','city','state_province','postal_code'].forEach((field) => {
-          const el = document.querySelector(`[name="${field}"]`) as HTMLInputElement | null
-          if (el) el.dispatchEvent(new Event('input', { bubbles: true }))
+      console.log('Autocomplete created successfully')
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace()
+        console.log('Place selected:', place)
+
+        if (!place || !place.address_components) {
+          console.log('No place or address components found')
+          return
+        }
+
+        let streetNumber = '', route = '', city = '', state = '', zip = ''
+
+        place.address_components.forEach((component: any) => {
+          const types = component.types
+          if (types.includes('street_number')) {
+            streetNumber = component.long_name
+          } else if (types.includes('route')) {
+            route = component.long_name
+          } else if (types.includes('locality')) {
+            city = component.long_name
+          } else if (types.includes('administrative_area_level_1')) {
+            state = component.short_name
+          } else if (types.includes('postal_code')) {
+            zip = component.long_name
+          }
         })
-      } catch (e) {
-        console.warn('Validation trigger failed', e)
-      }
-    })
+
+        const fullStreet = [streetNumber, route].filter(Boolean).join(' ')
+        console.log('Parsed address:', { fullStreet, city, state, zip })
+
+        setValue('street_address', fullStreet, { shouldValidate: true, shouldDirty: true })
+        setValue('city', city, { shouldValidate: true, shouldDirty: true })
+        setValue('state_province', state as any, { shouldValidate: true, shouldDirty: true })
+        setValue('postal_code', zip, { shouldValidate: true, shouldDirty: true })
+      })
+    } catch (error) {
+      console.error('Error creating autocomplete:', error)
+    }
   }
+
+  // Fallback: retry initialization until Google Maps Places is ready
+  useEffect(() => {
+    const initializeWhenReady = () => {
+      if (window.google?.maps?.places) {
+        initializeAutocomplete()
+      } else {
+        console.log('Google Maps not ready, retrying in 500ms...')
+        setTimeout(initializeWhenReady, 500)
+      }
+    }
+    initializeWhenReady()
+  }, [])
+
+  // Also handle the case where Google script loads after mount
+  useEffect(() => {
+    const handleGoogleLoad = () => {
+      console.log('Google Maps loaded, initializing autocomplete')
+      initializeAutocomplete()
+    }
+
+    if (window.google?.maps?.places) {
+      initializeAutocomplete()
+    } else {
+      window.addEventListener('google-maps-loaded', handleGoogleLoad)
+      return () => {
+        window.removeEventListener('google-maps-loaded', handleGoogleLoad)
+      }
+    }
+  }, [addressInputRef.current])
 
   // Auto-format phone number
   const formatPhoneNumber = (value: string) => {
