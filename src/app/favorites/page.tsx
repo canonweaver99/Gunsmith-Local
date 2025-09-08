@@ -25,10 +25,11 @@ export default function FavoritesPage() {
       }
 
       try {
+        const listingIds = favorites.map(f => f.listing_id)
         const { data, error } = await supabase
           .from('listings')
           .select('*')
-          .in('id', favorites)
+          .in('id', listingIds)
 
         if (error) throw error
 

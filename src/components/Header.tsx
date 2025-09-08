@@ -10,6 +10,7 @@ import { supabase } from '@/lib/supabase'
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [hasListing, setHasListing] = useState(false)
+  const [hasClaim, setHasClaim] = useState(false)
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false)
   const [showUserDropdown, setShowUserDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -21,6 +22,7 @@ export default function Header() {
     async function checkUserListing() {
       if (!user) {
         setHasListing(false)
+        setHasClaim(false)
         return
       }
 
@@ -38,8 +40,22 @@ export default function Header() {
           console.error('Listings owner check error:', error)
         }
         setHasListing(!!data && !error)
+
+        // Also check for any submitted business claims by this user
+        const { data: claimData, error: claimError } = await supabase
+          .from('business_claims')
+          .select('id')
+          .eq('claimer_id', user.id)
+          .limit(1)
+          .maybeSingle()
+
+        if (claimError) {
+          console.error('Business claims check error:', claimError)
+        }
+        setHasClaim(!!claimData && !claimError)
       } catch (error) {
         setHasListing(false)
+        setHasClaim(false)
       }
     }
 
@@ -88,9 +104,9 @@ export default function Header() {
             </Link>
                 {user && (
                   <Link href="/business-portal" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
-                    {hasListing ? 'Business Portal' : 'Add Business'}
-              </Link>
-            )}
+                    {hasListing || hasClaim ? 'Business Portal' : 'Add Business'}
+                  </Link>
+                )}
             <Link href="/about" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
               About
             </Link>
@@ -281,7 +297,7 @@ export default function Header() {
                 className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                {hasListing ? 'Business Portal' : 'Add Business'}
+                {hasListing || hasClaim ? 'Business Portal' : 'Add Business'}
               </Link>
             )}
             <Link
