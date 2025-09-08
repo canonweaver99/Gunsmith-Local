@@ -20,7 +20,7 @@ export default async function SubmissionStatusPage({ params }: Props) {
       <Header />
       <main className="flex-grow bg-gunsmith-black">
         <div className="container mx-auto px-4 py-12 max-w-2xl">
-          <h1 className="font-bebas text-4xl text-gunsmith-gold mb-4 text-center">SUBMISSION RECEIVED</n1>
+          <h1 className="font-bebas text-4xl text-gunsmith-gold mb-4 text-center">SUBMISSION RECEIVED</h1>
           <div className="card">
             <p className="text-gunsmith-text mb-2">Business: <span className="text-gunsmith-gold">{data?.business_name || 'Your Business'}</span></p>
             <p className="text-gunsmith-text mb-2">FFL: <span className="text-gunsmith-gold">{data?.ffl_license_number || '—'}</span></p>

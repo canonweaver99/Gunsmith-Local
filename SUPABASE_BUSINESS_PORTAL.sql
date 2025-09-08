@@ -1,4 +1,4 @@
--- Add new verification-related fields to listings
+- Add new verification-related fields to listings
 ALTER TABLE public.listings
 ADD COLUMN IF NOT EXISTS verification_status TEXT GENERATED ALWAYS AS (
   CASE
