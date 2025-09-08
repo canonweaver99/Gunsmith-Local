@@ -53,9 +53,8 @@ export default function BusinessRegistrationForm() {
 
     if (!window.google) {
       const script = document.createElement('script')
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
-      script.async = true
-      script.onload = () => {
+      // Use callback to ensure readiness
+      ;(window as any).initMap = () => {
         try {
           window.dispatchEvent(new Event('google-maps-loaded'))
           initializeAutocomplete()
@@ -63,6 +62,9 @@ export default function BusinessRegistrationForm() {
           console.error('Error running Google Maps init:', e)
         }
       }
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`
+      script.async = true
+      script.defer = true
       script.onerror = () => {
         console.error('Failed to load Google Maps script')
       }
