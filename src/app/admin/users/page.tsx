@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/AuthContext'
 import { 
   Search, 
   Shield,
@@ -36,6 +37,7 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const { user } = useAuth()
 
   useEffect(() => {
     fetchUsers()
@@ -125,13 +127,13 @@ export default function AdminUsersPage() {
 
     setActionLoading(userId)
     try {
-      // Get requester id
-      const { data: session } = await supabase.auth.getSession()
-      const requesterId = session.session?.user?.id
+      // Use AuthContext user id as requester
+      const requesterId = user?.id
+      if (!requesterId) throw new Error('Auth session missing')
 
       const res = await fetch('/api/admin/delete-user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-requester-id': requesterId },
         body: JSON.stringify({ userId, requesterId }),
       })
       const result = await res.json()
