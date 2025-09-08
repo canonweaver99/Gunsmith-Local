@@ -28,8 +28,22 @@ export async function POST(request: NextRequest) {
     if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 })
     if (!profile?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
+    // Clean up dependent records to avoid FK violations
+    const cleanupSteps = [
+      () => adminClient.from('favorites').delete().eq('user_id', userId),
+      () => adminClient.from('business_claims').delete().eq('claimer_id', userId),
+      () => adminClient.from('listings').update({ owner_id: null }).eq('owner_id', userId),
+    ]
+
+    for (const step of cleanupSteps) {
+      const { error: stepError } = await step()
+      if (stepError) {
+        return NextResponse.json({ error: `Cleanup failed: ${stepError.message}` }, { status: 500 })
+      }
+    }
+
     const { error } = await adminClient.auth.admin.deleteUser(userId)
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) return NextResponse.json({ error: `Auth delete failed: ${error.message}` }, { status: 500 })
 
     return NextResponse.json({ success: true })
   } catch (e: any) {
