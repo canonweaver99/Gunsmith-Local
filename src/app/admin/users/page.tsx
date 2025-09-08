@@ -125,17 +125,23 @@ export default function AdminUsersPage() {
 
     setActionLoading(userId)
     try {
-      // Delete user's auth account
-      const { error } = await supabase.auth.admin.deleteUser(userId)
-      if (error) throw error
+      // Get requester id
+      const { data: session } = await supabase.auth.getSession()
+      const requesterId = session.session?.user?.id
 
-      // Profile and related data will be deleted via cascade
-      
+      const res = await fetch('/api/admin/delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, requesterId }),
+      })
+      const result = await res.json()
+      if (!res.ok) throw new Error(result.error || 'Failed to delete user')
+
       // Update local state
       setUsers(prev => prev.filter(user => user.id !== userId))
     } catch (error) {
       console.error('Error deleting user:', error)
-      alert('Failed to delete user. Note: Admin API access may be required for user deletion.')
+      alert('Failed to delete user.')
     } finally {
       setActionLoading(null)
     }
