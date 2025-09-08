@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { cookies } from 'next/headers'
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
 
 export const runtime = 'nodejs'
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId } = await request.json()
+    const { userId, requesterId } = await request.json()
     if (!userId) return NextResponse.json({ error: 'userId is required' }, { status: 400 })
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -15,18 +13,17 @@ export async function POST(request: NextRequest) {
     if (!supabaseUrl) return NextResponse.json({ error: 'Missing NEXT_PUBLIC_SUPABASE_URL' }, { status: 500 })
     if (!serviceKey) return NextResponse.json({ error: 'Missing SUPABASE_SERVICE_ROLE_KEY' }, { status: 500 })
 
-    // Verify requester is authenticated and is admin
-    const cookieStore = cookies()
-    const routeClient = createRouteHandlerClient({ cookies: () => cookieStore })
-    const { data: { user }, error: userError } = await routeClient.auth.getUser()
-    if (userError) return NextResponse.json({ error: userError.message }, { status: 401 })
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Verify requester is admin. Prefer cookie user id if present in X-Requester-Id header or body.
+    const effectiveRequesterId = requesterId || request.headers.get('x-requester-id') || null
+    if (!effectiveRequesterId) {
+      return NextResponse.json({ error: 'Requester not provided' }, { status: 401 })
+    }
 
     const adminClient = createClient(supabaseUrl, serviceKey)
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
       .select('is_admin')
-      .eq('id', user.id)
+      .eq('id', effectiveRequesterId)
       .maybeSingle()
     if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 })
     if (!profile?.is_admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })

@@ -132,7 +132,7 @@ export default function AdminUsersPage() {
       const res = await fetch('/api/admin/delete-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, requesterId }),
       })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error || 'Failed to delete user')
