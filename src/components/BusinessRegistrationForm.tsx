@@ -48,13 +48,19 @@ export default function BusinessRegistrationForm() {
 
   // Load Google Places API
   useEffect(() => {
-    if (typeof window !== 'undefined' && !window.google && process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+    if (typeof window === 'undefined') return
+    if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) return
+
+    if (!window.google) {
       const script = document.createElement('script')
       script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
       script.async = true
-      script.onload = initializeAutocomplete
+      script.onload = () => initializeAutocomplete()
+      script.onerror = () => {
+        console.error('Failed to load Google Maps script')
+      }
       document.head.appendChild(script)
-    } else if (window.google) {
+    } else {
       initializeAutocomplete()
     }
   }, [])
@@ -62,14 +68,19 @@ export default function BusinessRegistrationForm() {
   function initializeAutocomplete() {
     if (!addressInputRef.current || !window.google) return
 
-    const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+    const inputEl = addressInputRef.current
+    if (!inputEl) return
+
+    const autocomplete = new window.google.maps.places.Autocomplete(inputEl, {
       types: ['establishment', 'geocode'],
       componentRestrictions: { country: 'us' }
     })
 
+    if (!autocomplete) return
+
     autocomplete.addListener('place_changed', () => {
       const place = autocomplete.getPlace()
-      if (!place.address_components) return
+      if (!place || !place.address_components) return
 
       let street = '', city = '', state = '', zip = ''
       
@@ -93,12 +104,15 @@ export default function BusinessRegistrationForm() {
       setValue('postal_code', zip, { shouldValidate: true, shouldDirty: true })
       
       // Trigger validation for all updated fields
-      setTimeout(() => {
-        const form = document.querySelector('form')
-        if (form) {
-          form.dispatchEvent(new Event('input', { bubbles: true }))
-        }
-      }, 100)
+      // Trigger validation for fields explicitly
+      try {
+        ;['street_address','city','state_province','postal_code'].forEach((field) => {
+          const el = document.querySelector(`[name="${field}"]`) as HTMLInputElement | null
+          if (el) el.dispatchEvent(new Event('input', { bubbles: true }))
+        })
+      } catch (e) {
+        console.warn('Validation trigger failed', e)
+      }
     })
   }
 

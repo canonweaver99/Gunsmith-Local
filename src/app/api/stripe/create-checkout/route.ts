@@ -18,10 +18,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Get listing info (temporarily skip auth for testing)
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
-    )
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!supabaseUrl || !supabaseAnon) {
+      return NextResponse.json(
+        { error: 'Supabase not configured' },
+        { status: 503 }
+      )
+    }
+    const supabase = createClient(supabaseUrl, supabaseAnon)
     
     const { data: listing, error: listingError } = await supabase
       .from('listings')

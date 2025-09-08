@@ -10,7 +10,11 @@ const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_placeholder'
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
-  const sig = request.headers.get('stripe-signature')!
+  const sig = request.headers.get('stripe-signature')
+
+  if (!sig) {
+    return NextResponse.json({ error: 'Missing stripe-signature header' }, { status: 400 })
+  }
 
   let event: Stripe.Event
 
@@ -39,10 +43,12 @@ export async function POST(request: NextRequest) {
         featuredUntil.setDate(featuredUntil.getDate() + durationDays)
 
         // Create service role client (bypasses RLS)
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-          process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key'
-        )
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+        if (!supabaseUrl || !serviceKey) {
+          return NextResponse.json({ error: 'Supabase not configured' }, { status: 503 })
+        }
+        const supabase = createClient(supabaseUrl, serviceKey)
         
         // Update the listing to be featured
         const { error: updateError } = await supabase
