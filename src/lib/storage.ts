@@ -145,6 +145,7 @@ export function validateImageFile(
 export const STORAGE_BUCKETS = {
   LISTINGS: 'listings',
   PROFILES: 'profiles',
+  DOCUMENTS: 'documents',
 } as const
 
 // Storage paths
@@ -153,4 +154,5 @@ export const STORAGE_PATHS = {
   COVERS: 'covers',
   GALLERY: 'gallery',
   AVATARS: 'avatars',
+  VERIFICATION_DOCS: 'verification',
 } as const

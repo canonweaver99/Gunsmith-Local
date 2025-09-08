@@ -46,12 +46,18 @@ export default function MessagesPage() {
       setLoading(true)
       
       // First get user's listings
+      const { data: session } = await supabase.auth.getSession()
+      console.log('Session before query (messages):', session)
+
       const { data: listings, error: listingsError } = await supabase
         .from('listings')
         .select('id')
         .eq('owner_id', user!.id)
 
-      if (listingsError) throw listingsError
+      if (listingsError) {
+        console.error('Listings query error (messages):', listingsError)
+        throw listingsError
+      }
 
       if (!listings || listings.length === 0) {
         setMessages([])

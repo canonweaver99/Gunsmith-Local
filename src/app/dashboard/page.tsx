@@ -43,13 +43,19 @@ export default function DashboardPage() {
   async function fetchUserListings() {
     setLoading(true)
     try {
+      const { data: session } = await supabase.auth.getSession()
+      console.log('Session before query (dashboard):', session)
+
       const { data, error } = await supabase
         .from('listings')
         .select('*')
         .eq('owner_id', user?.id)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Listings query error (dashboard):', error)
+        throw error
+      }
       setListings(data || [])
       
       // Also fetch unread message count
@@ -129,12 +135,37 @@ export default function DashboardPage() {
                 <p className="text-gunsmith-text-secondary mb-6">
                   Start by adding your business to GunsmithLocal
                 </p>
-                <Link href="/add-business" className="btn-primary inline-block">
-                  Add Your Business
+                <Link href="/business-portal" className="btn-primary inline-block">
+                  Business Portal
                 </Link>
               </div>
             ) : (
               <div className="max-w-4xl mx-auto">
+                {/* Top Featured Banner (once) */}
+                <div className="card bg-gradient-to-br from-gunsmith-gold/10 to-transparent border-gunsmith-gold/30 mb-10">
+                  <div className="text-center">
+                    <Star className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
+                    <h3 className="font-bebas text-2xl text-gunsmith-gold mb-2">BOOST YOUR VISIBILITY</h3>
+                    <p className="text-gunsmith-text mb-6 max-w-md mx-auto">
+                      Get featured in your state for premium placement and increased customer inquiries
+                    </p>
+                    {listings.find(l => !l.is_featured) ? (
+                      <button
+                        onClick={() => {
+                          const first = listings.find(l => !l.is_featured)
+                          if (first) setShowFeaturedCheckout(first.id)
+                        }}
+                        className="btn-primary inline-flex items-center gap-2"
+                      >
+                        <Sparkles className="h-5 w-5" />
+                        Get Featured Now
+                      </button>
+                    ) : (
+                      <span className="text-gunsmith-text-secondary">All your listings are already featured</span>
+                    )}
+                  </div>
+                </div>
+
                 {listings.map((listing) => (
                   <div key={listing.id} className="space-y-8">
                     {/* Business Info Card */}
@@ -247,27 +278,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* Get Featured Card */}
-                    {!listing.is_featured && (
-                      <div className="card bg-gradient-to-br from-gunsmith-gold/10 to-transparent border-gunsmith-gold/30">
-                        <div className="text-center">
-                          <Star className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
-                          <h3 className="font-bebas text-2xl text-gunsmith-gold mb-2">
-                            BOOST YOUR VISIBILITY
-                          </h3>
-                          <p className="text-gunsmith-text mb-6 max-w-md mx-auto">
-                            Get featured in your state for premium placement and increased customer inquiries
-                          </p>
-                          <button 
-                            onClick={() => setShowFeaturedCheckout(listing.id)}
-                            className="btn-primary inline-flex items-center gap-2"
-                          >
-                            <Sparkles className="h-5 w-5" />
-                            Get Featured Now
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                    {/* Removed duplicate featured banners per request */}
                   </div>
                 ))}
               </div>

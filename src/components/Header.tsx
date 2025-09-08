@@ -22,12 +22,18 @@ export default function Header() {
       }
 
       try {
+        const { data: sessionData } = await supabase.auth.getSession()
+        console.log('Session before listings check:', sessionData)
+
         const { data, error } = await supabase
           .from('listings')
           .select('id')
           .eq('owner_id', user.id)
-          .single()
+          .maybeSingle()
         
+        if (error) {
+          console.error('Listings owner check error:', error)
+        }
         setHasListing(!!data && !error)
       } catch (error) {
         setHasListing(false)
@@ -77,15 +83,10 @@ export default function Header() {
               <Star className="h-4 w-4" />
               Featured
             </Link>
-                {user && (!hasListing || isAdmin) && (
-                  <>
-                    <Link href="/add-business" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
-                      Add Business
-                    </Link>
-                    <Link href="/claim-business" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
-                      Claim Business
-                    </Link>
-                  </>
+                {user && (
+                  <Link href="/business-portal" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
+                    Business Portal
+                  </Link>
                 )}
             <Link href="/about" className="font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors">
               About
@@ -253,23 +254,14 @@ export default function Header() {
               <Star className="h-4 w-4" />
               Featured
             </Link>
-            {user && (!hasListing || isAdmin) && (
-              <>
-                <Link
-                  href="/add-business"
-                  className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Add Business
-                </Link>
-                <Link
-                  href="/claim-business"
-                  className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Claim Business
-                </Link>
-              </>
+            {user && (
+              <Link
+                href="/business-portal"
+                className="block py-2 font-oswald font-medium text-gunsmith-text hover:text-gunsmith-gold transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Business Portal
+              </Link>
             )}
             <Link
               href="/about"

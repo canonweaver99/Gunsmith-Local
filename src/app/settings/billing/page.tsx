@@ -46,12 +46,18 @@ export default function BillingPage() {
       setLoading(true)
       
       // Fetch user's listings
+      const { data: session } = await supabase.auth.getSession()
+      console.log('Session before query (billing):', session)
+
       const { data: listingsData, error: listingsError } = await supabase
         .from('listings')
         .select('id, business_name, is_featured, featured_until')
         .eq('owner_id', user?.id)
 
-      if (listingsError) throw listingsError
+      if (listingsError) {
+        console.error('Listings query error (billing):', listingsError)
+        throw listingsError
+      }
 
       // Fetch transaction history
       const { data: transactionsData, error: transactionsError } = await supabase
@@ -133,10 +139,10 @@ export default function BillingPage() {
                       <CreditCard className="h-12 w-12 text-gunsmith-gold/30 mx-auto mb-4" />
                       <p className="text-gunsmith-text-secondary">No business listings found</p>
                       <button
-                        onClick={() => router.push('/add-business')}
+                        onClick={() => router.push('/business-portal')}
                         className="btn-primary mt-4"
                       >
-                        Add Your Business
+                        Business Portal
                       </button>
                     </div>
                   ) : (

@@ -112,7 +112,7 @@ export default function ProfilePage() {
         .from('listings')
         .select('*')
         .eq('owner_id', user!.id)
-        .single()
+        .maybeSingle()
       
       if (userListing && !listingError) {
         setHasListing(true)

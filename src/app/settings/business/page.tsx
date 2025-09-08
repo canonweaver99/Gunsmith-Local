@@ -36,13 +36,17 @@ export default function BusinessSettingsPage() {
 
   const fetchBusinessInfo = async () => {
     try {
+      const { data: session } = await supabase.auth.getSession()
+      console.log('Session before query (business settings):', session)
+
       const { data, error } = await supabase
         .from('listings')
         .select('*')
         .eq('owner_id', user?.id)
-        .single()
+        .maybeSingle()
 
       if (error || !data) {
+        if (error) console.error('Listings query error (business settings):', error)
         setHasListing(false)
         return
       }
@@ -115,10 +119,10 @@ export default function BusinessSettingsPage() {
               You need to create a business listing first
             </p>
             <button
-              onClick={() => router.push('/add-business')}
+              onClick={() => router.push('/business-portal')}
               className="btn-primary"
             >
-              Add Your Business
+              Business Portal
             </button>
           </div>
         </main>

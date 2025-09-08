@@ -29,8 +29,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/add-business" className="text-gunsmith-text-secondary hover:text-gunsmith-gold transition-colors text-sm">
-                  Add Your Business
+                <Link href="/business-portal" className="text-gunsmith-text-secondary hover:text-gunsmith-gold transition-colors text-sm">
+                  Business Portal
                 </Link>
               </li>
               <li>

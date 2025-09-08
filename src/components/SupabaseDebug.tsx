@@ -2,11 +2,16 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
 
 export default function SupabaseDebug() {
   const [testing, setTesting] = useState(false)
   const [results, setResults] = useState<any>(null)
+  
+  // Read public env vars for direct REST test (client-safe)
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
   const testConnection = async () => {
     setTesting(true)
@@ -18,8 +23,22 @@ export default function SupabaseDebug() {
     }
 
     try {
+      // Guard: ensure Supabase client was created
+      if (!supabase || typeof (supabase as any).from !== 'function') {
+        console.error('Supabase client not initialized')
+        testResults.tests.push({
+          name: 'Supabase Client',
+          success: false,
+          data: null,
+          error: 'Supabase client not initialized'
+        })
+        setResults(testResults)
+        setTesting(false)
+        return
+      }
+
       // Test 1: Get current user
-      console.log('🧪 Testing Supabase auth...')
+      // console.log('🧪 Testing Supabase auth...')
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       testResults.tests.push({
         name: 'Auth - Get User',
@@ -27,11 +46,11 @@ export default function SupabaseDebug() {
         data: user ? { id: user.id, email: user.email } : null,
         error: userError?.message
       })
-      console.log('Current user:', user)
-      console.log('User error:', userError)
+      // console.log('Current user:', user)
+      // console.log('User error:', userError)
 
       // Test 2: Test listings table read
-      console.log('🧪 Testing listings table read...')
+      // console.log('🧪 Testing listings table read...')
       const { data: listingsData, error: listingsError } = await supabase
         .from('listings')
         .select('id, business_name, status')
@@ -43,10 +62,10 @@ export default function SupabaseDebug() {
         data: listingsData,
         error: listingsError?.message
       })
-      console.log('Listings query result:', { data: listingsData, error: listingsError })
+      // console.log('Listings query result:', { data: listingsData, error: listingsError })
 
       // Test 3: Test profiles table read
-      console.log('🧪 Testing profiles table read...')
+      // console.log('🧪 Testing profiles table read...')
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email')
@@ -58,26 +77,56 @@ export default function SupabaseDebug() {
         data: profilesData,
         error: profilesError?.message
       })
-      console.log('Profiles query result:', { data: profilesData, error: profilesError })
+      // console.log('Profiles query result:', { data: profilesData, error: profilesError })
 
-      // Test 4: Test connection with headers
-      console.log('🧪 Testing with custom headers...')
-      const response = await fetch(`${supabaseUrl}/rest/v1/listings?select=id&limit=1`, {
-        headers: {
-          'apikey': supabaseAnonKey,
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
+      // Test 4: Test connection with custom headers via a temporary client
+      // console.log('🧪 Testing with custom headers...')
+      try {
+        const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+        if (!url || !key) {
+          console.error('Missing environment variables for custom headers test')
+          testResults.tests.push({
+            name: 'Custom Headers Client',
+            success: false,
+            data: null,
+            error: 'Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY'
+          })
+        } else {
+          const customClient = createClient(url, key, {
+            global: {
+              headers: {
+                'apikey': key,
+                'Authorization': `Bearer ${key}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+              }
+            }
+          })
+
+          const { data: chData, error: chError } = await customClient
+            .from('listings')
+            .select('id')
+            .limit(1)
+
+          // console.log('Custom headers test:', { data: chData, error: chError })
+          testResults.tests.push({
+            name: 'Custom Headers Client',
+            success: !chError,
+            data: chData,
+            error: chError?.message || null
+          })
         }
-      })
-      
-      testResults.tests.push({
-        name: 'Direct API - Listings',
-        success: response.ok,
-        data: { status: response.status, statusText: response.statusText },
-        error: response.ok ? null : `HTTP ${response.status}: ${response.statusText}`
-      })
-      console.log('Direct API response:', response.status, response.statusText)
+      } catch (err: any) {
+        console.error('Custom headers test failed:', err)
+        testResults.tests.push({
+          name: 'Custom Headers Client',
+          success: false,
+          data: null,
+          error: err.message
+        })
+      }
 
       // Test 5: Environment variables
       testResults.tests.push({

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -10,7 +10,6 @@ import { Building2, Shield, Loader2, AlertCircle, CheckCircle, Search } from 'lu
 
 export default function ClaimBusinessPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
@@ -31,21 +30,103 @@ export default function ClaimBusinessPage() {
     }
   }, [user, router])
 
+  // Validate FFL: 15 alphanumeric chars, exactly 14 digits and 1 letter
+  const isValidFfl = (value: string): boolean => {
+    const raw = value.replace(/[^A-Za-z0-9]/g, '')
+    if (raw.length !== 15) return false
+    const digits = (raw.match(/\d/g) || []).length
+    const letters = (raw.match(/[A-Za-z]/g) || []).length
+    return digits === 14 && letters === 1
+  }
+
   const searchBusinesses = async () => {
-    if (!searchQuery.trim()) return
-    
+    const raw = searchQuery.trim()
+    if (!raw) return
     setSearchLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('listings')
-        .select('*')
-        .or(`business_name.ilike.%${searchQuery}%,city.ilike.%${searchQuery}%,state_province.ilike.%${searchQuery}%`)
-        .is('owner_id', null) // Only unclaimed businesses
-        .eq('status', 'active')
-        .limit(10)
+      // Parse "City, ST" quick format
+      const cityStateMatch = raw.match(/^([^,]+),\s*([A-Za-z]{2})$/)
+      let primaryQuery
+      if (cityStateMatch) {
+        const city = cityStateMatch[1].trim()
+        const state = cityStateMatch[2].toUpperCase()
+        primaryQuery = supabase
+          .from('listings')
+          .select('*')
+          .eq('status', 'active')
+          .is('owner_id', null)
+          .ilike('city', `%${city}%`)
+          .eq('state_province', state)
+          .limit(25)
+      } else {
+        // Tokenize and build ORs across multiple fields for best-effort matching
+        const tokens = raw.split(/\s+/).filter(Boolean)
+        const searchableFields = [
+          'business_name',
+          'city',
+          'state_province',
+          'street_address',
+          'postal_code',
+          'description',
+          'website',
+          'phone'
+        ]
+        const orParts: string[] = []
+        for (const field of searchableFields) {
+          for (const t of tokens) {
+            orParts.push(`${field}.ilike.%${t}%`)
+          }
+        }
+        const orClause = orParts.join(',')
+        primaryQuery = supabase
+          .from('listings')
+          .select('*')
+          .or(orClause)
+          .eq('status', 'active')
+          .is('owner_id', null)
+          .limit(25)
+      }
 
+      let { data, error } = await primaryQuery
       if (error) throw error
-      setSearchResults(data || [])
+
+      // Fallback: include claimed businesses if none unclaimed matched
+      if (!data || data.length === 0) {
+        let fallback
+        if (cityStateMatch) {
+          const city = cityStateMatch[1].trim()
+          const state = cityStateMatch[2].toUpperCase()
+          const { data: fb, error: fbErr } = await supabase
+            .from('listings')
+            .select('*')
+            .eq('status', 'active')
+            .ilike('city', `%${city}%`)
+            .eq('state_province', state)
+            .limit(25)
+          if (fbErr) throw fbErr
+          fallback = fb
+        } else {
+          const tokens = raw.split(/\s+/).filter(Boolean)
+          const searchableFields = ['business_name','city','state_province','street_address','postal_code','description','website','phone']
+          const orParts: string[] = []
+          for (const field of searchableFields) {
+            for (const t of tokens) {
+              orParts.push(`${field}.ilike.%${t}%`)
+            }
+          }
+          const { data: fb, error: fbErr } = await supabase
+            .from('listings')
+            .select('*')
+            .or(orParts.join(','))
+            .eq('status', 'active')
+            .limit(25)
+          if (fbErr) throw fbErr
+          fallback = fb
+        }
+        setSearchResults(fallback || [])
+      } else {
+        setSearchResults(data)
+      }
     } catch (error: any) {
       setError(error.message || 'Failed to search businesses')
     } finally {
@@ -62,6 +143,11 @@ export default function ClaimBusinessPage() {
     setSuccess(false)
 
     try {
+      // Validate FFL
+      if (!isValidFfl(claimData.ffl_license_number)) {
+        throw new Error('Invalid FFL number. It must be 15 characters with 14 digits and 1 letter.')
+      }
+
       // Create a claim request
       const { error: claimError } = await supabase
         .from('business_claims')
@@ -69,7 +155,7 @@ export default function ClaimBusinessPage() {
           listing_id: selectedBusiness.id,
           claimer_id: user.id,
           claimer_email: user.email,
-          ffl_license_number: claimData.ffl_license_number,
+          ffl_license_number: claimData.ffl_license_number.replace(/[^A-Za-z0-9]/g, ''),
           verification_documents: claimData.verification_documents,
           additional_info: claimData.additional_info,
           status: 'pending',
@@ -192,6 +278,18 @@ export default function ClaimBusinessPage() {
                   ))}
                 </div>
               )}
+
+              {/* Not listed CTA */}
+              <div className="mt-8 p-6 rounded-lg bg-gunsmith-accent/20 border border-gunsmith-border">
+                <h3 className="font-bebas text-xl text-gunsmith-gold mb-2">MY BUSINESS ISN'T LISTED</h3>
+                <p className="text-gunsmith-text-secondary mb-4">Can't find your shop? Add it now and get verified.</p>
+                <button
+                  onClick={() => router.push('/add-business/new')}
+                  className="btn-primary"
+                >
+                  Add My Business
+                </button>
+              </div>
             </div>
 
             {/* Claim Form */}
@@ -264,40 +362,6 @@ export default function ClaimBusinessPage() {
                 </form>
               </div>
             )}
-
-            {/* Instructions */}
-            <div className="card mt-8">
-              <h2 className="font-bebas text-2xl text-gunsmith-gold mb-4">HOW IT WORKS</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-gunsmith-gold text-gunsmith-black rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-3">
-                    1
-                  </div>
-                  <h3 className="font-bebas text-lg text-gunsmith-gold mb-2">SEARCH</h3>
-                  <p className="text-gunsmith-text-secondary text-sm">
-                    Find your business in our directory of unclaimed listings
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-gunsmith-gold text-gunsmith-black rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-3">
-                    2
-                  </div>
-                  <h3 className="font-bebas text-lg text-gunsmith-gold mb-2">VERIFY</h3>
-                  <p className="text-gunsmith-text-secondary text-sm">
-                    Provide your FFL license number for verification
-                  </p>
-                </div>
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-gunsmith-gold text-gunsmith-black rounded-full flex items-center justify-center font-bold text-xl mx-auto mb-3">
-                    3
-                  </div>
-                  <h3 className="font-bebas text-lg text-gunsmith-gold mb-2">APPROVED</h3>
-                  <p className="text-gunsmith-text-secondary text-sm">
-                    Once verified, you'll have full control of your listing
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </main>

@@ -94,8 +94,8 @@ export default function HomePageClient() {
               <Link href="/listings" className="btn-primary">
                 Find a Gunsmith
               </Link>
-              <Link href="/add-business" className="btn-secondary">
-                Add Your Business
+              <Link href="/business-portal" className="btn-secondary">
+                Business Portal
               </Link>
             </div>
           </div>

@@ -245,7 +245,7 @@ function FeaturedContent() {
                 <p className="text-gunsmith-text-secondary mb-8">
                   No gunsmiths found in {US_STATES.find(s => s.code === selectedState)?.name}.
                 </p>
-                <Link href="/add-business" className="btn-primary">
+                <Link href="/business-portal" className="btn-primary">
                   Be the First to List
                 </Link>
               </div>

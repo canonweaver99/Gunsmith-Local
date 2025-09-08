@@ -4,7 +4,16 @@ import { useState, useEffect } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Star, Loader2, CreditCard } from 'lucide-react'
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+// Lazy-init Stripe to avoid crashing when the key is missing in local/dev
+let stripePromise: ReturnType<typeof loadStripe> | null = null
+function getStripe() {
+  const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  if (!key) return null
+  if (!stripePromise) {
+    stripePromise = loadStripe(key)
+  }
+  return stripePromise
+}
 
 interface FeaturedCheckoutProps {
   listingId: string
@@ -75,7 +84,12 @@ export default function FeaturedCheckout({ listingId, businessName, onClose }: F
       if (url) {
         window.location.href = url
       } else {
-        const stripe = await stripePromise
+        const stripeLoader = getStripe()
+        if (!stripeLoader) {
+          alert('Payments are disabled in this environment (missing Stripe key).')
+          return
+        }
+        const stripe = await stripeLoader
         if (stripe) {
           const { error } = await stripe.redirectToCheckout({ sessionId })
           if (error) {

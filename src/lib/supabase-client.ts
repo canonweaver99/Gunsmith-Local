@@ -1,12 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Validate environment variables with graceful fallback for build time
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
+// Validate environment variables (no placeholders to avoid 406/headers issues)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Warn about missing environment variables but don't fail during build
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-  console.warn('⚠️  Supabase environment variables not found. Using placeholder values for build.')
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY')
 }
 
 // Create a more robust Supabase client with retry logic
@@ -19,8 +18,11 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: {
     headers: {
       'x-application-name': 'gunsmithlocal',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
+      'x-my-custom-header': 'my-app-name',
+      // Let postgrest-js manage Accept/Content-Type per request (.single/.maybeSingle)
+      // Setting them globally can cause 406 with single/object responses
+      // Ensure PostgREST receives the API key explicitly
+      'apikey': supabaseAnonKey,
     },
   },
   db: {

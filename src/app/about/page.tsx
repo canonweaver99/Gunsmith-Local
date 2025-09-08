@@ -123,8 +123,8 @@ export default function AboutPage() {
               <a href="/listings" className="btn-primary">
                 Find a Gunsmith
               </a>
-              <a href="/add-business" className="btn-secondary">
-                Add Your Business
+              <a href="/business-portal" className="btn-secondary">
+                Business Portal
               </a>
             </div>
           </div>
