@@ -10,6 +10,7 @@ import ListingCard from '@/components/ListingCard'
 import MapView from '@/components/MapView'
 import AdvancedFilters from '@/components/AdvancedFilters'
 import { useAnalytics } from '@/hooks/useAnalytics'
+import { GUNSMITH_SPECIALTIES } from '@/lib/gunsmith-specialties'
 import { supabase, Listing } from '@/lib/supabase'
 import { Search, Filter, MapPin, Loader2, Map as MapIcon, SlidersHorizontal } from 'lucide-react'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -232,7 +233,21 @@ function ListingsContent() {
       }
     }
 
-    // Apply sorting
+    // If coming from wizard, compute ranking score per listing
+    const fromWizard = searchParams.get('fromWizard') === 'true'
+    const wizardPrefs = getWizardPreferences()
+    let scoresMap: Map<string, number> | null = null
+    if (fromWizard) {
+      scoresMap = new Map()
+      filtered.forEach((l) => {
+        const s = calculateGunsmithScore(l as any, wizardPrefs)
+        scoresMap!.set(l.id, s)
+      })
+      // Sort by score desc first; stable sort by featured/date remains via fallback later
+      filtered.sort((a, b) => (scoresMap!.get(b.id)! - scoresMap!.get(a.id)!))
+    }
+
+    // Apply sorting (UI-driven override after wizard sort)
     const ratingsMap = new Map(listingsWithRatings.map(l => [l.id, l.avgRating]))
     
     switch (sortBy) {
@@ -273,6 +288,104 @@ function ListingsContent() {
       
       analytics.trackSearch(searchTerm || 'browse', filtered.length, activeFilters)
     }
+  }
+
+  // Build user preferences object from URL params
+  function getWizardPreferences() {
+    const location = searchParams.get('location') || ''
+    const gunTypes = (searchParams.get('gunTypes') || '').split(',').filter(Boolean)
+    const services = (searchParams.get('services') || '').split(',').filter(Boolean)
+    const delivery = (searchParams.get('delivery') || 'both') as 'in-person' | 'shipping' | 'both'
+    return { location, gunTypes, services, delivery }
+  }
+
+  // Utilities for ranking
+  function calculateGunsmithScore(listing: any, prefs: any): number {
+    let score = 0
+
+    // Location (very basic: same city/state boost; distance fallback TODO)
+    if (prefs.location && listing.city && listing.city.toLowerCase() === prefs.location.toLowerCase()) score += 30
+    else if (prefs.location && listing.state_province && listing.state_province.toLowerCase().includes(prefs.location.toLowerCase())) score += 5
+
+    // Gun type match (treat tags containing types)
+    const gunTypes = prefs.gunTypes || []
+    if (gunTypes.length > 0) {
+      const hasMatch = (listing.tags || []).some((t: string) => gunTypes.some((g: string) => t.toLowerCase().includes(g.toLowerCase())))
+      if (hasMatch) score += 20
+      else if (gunTypes.includes('other')) score += 10
+    } else {
+      score += 10
+    }
+
+    // Service match using category mapping
+    const selectedServices = prefs.services || []
+    if (selectedServices.length > 0) {
+      const relatedSet = new Set<string>()
+      // Build category lookup: service -> group key
+      const serviceToGroup = new Map<string, string>()
+      GUNSMITH_SPECIALTIES.forEach(g => g.items.forEach(i => serviceToGroup.set(i.toLowerCase(), g.key)))
+
+      const listingTags = (listing.tags || []).map((t: string) => t.toLowerCase())
+      const exact = listingTags.some((t: string) => selectedServices.some((s: string) => t === s.toLowerCase()))
+      if (exact) score += 35
+      else {
+        // Related: same group
+        const selectedGroups = new Set(selectedServices.map((s: string) => serviceToGroup.get(s.toLowerCase())).filter(Boolean) as string[])
+        const listingGroups = new Set(listingTags.map((t: string) => serviceToGroup.get(t)).filter(Boolean) as string[])
+        const hasRelated = [...selectedGroups].some(g => listingGroups.has(g))
+        if (hasRelated) score += 25
+        else if (listingTags.includes('other') || listingTags.includes('other services')) score += 10
+      }
+    }
+
+    // Delivery preference
+    const pref = prefs.delivery
+    const offersBoth = listing.delivery_method === 'both'
+    if (pref === 'both') score += 15
+    else if (listing.delivery_method === pref) score += 15
+    else if (offersBoth) score += 10
+
+    // Quality bonuses
+    score += calculateQualityBonus(listing)
+
+    // Featured multiplier
+    if (listing.is_featured) score *= 1.15
+
+    return score
+  }
+
+  function calculateQualityBonus(listing: any): number {
+    let bonus = 0
+    if (listing.business_hours) bonus += 2
+    if (listing.cover_image_url || listing.logo_url || (listing.image_gallery && listing.image_gallery.length > 0)) bonus += 3
+    if (listing.description && listing.description.length > 40) bonus += 3
+    if (listing.website || listing.facebook_url || listing.instagram_url) bonus += 2
+
+    // Specialization bonus: multiple items in same category as any selected service
+    const prefs = getWizardPreferences()
+    const selected = prefs.services || []
+    if (selected.length > 0) {
+      const serviceToGroup = new Map<string, string>()
+      GUNSMITH_SPECIALTIES.forEach(g => g.items.forEach(i => serviceToGroup.set(i.toLowerCase(), g.key)))
+      const selectedGroups = new Set(selected.map((s: string) => serviceToGroup.get(s.toLowerCase())).filter(Boolean) as string[])
+      const listingGroups = (listing.tags || []).map((t: string) => serviceToGroup.get(String(t).toLowerCase())).filter(Boolean) as string[]
+      const counts: Record<string, number> = {}
+      listingGroups.forEach(g => { counts[g] = (counts[g] || 0) + 1 })
+      if ([...selectedGroups].some(g => (counts[g] || 0) >= 2)) bonus += 10
+    }
+
+    // Availability bonus (basic: open now + weekend)
+    const now = new Date()
+    const dayIdx = now.getDay()
+    const days = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday']
+    const currentDay = days[dayIdx]
+    if (listing.business_hours && listing.business_hours[currentDay] && !listing.business_hours[currentDay].closed) {
+      bonus += 5
+    }
+    const weekendOpen = listing.business_hours && ((listing.business_hours['saturday'] && !listing.business_hours['saturday'].closed) || (listing.business_hours['sunday'] && !listing.business_hours['sunday'].closed))
+    if (weekendOpen) bonus += 5
+
+    return bonus
   }
 
   // Get unique categories and states for filters
