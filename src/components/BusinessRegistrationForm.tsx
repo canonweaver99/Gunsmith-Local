@@ -9,7 +9,6 @@ import ImageUpload from '@/components/ImageUpload'
 import { HelpCircle, CheckCircle, Clock, Upload, MapPin } from 'lucide-react'
 import Link from 'next/link'
 import { loadGoogleMapsScript } from '@/lib/google-maps'
-import { ALL_SPECIALTIES } from '@/lib/gunsmith-specialties'
 
 declare global {
   interface Window {
@@ -17,7 +16,38 @@ declare global {
   }
 }
 
-const SERVICES = ALL_SPECIALTIES
+const SERVICES = [
+  'Custom Rifle Builds',
+  'Custom Pistol Builds',
+  'AR-15 Builds',
+  'Bolt Action Rifle Work',
+  'Trigger Installation/Tuning',
+  'Barrel Threading',
+  'Muzzle Device Installation',
+  'Scope Mounting',
+  'Sight Installation',
+  'Cerakote Coating',
+  'Bluing/Refinishing',
+  'Stock Work/Bedding',
+  'Action Blueprinting',
+  'Barrel Installation',
+  'Recoil Pad Installation',
+  'Sling Swivel Installation',
+  'Safety Repairs',
+  'Feed Ramp Polishing',
+  'Chamber Work',
+  'Headspace Checking',
+  'Trigger Guard Installation',
+  'Magazine Well Work',
+  'Checkering',
+  'Engraving',
+  'Parts Fabrication',
+  'Restoration Work',
+  'Competition Prep',
+  'Hunting Rifle Setup',
+  'Tactical Modifications',
+  'General Repairs'
+]
 
 const TIME_OPTIONS = [
   '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
