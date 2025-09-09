@@ -59,7 +59,6 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 export default function BusinessRegistrationForm() {
   const [submitting, setSubmitting] = useState(false)
-  const [currentStep, setCurrentStep] = useState(1)
   const [logoUrl, setLogoUrl] = useState<string>('')
   const [coverUrl, setCoverUrl] = useState<string>('')
   const [galleryUrls, setGalleryUrls] = useState<string[]>([])
@@ -349,19 +348,6 @@ export default function BusinessRegistrationForm() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Progress Indicator */}
-      <div className="mb-8 bg-gunsmith-card p-6 rounded-lg border-2 border-gunsmith-gold">
-        <div className="text-center mb-4">
-          <h2 className="font-bebas text-3xl text-gunsmith-gold">BUSINESS REGISTRATION</h2>
-          <p className="text-xl text-gunsmith-text mt-2">Step {currentStep} of {totalSteps}</p>
-        </div>
-        <div className="w-full bg-gunsmith-accent rounded-full h-4">
-          <div 
-            className="bg-gunsmith-gold h-4 rounded-full transition-all duration-500"
-            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
-          ></div>
-        </div>
-      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {message && (
