@@ -45,6 +45,7 @@ export const businessFormSchema = z.object({
 
   services: z.array(z.string()).optional(),
   specialties: z.string().trim().optional(),
+  delivery_method: z.enum(['in-person','shipping','both']).optional(),
 })
 
 export type BusinessFormValues = z.infer<typeof businessFormSchema>

@@ -75,6 +75,7 @@ export default function BusinessRegistrationForm() {
     resolver: zodResolver(businessFormSchema),
     defaultValues: {
       services: [],
+      delivery_method: 'both',
     },
   })
 
@@ -326,6 +327,7 @@ export default function BusinessRegistrationForm() {
         description: values.specialties || '',
         status: 'pending',
         verification_status: 'pending',
+        delivery_method: values.delivery_method || 'both',
         slug,
         logo_url: logoUrl || null,
         cover_image_url: coverUrl || null,
@@ -725,10 +727,36 @@ export default function BusinessRegistrationForm() {
           </div>
         </div>
 
-        {/* Step 7: Specialties */}
+        {/* Step 7: Delivery Preference */}
         <div className="bg-gunsmith-card p-8 rounded-lg border-2 border-gunsmith-border">
           <div className="flex items-center gap-3 mb-6">
             <div className="bg-gunsmith-gold text-gunsmith-black w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">7</div>
+            <h3 className="font-bebas text-3xl text-gunsmith-gold">HOW DO YOU PREFER TO WORK?</h3>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            <label className={`wizard-button ${watch('delivery_method') === 'in-person' ? 'selected' : ''} text-center`}>
+              <input type="radio" value="in-person" {...register('delivery_method')} className="hidden" />
+              <span className="text-lg font-medium">In-Person Only</span>
+              <p className="text-sm text-gunsmith-text-secondary mt-1">Visit the gunsmith's shop directly</p>
+            </label>
+            <label className={`wizard-button ${watch('delivery_method') === 'shipping' ? 'selected' : ''} text-center`}>
+              <input type="radio" value="shipping" {...register('delivery_method')} className="hidden" />
+              <span className="text-lg font-medium">Shipping Only</span>
+              <p className="text-sm text-gunsmith-text-secondary mt-1">Ship your firearm to the gunsmith</p>
+            </label>
+            <label className={`wizard-button ${watch('delivery_method') === 'both' ? 'selected' : ''} text-center`}>
+              <input type="radio" value="both" {...register('delivery_method')} className="hidden" />
+              <span className="text-lg font-medium">Either Works</span>
+              <p className="text-sm text-gunsmith-text-secondary mt-1">Open to both options</p>
+            </label>
+          </div>
+        </div>
+
+        {/* Step 8: Specialties */}
+        <div className="bg-gunsmith-card p-8 rounded-lg border-2 border-gunsmith-border">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="bg-gunsmith-gold text-gunsmith-black w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg">8</div>
             <h3 className="font-bebas text-3xl text-gunsmith-gold">TELL US ABOUT YOUR EXPERTISE</h3>
           </div>
           
