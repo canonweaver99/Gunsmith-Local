@@ -9,6 +9,7 @@ import ImageUpload from '@/components/ImageUpload'
 import { HelpCircle, CheckCircle, Clock, Upload, MapPin } from 'lucide-react'
 import Link from 'next/link'
 import { loadGoogleMapsScript } from '@/lib/google-maps'
+import { GUNSMITH_SPECIALTIES } from '@/lib/gunsmith-specialties'
 
 declare global {
   interface Window {
@@ -596,20 +597,32 @@ export default function BusinessRegistrationForm() {
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            {SERVICES.map((service) => (
-              <button
-                key={service}
-                type="button"
-                onClick={() => toggleService(service)}
-                className={`p-3 rounded-lg border transition-all duration-200 text-left min-h-[60px] flex items-center ${
-                  selectedServices.includes(service)
-                    ? 'bg-gunsmith-gold text-gunsmith-black border-gunsmith-gold'
-                    : 'bg-gunsmith-accent border-gunsmith-border text-gunsmith-text hover:border-gunsmith-gold hover:bg-gunsmith-gold/10'
-                }`}
-              >
-                <span className="text-sm">{service}</span>
-              </button>
+          {/* Grouped services under 8 parent categories */}
+          <div className="space-y-4">
+            {GUNSMITH_SPECIALTIES.map(group => (
+              <div key={group.key} className="border border-gunsmith-border rounded-md">
+                <details>
+                  <summary className="cursor-pointer select-none px-4 py-3 font-oswald text-lg text-gunsmith-gold">
+                    {group.label}
+                  </summary>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4">
+                    {group.items.map(item => (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => toggleService(item)}
+                        className={`p-3 rounded-lg border transition-all duration-200 text-left min-h-[48px] flex items-center ${
+                          selectedServices.includes(item)
+                            ? 'bg-gunsmith-gold text-gunsmith-black border-gunsmith-gold'
+                            : 'bg-gunsmith-accent border-gunsmith-border text-gunsmith-text hover:border-gunsmith-gold hover:bg-gunsmith-gold/10'
+                        }`}
+                      >
+                        <span className="text-sm">{item}</span>
+                      </button>
+                    ))}
+                  </div>
+                </details>
+              </div>
             ))}
           </div>
         </div>

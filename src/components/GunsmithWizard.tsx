@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { MapPin, Wrench, Package, ChevronRight, ChevronLeft, Loader2, CheckCircle, Truck, Users, Target } from 'lucide-react'
+import { GUNSMITH_SPECIALTIES } from '@/lib/gunsmith-specialties'
 // Using curated list for the wizard UI
 
 interface WizardData {
@@ -255,39 +256,48 @@ export default function GunsmithWizard() {
               </p>
             </div>
             
-            <div className="grid grid-cols-2 gap-3">
-              {SERVICE_OPTIONS.map((service) => (
+            {/* Parent categories as buttons; expand to show children */}
+            <div className="space-y-4">
+              {GUNSMITH_SPECIALTIES.map(group => (
+                <details key={group.key}>
+                  <summary className="wizard-button text-left">
+                    <span className="text-sm font-medium">{group.label}</span>
+                  </summary>
+                  <div className="grid grid-cols-2 gap-3 mt-3">
+                    {group.items.map(item => (
+                      <button
+                        key={item}
+                        onClick={() => toggleService(item)}
+                        className={`wizard-button ${
+                          wizardData.services.includes(item) ? 'selected' : ''
+                        } text-center`}
+                      >
+                        <span className="text-sm font-medium">{item}</span>
+                      </button>
+                    ))}
+                  </div>
+                </details>
+              ))}
+
+              {/* Other option */}
+              <div className="mt-4">
                 <button
-                  key={service.id}
-                  onClick={() => toggleService(service.id)}
-                  className={`wizard-button ${
-                    wizardData.services.includes(service.id) ? 'selected' : ''
+                  onClick={() => toggleService('other')}
+                  className={`wizard-button w-full ${
+                    wizardData.services.includes('other') ? 'selected' : ''
                   } text-center`}
                 >
-                  <span className="text-sm font-medium">{service.label}</span>
+                  <span className="text-sm font-medium">Other</span>
                 </button>
-              ))}
-              {/* Other option */}
-              <button
-                onClick={() => toggleService('other')}
-                className={`wizard-button col-span-2 ${
-                  wizardData.services.includes('other') ? 'selected' : ''
-                } text-center`}
-              >
-                <span className="text-sm font-medium">Other</span>
-              </button>
-              {wizardData.services.includes('other') && (
-                <input
-                  type="text"
-                  placeholder="Describe what you need..."
-                  className="input w-full col-span-2"
-                  onChange={(e) => {
-                    const text = e.target.value
-                    // Reuse customGunType field to store free text for now
-                    setWizardData({ ...wizardData, customGunType: text })
-                  }}
-                />
-              )}
+                {wizardData.services.includes('other') && (
+                  <input
+                    type="text"
+                    placeholder="Describe what you need..."
+                    className="input w-full mt-3"
+                    onChange={(e) => setWizardData({ ...wizardData, customGunType: e.target.value })}
+                  />
+                )}
+              </div>
             </div>
           </div>
         )}
