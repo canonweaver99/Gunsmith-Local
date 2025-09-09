@@ -171,13 +171,32 @@ function ListingsContent() {
         })
       }
 
-      // Services filter
+      // Services filter (relaxed: match by exact tag OR same parent category)
       if (advancedFilters.services.length > 0) {
-        filtered = filtered.filter(listing => 
-          listing.tags && listing.tags.some(tag => 
-            advancedFilters.services.includes(tag)
-          )
-        )
+        // Build mapping from service -> group and label -> key
+        const serviceToGroup = new Map<string, string>()
+        const labelToKey = new Map<string, string>()
+        GUNSMITH_SPECIALTIES.forEach(g => {
+          labelToKey.set(g.label.toLowerCase(), g.key)
+          g.items.forEach(i => serviceToGroup.set(i.toLowerCase(), g.key))
+        })
+
+        const selectedServices = advancedFilters.services.map((s: string) => s.toLowerCase())
+        const selectedGroups = new Set<string>()
+        selectedServices.forEach(s => {
+          const grp = serviceToGroup.get(s) || labelToKey.get(s)
+          if (grp) selectedGroups.add(grp)
+        })
+
+        filtered = filtered.filter(listing => {
+          const tags = (listing.tags || []).map((t: string) => t.toLowerCase())
+          // Exact tag match
+          const exact = tags.some(t => selectedServices.includes(t))
+          if (exact) return true
+          // Group match
+          const groups = new Set(tags.map(t => serviceToGroup.get(t)).filter(Boolean) as string[])
+          return [...selectedGroups].some(g => groups.has(g))
+        })
       }
 
       // Verified filter
