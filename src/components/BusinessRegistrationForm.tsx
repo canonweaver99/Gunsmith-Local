@@ -7,6 +7,7 @@ import { businessFormSchema, type BusinessFormValues, STATES } from '@/lib/valid
 import { supabase } from '@/lib/supabase'
 import ImageUpload from '@/components/ImageUpload'
 import { HelpCircle, CheckCircle, Clock, Upload, MapPin } from 'lucide-react'
+import Link from 'next/link'
 import { loadGoogleMapsScript } from '@/lib/google-maps'
 
 declare global {
@@ -38,6 +39,7 @@ export default function BusinessRegistrationForm() {
   const [showHelp, setShowHelp] = useState<{[key: string]: boolean}>({})
   const addressInputRef = useRef<HTMLInputElement | null>(null)
   const autocompleteRef = useRef<any | null>(null)
+  const [showSuccess, setShowSuccess] = useState(false)
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<BusinessFormValues>({
     resolver: zodResolver(businessFormSchema),
@@ -303,6 +305,7 @@ export default function BusinessRegistrationForm() {
       const { error } = await supabase.from('listings').insert(payload)
       if (error) throw error
       setMessage('SUCCESS! Your business has been submitted for review. We will contact you within 2-3 business days.')
+      setShowSuccess(true)
     } catch (e: any) {
       setMessage(`ERROR: ${e?.message || 'Failed to submit form. Please try again.'}`)
     } finally {
@@ -738,6 +741,18 @@ export default function BusinessRegistrationForm() {
           </div>
         </div>
       </form>
+      {showSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div role="dialog" aria-modal="true" className="max-w-lg w-full bg-gunsmith-card border-2 border-gunsmith-gold rounded-lg p-8 text-center">
+            <h3 className="font-bebas text-3xl text-gunsmith-gold mb-4">SUCCESS!</h3>
+            <p className="text-gunsmith-text text-lg mb-6">Your business has been submitted for review. We will contact you within 2-3 business days.</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button onClick={() => setShowSuccess(false)} className="btn-secondary min-w-[140px]">Close</button>
+              <Link href="/dashboard" className="btn-primary min-w-[180px] text-center">Go to Dashboard</Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
