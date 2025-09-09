@@ -82,15 +82,14 @@ export default function MapView({
         })
         setCustomIcon(icon)
 
-        // Featured icon with gold outline using a CSS class
+        // Featured icon: solid gold marker
         const featured = new L.Icon({
-          iconUrl: '/leaflet-svg/marker.svg',
+          iconUrl: '/leaflet-svg/marker-gold.svg',
           shadowUrl: '/leaflet/marker-shadow.png',
           iconSize: [25, 41],
           iconAnchor: [12, 41],
           popupAnchor: [1, -34],
-          shadowSize: [41, 41],
-          className: 'featured-marker'
+          shadowSize: [41, 41]
         })
         setFeaturedIcon(featured)
 
