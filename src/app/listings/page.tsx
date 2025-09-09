@@ -523,7 +523,6 @@ function ListingsContent() {
           <div className="container mx-auto">
             <AdvancedFilters
               onFiltersChange={setAdvancedFilters}
-              availableCategories={categories}
               availableStates={states}
               availableServices={services}
             />

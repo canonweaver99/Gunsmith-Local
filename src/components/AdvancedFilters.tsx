@@ -5,12 +5,9 @@ import {
   Filter, 
   X, 
   Star, 
-  DollarSign, 
   Clock, 
   Shield,
   Award,
-  MapPin,
-  Wrench,
   ChevronDown,
   ChevronUp
 } from 'lucide-react'
@@ -32,14 +29,12 @@ interface FilterOptions {
 
 interface AdvancedFiltersProps {
   onFiltersChange: (filters: FilterOptions) => void
-  availableCategories: string[]
   availableStates: string[]
   availableServices: string[]
 }
 
 export default function AdvancedFilters({
   onFiltersChange,
-  availableCategories,
   availableStates,
   availableServices
 }: AdvancedFiltersProps) {
@@ -151,25 +146,7 @@ export default function AdvancedFilters({
       {/* Filter Content */}
       {isExpanded && (
         <div className="px-4 pb-4 space-y-6 border-t border-gunsmith-border pt-4">
-          {/* Categories */}
-          <div>
-            <h4 className="font-oswald font-medium text-gunsmith-text mb-3">Categories</h4>
-            <div className="flex flex-wrap gap-2">
-              {availableCategories.map(category => (
-                <button
-                  key={category}
-                  onClick={() => toggleCategory(category)}
-                  className={`px-3 py-1 rounded text-sm font-oswald transition-colors ${
-                    filters.categories.includes(category)
-                      ? 'bg-gunsmith-gold text-gunsmith-black'
-                      : 'bg-gunsmith-accent text-gunsmith-text hover:bg-gunsmith-gold hover:text-gunsmith-black'
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Categories removed per request */}
 
           {/* States */}
           <div>
@@ -310,36 +287,7 @@ export default function AdvancedFilters({
             </div>
           </div>
 
-          {/* Year Established */}
-          <div>
-            <h4 className="font-oswald font-medium text-gunsmith-text mb-3">Year Established</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="text-sm text-gunsmith-text-secondary">From</label>
-                <input
-                  type="number"
-                  min="1800"
-                  max={currentYear}
-                  value={filters.yearEstablishedMin || ''}
-                  onChange={(e) => updateFilter('yearEstablishedMin', e.target.value ? parseInt(e.target.value) : null)}
-                  className="input w-full"
-                  placeholder="Min year"
-                />
-              </div>
-              <div>
-                <label className="text-sm text-gunsmith-text-secondary">To</label>
-                <input
-                  type="number"
-                  min="1800"
-                  max={currentYear}
-                  value={filters.yearEstablishedMax || ''}
-                  onChange={(e) => updateFilter('yearEstablishedMax', e.target.value ? parseInt(e.target.value) : null)}
-                  className="input w-full"
-                  placeholder="Max year"
-                />
-              </div>
-            </div>
-          </div>
+          {/* Year Established removed per request */}
 
           {/* Distance (placeholder for future geolocation feature) */}
           <div>
