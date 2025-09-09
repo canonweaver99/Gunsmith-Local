@@ -126,14 +126,17 @@ export default function ListingDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Hero Section with Cover Image */}
+        {/* Hero Section with Cover Image (non-repeating, center, cover) */}
         {listing.cover_image_url && (
-          <div className="h-64 md:h-96 relative overflow-hidden">
-            <img 
-              src={listing.cover_image_url} 
-              alt={listing.business_name}
-              className="w-full h-full object-cover"
-            />
+          <div 
+            className="relative h-64 md:h-[28rem] lg:h-[32rem]"
+            style={{
+              backgroundImage: `url(${listing.cover_image_url})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center center',
+              backgroundRepeat: 'no-repeat',
+            }}
+          >
             <div className="absolute inset-0 bg-gradient-to-t from-gunsmith-black/80 to-transparent" />
           </div>
         )}
@@ -184,17 +187,7 @@ export default function ListingDetailPage({ params }: PageProps) {
           </section>
         )}
 
-        {/* Cover Image */}
-        {listing.cover_image_url && (
-          <section className="relative h-64 md:h-96">
-            <img
-              src={listing.cover_image_url}
-              alt={`${listing.business_name} cover`}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-gunsmith-black/80 to-transparent"></div>
-          </section>
-        )}
+        {/* (Removed duplicate cover image section to prevent double rendering) */}
 
         {/* Main Content */}
         <section className="py-12 px-4">
