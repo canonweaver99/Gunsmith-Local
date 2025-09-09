@@ -8,11 +8,22 @@ ADD COLUMN IF NOT EXISTS verification_status TEXT GENERATED ALWAYS AS (
   END
 ) STORED;
 
+-- Normalize on ffl_license_number everywhere
 ALTER TABLE public.listings
-ADD COLUMN IF NOT EXISTS ffl_number TEXT;
+ADD COLUMN IF NOT EXISTS ffl_license_number TEXT;
 
-ALTER TABLE public.listings
-ADD CONSTRAINT listings_ffl_number_unique UNIQUE (ffl_number);
+-- Optional unique constraint (remove if multiple locations share same FFL)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM   pg_constraint
+    WHERE  conname = 'listings_ffl_license_number_unique'
+  ) THEN
+    ALTER TABLE public.listings
+    ADD CONSTRAINT listings_ffl_license_number_unique UNIQUE (ffl_license_number);
+  END IF;
+END$$;
 
 ALTER TABLE public.listings
 ADD COLUMN IF NOT EXISTS submitted_documents JSONB DEFAULT '{}'::jsonb;
