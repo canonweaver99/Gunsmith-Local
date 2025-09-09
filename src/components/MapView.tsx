@@ -189,20 +189,20 @@ export default function MapView({
             }}
           >
             <Popup>
-              <div className="min-w-[200px]">
-                <h3 className="font-bebas text-lg text-gunsmith-gold mb-2">
+              <div className="min-w-[200px] text-gray-900">
+                <h3 className="font-bebas text-lg text-amber-600 mb-2">
                   {listing.business_name}
                 </h3>
                 
                 {listing.short_description && (
-                  <p className="text-sm text-gunsmith-text-secondary mb-2">
+                  <p className="text-sm text-gray-700 mb-2">
                     {listing.short_description}
                   </p>
                 )}
                 
                 <div className="space-y-1 text-sm">
                   {listing.street_address && (
-                    <p className="text-gunsmith-text">
+                    <p className="text-gray-800">
                       <MapPin className="inline h-3 w-3 mr-1" />
                       {listing.street_address}
                       {listing.city && `, ${listing.city}`}
@@ -211,13 +211,13 @@ export default function MapView({
                   )}
                   
                   {listing.phone && (
-                    <p className="text-gunsmith-text">
+                    <p className="text-gray-800">
                       📞 {listing.phone}
                     </p>
                   )}
                   
                   {listing.category && (
-                    <p className="text-gunsmith-text">
+                    <p className="text-gray-800">
                       🏷️ {listing.category}
                     </p>
                   )}
@@ -227,7 +227,7 @@ export default function MapView({
                   onClick={() => {
                     router.push(`/listings/${listing.slug}`)
                   }}
-                  className="mt-3 w-full bg-gunsmith-gold text-gunsmith-black px-3 py-1 rounded text-sm font-medium hover:bg-gunsmith-goldenrod transition-colors"
+                  className="mt-3 w-full bg-amber-500 text-gray-900 px-3 py-1 rounded text-sm font-medium hover:bg-amber-600 transition-colors"
                 >
                   View Profile
                 </button>
