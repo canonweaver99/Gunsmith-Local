@@ -2,14 +2,14 @@
 // Grouped for easy consumption in UIs
 
 export type SpecialtyGroupKey =
-  | 'repair_restoration'
-  | 'custom_work'
-  | 'finishing_services'
-  | 'specialized_mods'
-  | 'engraving_personalization'
-  | 'ffl_services'
-  | 'specialized_firearms'
-  | 'law_enforcement_military'
+  | 'general_repairs'
+  | 'barrel_services'
+  | 'stock_work'
+  | 'metal_finishing'
+  | 'sights_optics'
+  | 'custom_builds'
+  | 'restoration'
+  | 'ffl_other'
 
 export interface SpecialtyGroup {
   key: SpecialtyGroupKey
@@ -19,100 +19,77 @@ export interface SpecialtyGroup {
 
 export const GUNSMITH_SPECIALTIES: SpecialtyGroup[] = [
   {
-    key: 'repair_restoration',
-    label: 'Repair & Restoration',
+    key: 'general_repairs',
+    label: 'General Repairs & Maintenance',
     items: [
-      'General firearm repair',
-      'Antique/historical firearm restoration',
-      'Military surplus restoration',
-      'Vintage sporting rifle restoration',
-      'Shotgun repair specialist',
-      'Handgun repair specialist',
-      'Muzzleloader restoration',
+      'Trigger Installation/Tuning',
+      'Safety Repairs',
+      'Feed Ramp Polishing',
+      'Headspace Checking',
+      'Magazine Well Work',
+      'General Repairs',
     ],
   },
   {
-    key: 'custom_work',
-    label: 'Custom Work',
+    key: 'barrel_services',
+    label: 'Barrel Services',
     items: [
-      'Custom rifle building',
-      'Precision/benchrest rifle building',
-      'Competition pistol modifications',
-      'Stock making and fitting',
-      'Barrel fitting and chambering',
-      'Action blueprinting',
-      'Trigger work and tuning',
+      'Barrel Threading',
+      'Barrel Installation',
+      'Muzzle Device Installation',
     ],
   },
   {
-    key: 'finishing_services',
-    label: 'Finishing Services',
+    key: 'stock_work',
+    label: 'Stock Work',
     items: [
-      'Bluing (hot and cold)',
-      'Parkerizing',
-      'Cerakote application',
-      'Anodizing',
-      'Case hardening',
-      'Rust removal and prevention',
-      'Metal polishing',
+      'Stock Work/Bedding',
+      'Recoil Pad Installation',
     ],
   },
   {
-    key: 'specialized_mods',
-    label: 'Specialized Modifications',
+    key: 'metal_finishing',
+    label: 'Metal Finishing',
     items: [
-      'Scope mounting and bore sighting',
-      'Sight installation (iron sights, optics)',
-      'Muzzle device installation',
-      'Threading for suppressors/muzzle brakes',
-      'Magazine modifications',
-      'Safety modifications',
-      'Grip and stock modifications',
+      'Cerakote Coating',
+      'Bluing/Refinishing',
+      'Engraving',
     ],
   },
   {
-    key: 'engraving_personalization',
-    label: 'Engraving & Personalization',
+    key: 'sights_optics',
+    label: 'Sights & Optics',
     items: [
-      'Hand engraving',
-      'Machine engraving',
-      'Laser engraving',
-      'Custom checkering',
-      'Inlay work (gold, silver)',
-      'Monogramming',
+      'Sight Installation',
+      'Scope Mounting',
+      'Trigger Guard Installation',
     ],
   },
   {
-    key: 'ffl_services',
-    label: 'FFL Services',
+    key: 'custom_builds',
+    label: 'Custom Builds',
     items: [
-      'Federal Firearms License transfers',
-      'Background check processing',
-      'Firearm sales',
-      'Import/export documentation',
-      'Form 4473 processing',
+      'Custom Rifle Builds',
+      'Custom Pistol Builds',
+      'AR-15 Builds',
+      'Competition Prep',
+      'Tactical Modifications',
     ],
   },
   {
-    key: 'specialized_firearms',
-    label: 'Specialized Firearm Types',
+    key: 'restoration',
+    label: 'Restoration',
     items: [
-      'Black powder/muzzleloader specialist',
-      'Semi-automatic specialist',
-      'Lever action specialist',
-      'Single action revolver specialist',
-      'Double-barrel shotgun specialist',
-      'NFA items (Class 3 dealer)',
+      'Restoration Work',
+      'Parts Fabrication',
     ],
   },
   {
-    key: 'law_enforcement_military',
-    label: 'Law Enforcement/Military',
+    key: 'ffl_other',
+    label: 'FFL/Other Services',
     items: [
-      'Duty weapon maintenance',
-      'Armorer services',
-      'Bulk/fleet maintenance',
-      'Emergency repair services',
+      'FFL Transfers',
+      'Hunting Rifle Setup',
     ],
   },
 ]
