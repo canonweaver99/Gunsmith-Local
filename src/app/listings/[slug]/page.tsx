@@ -95,39 +95,8 @@ export default function ListingDetailPage({ params }: PageProps) {
       router.push('/auth/login')
       return
     }
-
-    setClaiming(true)
-    setClaimError('')
-
-    try {
-      // Update the listing with the current user as owner
-      const { error } = await supabase
-        .from('listings')
-        .update({ 
-          owner_id: user.id,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', listing!.id)
-        .is('owner_id', null) // Only claim if no owner
-
-      if (error) throw error
-
-      setClaimSuccess(true)
-      
-      // Track business claim
-      if (listing) {
-        analytics.trackBusinessClaim(listing.id, listing.business_name)
-      }
-      
-      // Refresh the listing
-      setTimeout(() => {
-        fetchListing()
-      }, 2000)
-    } catch (err: any) {
-      setClaimError(err.message || 'Failed to claim business')
-    } finally {
-      setClaiming(false)
-    }
+    // Route to FFL verification flow for this listing
+    router.push(`/verify-ffl?listingId=${listing!.id}`)
   }
 
   if (loading) {

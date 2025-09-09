@@ -1,31 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
-    const { listingId, approve } = await request.json()
+    const { claimId, action, adminId, listingId } = await request.json()
 
-    if (!listingId) {
-      return NextResponse.json({ error: 'Listing ID is required' }, { status: 400 })
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!supabaseUrl || !serviceKey) return NextResponse.json({ error: 'Server not configured' }, { status: 500 })
+    const adminClient = createClient(supabaseUrl, serviceKey)
+
+    if (!claimId || !action || !adminId) {
+      return NextResponse.json({ error: 'claimId, action, adminId are required' }, { status: 400 })
     }
 
-    // Call the appropriate Supabase function
-    const { data, error } = await supabase.rpc(
-      approve ? 'verify_business' : 'reject_business_verification',
-      { listing_id: listingId }
-    )
+    if (action === 'approve') {
+      await adminClient
+        .from('business_claims')
+        .update({ status: 'approved', verified_by: adminId, verified_at: new Date().toISOString() })
+        .eq('id', claimId)
 
-    if (error) {
-      console.error('Error processing FFL verification:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      if (listingId) {
+        const { data: claim } = await adminClient
+          .from('business_claims')
+          .select('claimer_id, claimer_email')
+          .eq('id', claimId)
+          .maybeSingle()
+        if (claim?.claimer_id) {
+          await adminClient
+            .from('listings')
+            .update({ owner_id: claim.claimer_id, updated_at: new Date().toISOString() })
+            .eq('id', listingId)
+        }
+      }
+    } else if (action === 'reject') {
+      await adminClient
+        .from('business_claims')
+        .update({ status: 'rejected', verified_by: adminId, verified_at: new Date().toISOString() })
+        .eq('id', claimId)
+    } else {
+      return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: approve ? 'FFL license verified successfully' : 'Verification rejected'
-    })
-  } catch (error) {
-    console.error('Error in verify-ffl API:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Internal server error' }, { status: 500 })
   }
 }
