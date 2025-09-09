@@ -239,10 +239,41 @@ export default function BusinessRegistrationForm() {
     setShowHelp(prev => ({ ...prev, [field]: !prev[field] }))
   }
 
+  // Create a URL-friendly slug and ensure uniqueness in the listings table
+  function slugify(value: string): string {
+    return value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+  }
+
+  async function generateUniqueSlug(businessName: string, city?: string): Promise<string> {
+    const baseParts = [businessName, city].filter(Boolean) as string[]
+    const base = slugify(baseParts.join(' ')) || `listing-${Date.now()}`
+    let candidate = base
+    // Try a few simple suffixes before timestamping
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { data } = await supabase
+        .from('listings')
+        .select('id')
+        .eq('slug', candidate)
+        .maybeSingle()
+      if (!data) return candidate
+      candidate = `${base}-${attempt + 1}`
+    }
+    return `${base}-${Date.now()}`
+  }
+
   async function onSubmit(values: BusinessFormValues) {
     try {
       setSubmitting(true)
       setMessage(null)
+
+      // Ensure required slug exists for insertion
+      const slug = await generateUniqueSlug(values.business_name, values.city)
 
       const payload = {
         business_name: values.business_name,
@@ -262,6 +293,7 @@ export default function BusinessRegistrationForm() {
         description: values.specialties || '',
         status: 'pending',
         verification_status: 'pending',
+        slug,
         logo_url: logoUrl || null,
         cover_image_url: coverUrl || null,
         image_gallery: galleryUrls.length ? galleryUrls : null,
