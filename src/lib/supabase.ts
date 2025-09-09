@@ -49,6 +49,34 @@ export interface Listing {
   meta_title?: string
   meta_description?: string
   meta_keywords?: string[]
+
+  // Enhancements (see SUPABASE_LISTINGS_ENHANCEMENTS.sql)
+  average_rating?: number
+  total_reviews?: number
+  reviews_1_star?: number
+  reviews_2_star?: number
+  reviews_3_star?: number
+  reviews_4_star?: number
+  reviews_5_star?: number
+
+  price_level?: '$' | '$$' | '$$$' | '$$$$' | null
+  business_status?: 'OPERATIONAL' | 'TEMPORARILY_CLOSED' | 'PERMANENTLY_CLOSED'
+  photos_count?: number
+  timezone?: string | null
+  google_place_id?: string | null
+  service_features?: Record<string, unknown>
+  area_service?: boolean
+
+  phone_secondary?: string | null
+  email_secondary?: string | null
+  employee_count?: number | null
+  google_reviews_link?: string | null
+  google_maps_link?: string | null
+  street_view_url?: string | null
+  borough?: string | null
+  h3_index?: string | null
+  payment_methods?: string[] | null
+  accessibility_features?: string[] | null
 }
 
 export interface Review {
