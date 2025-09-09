@@ -101,4 +101,11 @@
   input[type="checkbox"]:focus {
     @apply outline-none ring-2 ring-gunsmith-gold;
   }
+
+  /* Gold outline for featured map markers */
+  .featured-marker {
+    outline: 2px solid #FFD700;
+    outline-offset: 1px;
+    border-radius: 6px;
+  }
 }

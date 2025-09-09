@@ -48,6 +48,7 @@ export default function MapView({
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null)
   const [customIcon, setCustomIcon] = useState<any>(null)
   const [userIcon, setUserIcon] = useState<any>(null)
+  const [featuredIcon, setFeaturedIcon] = useState<any>(null)
 
   useEffect(() => {
     setIsClient(true)
@@ -80,6 +81,18 @@ export default function MapView({
           shadowSize: [41, 41]
         })
         setCustomIcon(icon)
+
+        // Featured icon with gold outline using a CSS class
+        const featured = new L.Icon({
+          iconUrl: '/leaflet-svg/marker.svg',
+          shadowUrl: '/leaflet/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41],
+          className: 'featured-marker'
+        })
+        setFeaturedIcon(featured)
 
         // Create user location icon
         const userLocationIcon = new L.Icon({
@@ -183,7 +196,7 @@ export default function MapView({
           <Marker
             key={listing.id}
             position={[listing.latitude!, listing.longitude!]}
-            icon={customIcon}
+            icon={listing.is_featured ? featuredIcon || customIcon : customIcon}
             eventHandlers={{
               click: () => onListingSelect?.(listing),
             }}
