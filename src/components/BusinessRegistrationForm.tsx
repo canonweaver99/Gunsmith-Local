@@ -285,6 +285,7 @@ export default function BusinessRegistrationForm() {
         postal_code: values.postal_code,
         email: values.email,
         phone: values.phone,
+        category: 'Gunsmith',
         website: formatWebsiteUrl(values.website_url || ''),
         facebook_url: formatSocialUrl('facebook', values.facebook_url || ''),
         instagram_url: formatSocialUrl('instagram', values.instagram_url || ''),
