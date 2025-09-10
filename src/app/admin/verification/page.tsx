@@ -18,9 +18,10 @@ interface PendingListing {
 export default function AdminVerificationPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'pending' | 'verified' | 'rejected'>('pending')
+  const [activeTab, setActiveTab] = useState<'claims' | 'pending' | 'verified' | 'rejected'>('claims')
   const [search, setSearch] = useState('')
   const [rows, setRows] = useState<PendingListing[]>([])
+  const [claims, setClaims] = useState<any[]>([])
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [page, setPage] = useState(0)
   const pageSize = 20
@@ -29,7 +30,7 @@ export default function AdminVerificationPage() {
   const [detail, setDetail] = useState<any>(null)
 
   useEffect(() => {
-    fetchRows()
+    if (activeTab === 'claims') fetchClaims(); else fetchRows()
   }, [activeTab, page])
 
   async function fetchRows() {
@@ -55,6 +56,28 @@ export default function AdminVerificationPage() {
       setRows(data || [])
     } catch (e) {
       console.error('Load pending verifications error:', e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function fetchClaims() {
+    setLoading(true)
+    try {
+      // Pull pending claims joined with listing basics
+      const { data, error } = await supabase
+        .from('business_claims')
+        .select(`
+          id, listing_id, claimer_email, ffl_license_number, claim_status, verification_status, submitted_at,
+          listings:listing_id (business_name, city, state_province)
+        `)
+        .eq('claim_status', 'pending')
+        .order('submitted_at', { ascending: false })
+
+      if (error) throw error
+      setClaims(data || [])
+    } catch (e) {
+      console.error('Load claims error:', e)
     } finally {
       setLoading(false)
     }
@@ -142,7 +165,7 @@ export default function AdminVerificationPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 mr-4">
-            {(['pending','verified','rejected'] as const).map(tab => (
+            {(['claims','pending','verified','rejected'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -169,6 +192,54 @@ export default function AdminVerificationPage() {
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 text-gunsmith-gold animate-spin" />
         </div>
+      ) : activeTab === 'claims' ? (
+        claims.length === 0 ? (
+          <div className="text-center py-12 text-gunsmith-text-secondary">No pending claims</div>
+        ) : (
+          <div className="space-y-3">
+            {claims
+              .filter(c => !search || c.listings?.business_name?.toLowerCase().includes(search.toLowerCase()) || (c.ffl_license_number || '').toLowerCase().includes(search.toLowerCase()))
+              .map((c) => (
+              <div key={c.id} className="flex items-center justify-between border border-gunsmith-border rounded p-4">
+                <div>
+                  <p className="font-oswald text-gunsmith-text"><span className="text-gunsmith-gold">{c.listings?.business_name || 'Unknown'}</span> {c.listings?.city ? `• ${c.listings.city}, ${c.listings.state_province}` : ''}</p>
+                  <p className="text-sm text-gunsmith-text-secondary">FFL: {c.ffl_license_number || '—'} • Claimer: {c.claimer_email || '—'}</p>
+                  <p className="text-xs text-gunsmith-text-secondary">Submitted: {new Date(c.submitted_at).toLocaleString()}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      setUpdatingId(c.id)
+                      try {
+                        const res = await fetch('/api/claims/admin-review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ claimId: c.id, approve: false }) })
+                        if (!res.ok) throw new Error('Reject failed')
+                        await fetchClaims()
+                      } finally { setUpdatingId(null) }
+                    }}
+                    className="btn-ghost text-sm"
+                    disabled={updatingId === c.id}
+                  >
+                    <XCircle className="h-4 w-4" /> Reject
+                  </button>
+                  <button
+                    onClick={async () => {
+                      setUpdatingId(c.id)
+                      try {
+                        const res = await fetch('/api/claims/admin-review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ claimId: c.id, approve: true }) })
+                        if (!res.ok) throw new Error('Approve failed')
+                        await fetchClaims();
+                      } finally { setUpdatingId(null) }
+                    }}
+                    className="btn-primary text-sm"
+                    disabled={updatingId === c.id}
+                  >
+                    {updatingId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />} Approve
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-gunsmith-text-secondary">No pending submissions</div>
       ) : (
