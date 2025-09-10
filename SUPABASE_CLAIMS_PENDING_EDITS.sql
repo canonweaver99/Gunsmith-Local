@@ -226,4 +226,34 @@ BEGIN
   END IF;
 END$$;
 
+-- RPC: admin_create_listing - inserts a listing with claimed_by NULL
+CREATE OR REPLACE FUNCTION public.admin_create_listing(p_listing JSONB)
+RETURNS UUID
+LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  v_uid UUID := auth.uid();
+  v_is_admin BOOLEAN;
+  v_id UUID;
+BEGIN
+  SELECT public.is_admin(v_uid) INTO v_is_admin;
+  IF NOT v_is_admin THEN
+    RAISE EXCEPTION 'Admin only';
+  END IF;
+  INSERT INTO public.listings (
+    business_name, slug, description, category,
+    address, city, state_province, postal_code,
+    latitude, longitude, phone, email, website,
+    cover_image_url, business_hours, is_featured,
+    verification_status, status
+  ) VALUES (
+    p_listing->>'business_name', p_listing->>'slug', p_listing->>'description', p_listing->>'category',
+    p_listing->>'address', p_listing->>'city', p_listing->>'state_province', p_listing->>'postal_code',
+    NULLIF((p_listing->>'latitude')::text,'')::numeric, NULLIF((p_listing->>'longitude')::text,'')::numeric,
+    p_listing->>'phone', p_listing->>'email', p_listing->>'website',
+    p_listing->>'cover_image_url', p_listing->'business_hours', COALESCE((p_listing->>'is_featured')::boolean, false),
+    COALESCE(p_listing->>'verification_status','unverified'), COALESCE(p_listing->>'status','active')
+  ) RETURNING id INTO v_id;
+  RETURN v_id;
+END$$;
+
 
