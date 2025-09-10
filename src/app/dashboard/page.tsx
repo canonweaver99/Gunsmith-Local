@@ -325,6 +325,13 @@ export default function DashboardPage() {
                           Edit Profile
                         </Link>
                         <Link 
+                          href={`/dashboard/listings/${listing.id}/delete`}
+                          className="btn-ghost flex items-center gap-2 text-gunsmith-error"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Delete Listing
+                        </Link>
+                        <Link 
                           href="/dashboard/messages"
                           className="btn-secondary flex items-center gap-2 relative"
                         >
