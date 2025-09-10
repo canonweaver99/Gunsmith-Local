@@ -114,6 +114,23 @@ export default function DashboardPage() {
     }
   }
 
+  async function cancelClaim(claimId: string) {
+    if (!confirm('Cancel this claim?')) return
+    try {
+      const { error } = await supabase
+        .from('business_claims')
+        .delete()
+        .eq('id', claimId)
+        .eq('claimer_id', user?.id)
+
+      if (error) throw error
+      setClaims(prev => prev.filter(c => c.id !== claimId))
+    } catch (e) {
+      console.error('Cancel claim error:', e)
+      alert('Failed to cancel claim')
+    }
+  }
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -155,11 +172,16 @@ export default function DashboardPage() {
                         <p>Claim #{c.id.slice(0,8)} • Status: <span className="text-gunsmith-gold">{c.claim_status}</span> • Verification: <span className="text-gunsmith-gold">{c.verification_status || 'unverified'}</span></p>
                         <p className="text-gunsmith-text-secondary">Submitted {new Date(c.submitted_at).toLocaleString()}</p>
                       </div>
-                      {c.listing_id && (
-                        <Link href={c.listings?.slug ? `/listings/${c.listings.slug}` : '#'} className="btn-secondary text-sm" onClick={(e) => { if (!c.listings?.slug) e.preventDefault() }}>
-                          View Listing
-                        </Link>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {c.listing_id && (
+                          <Link href={c.listings?.slug ? `/listings/${c.listings.slug}` : '#'} className="btn-secondary text-sm" onClick={(e) => { if (!c.listings?.slug) e.preventDefault() }}>
+                            View Listing
+                          </Link>
+                        )}
+                        {c.claim_status === 'pending' && (
+                          <button className="btn-ghost text-sm" onClick={() => cancelClaim(c.id)}>Cancel Claim</button>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
