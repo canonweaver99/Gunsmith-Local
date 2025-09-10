@@ -65,7 +65,6 @@ export async function POST(req: NextRequest) {
       status,
       // key requirement: do NOT assign ownership when created by admin
       owner_id: null,
-      updated_at: new Date().toISOString(),
     }
 
     const { data, error } = await admin.from('listings').insert(payload).select('id, slug').maybeSingle()
