@@ -1,4 +1,3 @@
-- Add new verification-related fields to listings
 ALTER TABLE public.listings
 ADD COLUMN IF NOT EXISTS verification_status TEXT GENERATED ALWAYS AS (
   CASE
@@ -24,6 +23,26 @@ BEGIN
     ADD CONSTRAINT listings_ffl_license_number_unique UNIQUE (ffl_license_number);
   END IF;
 END$$;
+
+-- Migrate any legacy values from ffl_number -> ffl_license_number, then drop ffl_number
+-- (Safe to run multiple times)
+update public.listings
+set ffl_license_number = coalesce(ffl_license_number, ffl_number)
+where ffl_number is not null
+  and (ffl_license_number is null or ffl_license_number = '');
+
+-- Drop old unique constraint if it existed
+do $$
+begin
+  if exists (
+    select 1 from pg_constraint where conname = 'listings_ffl_number_unique'
+  ) then
+    alter table public.listings drop constraint listings_ffl_number_unique;
+  end if;
+end$$;
+
+-- Finally drop the legacy column
+alter table public.listings drop column if exists ffl_number;
 
 ALTER TABLE public.listings
 ADD COLUMN IF NOT EXISTS submitted_documents JSONB DEFAULT '{}'::jsonb;
