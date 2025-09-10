@@ -60,7 +60,8 @@ GRANT ALL ON public.pending_edits TO service_role;
 ALTER TABLE public.business_claims
 ADD COLUMN IF NOT EXISTS claim_status TEXT DEFAULT 'pending',
 ADD COLUMN IF NOT EXISTS verification_status TEXT DEFAULT 'unverified',
-ADD COLUMN IF NOT EXISTS ffl_document_url TEXT;
+ADD COLUMN IF NOT EXISTS ffl_document_url TEXT,
+ALTER COLUMN ffl_license_number DROP NOT NULL;
 
 -- Migrate legacy status -> claim_status
 UPDATE public.business_claims

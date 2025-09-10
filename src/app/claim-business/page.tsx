@@ -24,6 +24,7 @@ export default function ClaimBusinessPage() {
     verification_documents: '',
     additional_info: ''
   })
+  const [edits, setEdits] = useState<any>({})
 
   useEffect(() => {
     if (!user) {
@@ -47,6 +48,23 @@ export default function ClaimBusinessPage() {
       })()
     }
   }, [user, router, searchParams])
+
+  // Initialize editable fields when a business is selected
+  useEffect(() => {
+    if (selectedBusiness) {
+      setEdits({
+        business_name: selectedBusiness.business_name || '',
+        street_address: selectedBusiness.street_address || selectedBusiness.address || '',
+        city: selectedBusiness.city || '',
+        state_province: selectedBusiness.state_province || '',
+        postal_code: selectedBusiness.postal_code || '',
+        phone: selectedBusiness.phone || '',
+        email: selectedBusiness.email || '',
+        website: selectedBusiness.website || '',
+        description: selectedBusiness.description || ''
+      })
+    }
+  }, [selectedBusiness])
 
   // Validate FFL: 15 alphanumeric chars, exactly 14 digits and 1 letter
   const isValidFfl = (value: string): boolean => {
@@ -167,9 +185,7 @@ export default function ClaimBusinessPage() {
         throw new Error('Invalid FFL number. It must be 15 characters with 14 digits and 1 letter.')
       }
 
-      const proposedEdits: any = {
-        // start with empty; allow user to fill in changes in future UI
-      }
+      const proposedEdits: any = edits
 
       // Include the user's access token so the RPC runs as the user
       const { data: session } = await supabase.auth.getSession()
@@ -184,7 +200,7 @@ export default function ClaimBusinessPage() {
         body: JSON.stringify({
           listingId: selectedBusiness.id,
           proposedEdits,
-          fflLicenseNumber: ffl || null,
+          fflLicenseNumber: ffl || '',
           fflDocumentUrl: claimData.verification_documents || null,
           userId: user.id,
         })
@@ -246,7 +262,8 @@ export default function ClaimBusinessPage() {
               </div>
             )}
 
-            {/* Search for Business */}
+            {/* Search for Business (hidden when preselected via listingId) */}
+            {!selectedBusiness && (
             <div className="card mb-8">
               <h2 className="font-bebas text-2xl text-gunsmith-gold mb-4">SEARCH FOR YOUR BUSINESS</h2>
               <div className="flex gap-4">
@@ -319,6 +336,7 @@ export default function ClaimBusinessPage() {
                 </button>
               </div>
             </div>
+            )}
 
             {/* Claim Form */}
             {selectedBusiness && (
@@ -328,16 +346,44 @@ export default function ClaimBusinessPage() {
                 </h2>
                 
                 <form onSubmit={handleClaim} className="space-y-6">
-                  {/* Listing summary for confirmation */}
-                  <div className="bg-gunsmith-accent/20 border border-gunsmith-border rounded-lg p-4">
-                    <p className="text-gunsmith-text"><span className="text-gunsmith-gold">{selectedBusiness.business_name}</span></p>
-                    <p className="text-gunsmith-text-secondary text-sm">{selectedBusiness.street_address || selectedBusiness.address || ''}{selectedBusiness.city ? `, ${selectedBusiness.city}` : ''}{selectedBusiness.state_province ? `, ${selectedBusiness.state_province}` : ''} {selectedBusiness.postal_code || ''}</p>
-                    {selectedBusiness.phone && (
-                      <p className="text-gunsmith-text-secondary text-sm mt-1">Phone: {selectedBusiness.phone}</p>
-                    )}
-                    {selectedBusiness.website && (
-                      <p className="text-gunsmith-text-secondary text-sm">Website: {selectedBusiness.website}</p>
-                    )}
+                  {/* Editable fields prefilled with listing data */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="label">Business Name</label>
+                      <input className="input w-full" value={edits.business_name || ''} onChange={(e)=>setEdits({...edits, business_name:e.target.value})}/>
+                    </div>
+                    <div>
+                      <label className="label">Phone</label>
+                      <input className="input w-full" value={edits.phone || ''} onChange={(e)=>setEdits({...edits, phone:e.target.value})}/>
+                    </div>
+                    <div>
+                      <label className="label">Email</label>
+                      <input className="input w-full" value={edits.email || ''} onChange={(e)=>setEdits({...edits, email:e.target.value})}/>
+                    </div>
+                    <div>
+                      <label className="label">Website</label>
+                      <input className="input w-full" value={edits.website || ''} onChange={(e)=>setEdits({...edits, website:e.target.value})}/>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="label">Street Address</label>
+                      <input className="input w-full" value={edits.street_address || ''} onChange={(e)=>setEdits({...edits, street_address:e.target.value})}/>
+                    </div>
+                    <div>
+                      <label className="label">City</label>
+                      <input className="input w-full" value={edits.city || ''} onChange={(e)=>setEdits({...edits, city:e.target.value})}/>
+                    </div>
+                    <div>
+                      <label className="label">State</label>
+                      <input className="input w-full" value={edits.state_province || ''} onChange={(e)=>setEdits({...edits, state_province:e.target.value})}/>
+                    </div>
+                    <div>
+                      <label className="label">Postal Code</label>
+                      <input className="input w-full" value={edits.postal_code || ''} onChange={(e)=>setEdits({...edits, postal_code:e.target.value})}/>
+                    </div>
+                    <div className="md:col-span-2">
+                      <label className="label">Description</label>
+                      <textarea className="input w-full h-28 resize-none" value={edits.description || ''} onChange={(e)=>setEdits({...edits, description:e.target.value})}/>
+                    </div>
                   </div>
 
                   <div className="bg-gunsmith-gold/10 border border-gunsmith-gold/30 rounded-lg p-4 mb-6">
