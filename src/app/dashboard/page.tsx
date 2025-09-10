@@ -22,6 +22,7 @@ export default function DashboardPage() {
   const [unreadMessages, setUnreadMessages] = useState(0)
   const [mounted, setMounted] = useState(false)
   const [showFeaturedCheckout, setShowFeaturedCheckout] = useState<string | null>(null)
+  const [claims, setClaims] = useState<any[]>([])
 
   useEffect(() => {
     setMounted(true)
@@ -36,6 +37,7 @@ export default function DashboardPage() {
       router.push('/auth/login')
     } else {
       fetchUserListings()
+      fetchMyClaims()
     }
   }, [user, authLoading, router, mounted])
 
@@ -96,6 +98,19 @@ export default function DashboardPage() {
     }
   }
 
+  async function fetchMyClaims() {
+    try {
+      const { data, error } = await supabase
+        .from('business_claims')
+        .select('id, listing_id, claim_status, verification_status, submitted_at')
+        .eq('claimer_id', user?.id)
+        .order('submitted_at', { ascending: false })
+      if (!error) setClaims(data || [])
+    } catch (e) {
+      // ignore
+    }
+  }
+
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -126,6 +141,25 @@ export default function DashboardPage() {
         {/* Business Profile Section */}
         <section className="py-12 px-4">
           <div className="container mx-auto">
+            {/* My Claims */}
+            {claims.length > 0 && (
+              <div className="card mb-8">
+                <h3 className="font-bebas text-2xl text-gunsmith-gold mb-4">MY CLAIMS</h3>
+                <div className="space-y-2">
+                  {claims.map((c) => (
+                    <div key={c.id} className="flex items-center justify-between border border-gunsmith-border rounded p-3">
+                      <div className="text-sm text-gunsmith-text">
+                        <p>Claim #{c.id.slice(0,8)} • Status: <span className="text-gunsmith-gold">{c.claim_status}</span> • Verification: <span className="text-gunsmith-gold">{c.verification_status || 'unverified'}</span></p>
+                        <p className="text-gunsmith-text-secondary">Submitted {new Date(c.submitted_at).toLocaleString()}</p>
+                      </div>
+                      {c.listing_id && (
+                        <Link href={`/listings/${c.listing_id}`} className="btn-secondary text-sm">View Listing</Link>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {listings.length === 0 ? (
               <div className="card text-center py-20">
                 <Building2 className="h-16 w-16 text-gunsmith-gold/30 mx-auto mb-4" />

@@ -35,6 +35,12 @@ BEGIN
       FOR SELECT USING (auth.uid() = editor_id);
   END IF;
   IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'pending_edits' AND policyname = 'Editors can insert their own edits'
+  ) THEN
+    CREATE POLICY "Editors can insert their own edits" ON public.pending_edits
+      FOR INSERT WITH CHECK (auth.uid() = editor_id);
+  END IF;
+  IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'pending_edits' AND policyname = 'Admins can view all edits'
   ) THEN
     CREATE POLICY "Admins can view all edits" ON public.pending_edits
