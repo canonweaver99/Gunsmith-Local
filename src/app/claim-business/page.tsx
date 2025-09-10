@@ -171,9 +171,16 @@ export default function ClaimBusinessPage() {
         // start with empty; allow user to fill in changes in future UI
       }
 
+      // Include the user's access token so the RPC runs as the user
+      const { data: session } = await supabase.auth.getSession()
+      const accessToken = session?.session?.access_token
+
       const res = await fetch('/api/claims/create', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+        },
         body: JSON.stringify({
           listingId: selectedBusiness.id,
           proposedEdits,
