@@ -181,12 +181,16 @@ export default function AdminListingsPage() {
 
     setActionLoading(id)
     try {
-      const { error } = await supabase
-        .from('listings')
-        .delete()
-        .eq('id', id)
-
-      if (error) throw error
+      // Use admin API to perform cascading cleanup and permanent delete
+      const res = await fetch('/api/admin/listings/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ listingId: id })
+      })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j.error || 'Failed to delete')
+      }
 
       // Update local state
       setListings(prev => prev.filter(listing => listing.id !== id))
