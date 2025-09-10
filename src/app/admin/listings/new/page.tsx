@@ -35,6 +35,16 @@ type FormValues = z.infer<typeof listingSchema>
 export default function AdminNewListingPage() {
   const router = useRouter()
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const DAYS: Array<keyof any> = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
+  const [hours, setHours] = useState<Record<string, { open: string; close: string; closed: boolean }>>({
+    monday: { open: '09:00', close: '17:00', closed: false },
+    tuesday: { open: '09:00', close: '17:00', closed: false },
+    wednesday: { open: '09:00', close: '17:00', closed: false },
+    thursday: { open: '09:00', close: '17:00', closed: false },
+    friday: { open: '09:00', close: '17:00', closed: false },
+    saturday: { open: '10:00', close: '14:00', closed: true },
+    sunday: { open: '10:00', close: '14:00', closed: true },
+  })
 
   const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } = useForm<FormValues>({
     resolver: zodResolver(listingSchema),
@@ -66,9 +76,17 @@ export default function AdminNewListingPage() {
     const fd = new FormData()
     Object.entries(values).forEach(([k, v]) => {
       if (v === undefined || v === null) return
-      if (k === 'business_hours' && typeof v !== 'string') fd.append(k, JSON.stringify(v))
-      else fd.append(k, String(v))
+      if (k === 'business_hours') return
+      fd.append(k, String(v))
     })
+    // Attach business_hours from table
+    const hoursPayload: Record<string, any> = {}
+    Object.entries(hours).forEach(([day, cfg]) => {
+      hoursPayload[day] = cfg.closed
+        ? { closed: true }
+        : { open: cfg.open, close: cfg.close, closed: false }
+    })
+    fd.append('business_hours', JSON.stringify(hoursPayload))
     const res = await createListing(fd)
     if ((res as any)?.ok === false) {
       setToast({ type: 'error', message: (res as any).error })
@@ -160,14 +178,88 @@ export default function AdminNewListingPage() {
               </div>
 
               <div>
-                <label className="label">Business Hours (JSON)</label>
-                <textarea className="input w-full h-28" placeholder='{"monday":{"open":"09:00","close":"17:00"}}' {...register('business_hours')} />
-                <div className="mt-2">
-                  <button type="button" className="btn-secondary" onClick={() => {
-                    const raw = (watch('business_hours') as any as string) || ''
-                    if (!raw.trim()) return
-                    try { setValue('business_hours', JSON.stringify(JSON.parse(raw), null, 2) as any) } catch { setToast({ type: 'error', message: 'Invalid JSON' }) }
-                  }}>Validate & Pretty Print</button>
+                <label className="label">Business Hours</label>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-gunsmith-text-secondary">
+                        <th className="py-2 pr-4">Day</th>
+                        <th className="py-2 pr-4">Open</th>
+                        <th className="py-2 pr-4">Close</th>
+                        <th className="py-2">Closed</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {DAYS.map((day) => (
+                        <tr key={String(day)} className="border-t border-gunsmith-border">
+                          <td className="py-2 pr-4 capitalize text-gunsmith-text">{String(day)}</td>
+                          <td className="py-2 pr-4">
+                            <input
+                              type="time"
+                              className="input w-full"
+                              value={hours[String(day)].open}
+                              disabled={hours[String(day)].closed}
+                              onChange={(e) => setHours((prev) => ({
+                                ...prev,
+                                [String(day)]: { ...prev[String(day)], open: e.target.value },
+                              }))}
+                            />
+                          </td>
+                          <td className="py-2 pr-4">
+                            <input
+                              type="time"
+                              className="input w-full"
+                              value={hours[String(day)].close}
+                              disabled={hours[String(day)].closed}
+                              onChange={(e) => setHours((prev) => ({
+                                ...prev,
+                                [String(day)]: { ...prev[String(day)], close: e.target.value },
+                              }))}
+                            />
+                          </td>
+                          <td className="py-2">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4"
+                              checked={hours[String(day)].closed}
+                              onChange={(e) => setHours((prev) => ({
+                                ...prev,
+                                [String(day)]: { ...prev[String(day)], closed: e.target.checked },
+                              }))}
+                            />
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => {
+                      // Copy Monday to Tue–Fri
+                      setHours((prev) => {
+                        const m = prev.monday
+                        return {
+                          ...prev,
+                          tuesday: { ...m },
+                          wednesday: { ...m },
+                          thursday: { ...m },
+                          friday: { ...m },
+                        }
+                      })
+                    }}
+                  >Copy Mon → Fri</button>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setHours((prev) => {
+                      const next = { ...prev }
+                      Object.keys(next).forEach((d) => { next[d] = { open: '09:00', close: '17:00', closed: false } })
+                      return next
+                    })}
+                  >Reset All</button>
                 </div>
               </div>
             </div>
