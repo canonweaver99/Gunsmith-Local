@@ -227,7 +227,7 @@ export default function AdminListingsPage() {
             <input className="input" placeholder="City" value={cityFilter} onChange={(e)=>setCityFilter(e.target.value)} />
             <input className="input" placeholder="State" value={stateFilter} onChange={(e)=>setStateFilter(e.target.value)} />
           </div>
-          <Link href="/admin/add-business" className="btn-primary px-4 whitespace-nowrap">Add Listing</Link>
+          <Link href="/admin/listings/new" className="btn-primary px-4 whitespace-nowrap">Add Listing</Link>
 
           {/* Status Filter */}
           <div className="flex gap-2">

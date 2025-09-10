@@ -256,4 +256,23 @@ BEGIN
   RETURN v_id;
 END$$;
 
+-- Unique index on slug
+CREATE UNIQUE INDEX IF NOT EXISTS listings_slug_uniq ON public.listings(slug);
+
+-- Status check constraint (case-insensitive for compatibility)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'listings_status_check'
+  ) THEN
+    ALTER TABLE public.listings
+      ADD CONSTRAINT listings_status_check
+      CHECK (lower(status) IN ('active','inactive'));
+  END IF;
+END$$;
+
+-- Default verification_status
+ALTER TABLE public.listings
+  ALTER COLUMN verification_status SET DEFAULT 'unverified';
+
 
