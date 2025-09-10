@@ -102,7 +102,10 @@ export default function DashboardPage() {
     try {
       const { data, error } = await supabase
         .from('business_claims')
-        .select('id, listing_id, claim_status, verification_status, submitted_at, listings:listing_id ( slug )')
+        .select(`
+          id, listing_id, claim_status, verification_status, submitted_at,
+          listings:listing_id ( slug )
+        `)
         .eq('claimer_id', user?.id)
         .order('submitted_at', { ascending: false })
       if (!error) setClaims(data || [])
@@ -152,9 +155,11 @@ export default function DashboardPage() {
                         <p>Claim #{c.id.slice(0,8)} • Status: <span className="text-gunsmith-gold">{c.claim_status}</span> • Verification: <span className="text-gunsmith-gold">{c.verification_status || 'unverified'}</span></p>
                         <p className="text-gunsmith-text-secondary">Submitted {new Date(c.submitted_at).toLocaleString()}</p>
                       </div>
-                      {c.listings?.slug ? (
-                        <Link href={`/listings/${c.listings.slug}`} className="btn-secondary text-sm">View Listing</Link>
-                      ) : null}
+                      {c.listing_id && (
+                        <Link href={c.listings?.slug ? `/listings/${c.listings.slug}` : '#'} className="btn-secondary text-sm" onClick={(e) => { if (!c.listings?.slug) e.preventDefault() }}>
+                          View Listing
+                        </Link>
+                      )}
                     </div>
                   ))}
                 </div>
