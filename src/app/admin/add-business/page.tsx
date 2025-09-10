@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -8,6 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { slugify } from '@/lib/slugify'
+import ImageUpload from '@/components/ImageUpload'
+import { uploadFile, STORAGE_BUCKETS, STORAGE_PATHS } from '@/lib/storage'
 
 const schema = z.object({
   business_name: z.string().min(2),
@@ -35,6 +37,7 @@ type FormValues = z.infer<typeof schema>
 export default function AdminAddBusinessPage() {
   const router = useRouter()
   const { user, isAdmin, loading } = useAuth()
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
 
   useEffect(() => {
     if (!loading && (!user || !isAdmin)) router.push('/')
@@ -75,10 +78,10 @@ export default function AdminAddBusinessPage() {
 
     const { error } = await supabase.rpc('admin_create_listing', { p_listing: payload })
     if (error) {
-      alert(error.message)
+      setToast({ type: 'error', message: error.message })
     } else {
-      alert('Listing created')
-      router.push('/admin/listings')
+      setToast({ type: 'success', message: 'Listing created' })
+      setTimeout(() => router.push('/admin/listings'), 800)
     }
   }
 
@@ -86,6 +89,11 @@ export default function AdminAddBusinessPage() {
     <div className="min-h-screen bg-gunsmith-black py-10 px-4">
       <div className="container mx-auto max-w-4xl">
         <div className="card">
+          {toast && (
+            <div className={`mb-4 p-3 rounded border ${toast.type==='success' ? 'bg-green-500/15 border-green-500 text-green-400' : 'bg-gunsmith-error/20 border-gunsmith-error text-gunsmith-error'}`}>
+              {toast.message}
+            </div>
+          )}
           <h1 className="font-bebas text-3xl text-gunsmith-gold mb-4">ADD BUSINESS</h1>
           <p className="text-gunsmith-text-secondary mb-6">Admin-only. Created listings are unclaimed by default.</p>
 
@@ -113,8 +121,17 @@ export default function AdminAddBusinessPage() {
               <input className="input w-full" {...register('website')} />
             </div>
             <div className="md:col-span-2">
-              <label className="label">Cover Image URL</label>
-              <input className="input w-full" {...register('cover_image_url')} />
+              <label className="label">Cover Image</label>
+              <div className="space-y-2">
+                <ImageUpload
+                  value={watch('cover_image_url') || ''}
+                  onChange={(val) => setValue('cover_image_url', (val as string) || '')}
+                  multiple={false}
+                  maxSizeMB={5}
+                  label="Upload or paste a URL below"
+                />
+                <input className="input w-full" placeholder="...or paste an image URL" {...register('cover_image_url')} />
+              </div>
             </div>
             <div className="md:col-span-2">
               <label className="label">Address</label>
@@ -151,6 +168,22 @@ export default function AdminAddBusinessPage() {
             <div className="md:col-span-2">
               <label className="label">Business Hours (JSON)</label>
               <textarea className="input w-full h-28" placeholder='{"monday":{"open":"09:00","close":"17:00"}}' {...register('business_hours')} />
+              <div className="mt-2 flex gap-2">
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={() => {
+                    const raw = (watch('business_hours') || '').trim()
+                    if (!raw) return
+                    try {
+                      const pretty = JSON.stringify(JSON.parse(raw), null, 2)
+                      setValue('business_hours', pretty)
+                    } catch (e) {
+                      alert('Invalid JSON')
+                    }
+                  }}
+                >Validate & Pretty Print</button>
+              </div>
             </div>
             <div>
               <label className="label">Status</label>
