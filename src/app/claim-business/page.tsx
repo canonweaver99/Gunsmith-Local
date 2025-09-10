@@ -143,26 +143,29 @@ export default function ClaimBusinessPage() {
     setSuccess(false)
 
     try {
-      // Validate FFL
-      if (!isValidFfl(claimData.ffl_license_number)) {
+      // FFL is optional at claim time
+      const ffl = claimData.ffl_license_number?.trim()
+      if (ffl && !isValidFfl(ffl)) {
         throw new Error('Invalid FFL number. It must be 15 characters with 14 digits and 1 letter.')
       }
 
-      // Create a claim request
-      const { error: claimError } = await supabase
-        .from('business_claims')
-        .insert({
-          listing_id: selectedBusiness.id,
-          claimer_id: user.id,
-          claimer_email: user.email,
-          ffl_license_number: claimData.ffl_license_number.replace(/[^A-Za-z0-9]/g, ''),
-          verification_documents: claimData.verification_documents,
-          additional_info: claimData.additional_info,
-          status: 'pending',
-          submitted_at: new Date().toISOString()
-        })
+      const proposedEdits: any = {
+        // start with empty; allow user to fill in changes in future UI
+      }
 
-      if (claimError) throw claimError
+      const res = await fetch('/api/claims/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          listingId: selectedBusiness.id,
+          proposedEdits,
+          fflLicenseNumber: ffl || null,
+          fflDocumentUrl: claimData.verification_documents || null,
+          userId: user.id,
+        })
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed to submit claim')
 
       setSuccess(true)
       setSelectedBusiness(null)
