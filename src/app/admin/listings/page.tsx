@@ -26,6 +26,8 @@ export default function AdminListingsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [newBiz, setNewBiz] = useState({ business_name: '', city: '', state_province: '' })
 
   useEffect(() => {
     fetchListings()
@@ -71,6 +73,27 @@ export default function AdminListingsPage() {
     }
 
     setFilteredListings(filtered)
+  }
+
+  async function createListingAsAdmin(e: React.FormEvent) {
+    e.preventDefault()
+    if (!newBiz.business_name) return
+    setCreating(true)
+    try {
+      const res = await fetch('/api/admin/listings/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newBiz)
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'Failed to create listing')
+      await fetchListings()
+      setNewBiz({ business_name: '', city: '', state_province: '' })
+    } catch (err) {
+      alert((err as any).message || 'Failed to create listing')
+    } finally {
+      setCreating(false)
+    }
   }
 
   async function updateListingStatus(id: string, newStatus: string) {
@@ -192,8 +215,36 @@ export default function AdminListingsPage() {
       <div className="bg-gunsmith-card border border-gunsmith-border rounded-lg p-6">
         <h1 className="font-bebas text-3xl text-gunsmith-gold mb-6">MANAGE LISTINGS</h1>
 
-        {/* Filters */}
+        {/* Quick Create + Filters */}
         <div className="flex flex-col lg:flex-row gap-4 mb-6">
+          {/* Quick Create (admin-owned = false) */}
+          <form onSubmit={createListingAsAdmin} className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Business name"
+              value={newBiz.business_name}
+              onChange={(e) => setNewBiz({ ...newBiz, business_name: e.target.value })}
+              className="input w-56"
+            />
+            <input
+              type="text"
+              placeholder="City"
+              value={newBiz.city}
+              onChange={(e) => setNewBiz({ ...newBiz, city: e.target.value })}
+              className="input w-36"
+            />
+            <input
+              type="text"
+              placeholder="State"
+              value={newBiz.state_province}
+              onChange={(e) => setNewBiz({ ...newBiz, state_province: e.target.value })}
+              className="input w-24"
+            />
+            <button type="submit" className="btn-primary px-4" disabled={creating}>
+              {creating ? 'Adding…' : 'Add Listing'}
+            </button>
+          </form>
+
           {/* Search */}
           <div className="flex-1">
             <div className="relative">
