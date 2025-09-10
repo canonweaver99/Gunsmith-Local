@@ -22,7 +22,7 @@ export default function BusinessPortalPage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/verify-ffl" prefetch={false}
+                href="/claim-business" prefetch={false}
                 className="btn-primary text-lg px-8 py-4 w-full sm:w-auto"
               >
                 YES — I OWN A GUNSMITH SHOP
