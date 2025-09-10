@@ -77,7 +77,10 @@ export default function AdminListingsPage() {
 
   async function createListingAsAdmin(e: React.FormEvent) {
     e.preventDefault()
-    if (!newBiz.business_name) return
+    if (!newBiz.business_name || newBiz.business_name.trim().length === 0) {
+      alert('Please enter a business name')
+      return
+    }
     setCreating(true)
     try {
       const res = await fetch('/api/admin/listings/create', {
@@ -224,6 +227,7 @@ export default function AdminListingsPage() {
               placeholder="Business name"
               value={newBiz.business_name}
               onChange={(e) => setNewBiz({ ...newBiz, business_name: e.target.value })}
+              required
               className="input w-56"
             />
             <input

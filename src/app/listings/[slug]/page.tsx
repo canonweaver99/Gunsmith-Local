@@ -95,8 +95,8 @@ export default function ListingDetailPage({ params }: PageProps) {
       router.push('/auth/login')
       return
     }
-    // Route to FFL verification flow for this listing
-    router.push(`/verify-ffl?listingId=${listing!.id}`)
+    // Route to new claim flow (FFL optional) for this listing
+    router.push(`/claim-business?listingId=${listing!.id}`)
   }
 
   if (loading) {
