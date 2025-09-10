@@ -26,11 +26,7 @@ export default function AdminListingsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
-  const [creating, setCreating] = useState(false)
-  const [newBiz, setNewBiz] = useState({ business_name: '', city: '', state_province: '' })
-  const [nameFilter, setNameFilter] = useState('')
-  const [cityFilter, setCityFilter] = useState('')
-  const [stateFilter, setStateFilter] = useState('')
+  const [globalSearch, setGlobalSearch] = useState('')
 
   useEffect(() => {
     fetchListings()
@@ -38,7 +34,7 @@ export default function AdminListingsPage() {
 
   useEffect(() => {
     filterListings()
-  }, [listings, searchTerm, statusFilter])
+  }, [listings, globalSearch, statusFilter])
 
   async function fetchListings() {
     try {
@@ -60,10 +56,17 @@ export default function AdminListingsPage() {
   function filterListings() {
     let filtered = [...listings]
 
-    // Search filter
-    if (nameFilter) filtered = filtered.filter(l => l.business_name.toLowerCase().includes(nameFilter.toLowerCase()))
-    if (cityFilter) filtered = filtered.filter(l => (l.city || '').toLowerCase().includes(cityFilter.toLowerCase()))
-    if (stateFilter) filtered = filtered.filter(l => (l.state_province || '').toLowerCase().includes(stateFilter.toLowerCase()))
+    // Global search across common fields
+    if (globalSearch) {
+      const q = globalSearch.toLowerCase()
+      filtered = filtered.filter(l =>
+        (l.business_name || '').toLowerCase().includes(q) ||
+        (l.city || '').toLowerCase().includes(q) ||
+        (l.state_province || '').toLowerCase().includes(q) ||
+        (l.email || '').toLowerCase().includes(q) ||
+        (l.phone || '').toLowerCase().includes(q)
+      )
+    }
 
     // Status filter
     if (statusFilter !== 'all') {
@@ -73,29 +76,7 @@ export default function AdminListingsPage() {
     setFilteredListings(filtered)
   }
 
-  async function createListingAsAdmin(e: React.FormEvent) {
-    e.preventDefault()
-    if (!newBiz.business_name || newBiz.business_name.trim().length === 0) {
-      alert('Please enter a business name')
-      return
-    }
-    setCreating(true)
-    try {
-      const res = await fetch('/api/admin/listings/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newBiz)
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Failed to create listing')
-      await fetchListings()
-      setNewBiz({ business_name: '', city: '', state_province: '' })
-    } catch (err) {
-      alert((err as any).message || 'Failed to create listing')
-    } finally {
-      setCreating(false)
-    }
-  }
+  // Removed quick-create; we now only provide search and an Add Listing link
 
   async function updateListingStatus(id: string, newStatus: string) {
     setActionLoading(id)
@@ -220,13 +201,17 @@ export default function AdminListingsPage() {
       <div className="bg-gunsmith-card border border-gunsmith-border rounded-lg p-6">
         <h1 className="font-bebas text-3xl text-gunsmith-gold mb-6">MANAGE LISTINGS</h1>
 
-        {/* Search + Add Listing link */}
+        {/* Global Search + Add Listing link */}
         <div className="flex flex-col lg:flex-row gap-4 mb-6">
-          <div className="flex gap-2 flex-1">
-            <input className="input" placeholder="Business name" value={nameFilter} onChange={(e)=>setNameFilter(e.target.value)} />
-            <input className="input" placeholder="City" value={cityFilter} onChange={(e)=>setCityFilter(e.target.value)} />
-            <input className="input" placeholder="State" value={stateFilter} onChange={(e)=>setStateFilter(e.target.value)} />
-          </div>
+          <form className="relative flex-1" onSubmit={(e)=>e.preventDefault()}>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gunsmith-text-secondary" />
+            <input
+              className="input pl-9 w-full"
+              placeholder="Search listings by name, city, state, email, or phone"
+              value={globalSearch}
+              onChange={(e)=>setGlobalSearch(e.target.value)}
+            />
+          </form>
           <Link href="/admin/listings/new" className="btn-primary px-4 whitespace-nowrap">Add Listing</Link>
 
           {/* Status Filter */}
