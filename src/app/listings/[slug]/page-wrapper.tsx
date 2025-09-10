@@ -38,7 +38,7 @@ export default async function Page({ params }: Props) {
   const structuredData = generateStructuredData('LocalBusiness', {
     '@id': `${process.env.NEXT_PUBLIC_SITE_URL || 'https://gunsmithlocal.com'}/listings/${listing.slug}`,
     name: listing.business_name,
-    description: listing.description || listing.short_description,
+    description: listing.description,
     url: listing.website,
     telephone: listing.phone,
     email: listing.email,

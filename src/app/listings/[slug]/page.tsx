@@ -126,19 +126,25 @@ export default function ListingDetailPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Hero Section with Cover Image (non-repeating, center, cover) */}
+        {/* Hero Section with Cover Image: constrained width to reduce blur */}
         {listing.cover_image_url && (
-          <div 
-            className="relative h-64 md:h-[28rem] lg:h-[32rem]"
-            style={{
-              backgroundImage: `url(${listing.cover_image_url})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center center',
-              backgroundRepeat: 'no-repeat',
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-t from-gunsmith-black/80 to-transparent" />
-          </div>
+          <section className="py-6 px-4">
+            <div className="container mx-auto">
+              <div className="mx-auto max-w-5xl">
+                <div 
+                  className="relative h-40 sm:h-48 md:h-56 lg:h-60 rounded-lg overflow-hidden border border-gunsmith-border"
+                  style={{
+                    backgroundImage: `url(${listing.cover_image_url})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center center',
+                    backgroundRepeat: 'no-repeat',
+                  }}
+                >
+                  <div className="absolute inset-0 bg-gradient-to-t from-gunsmith-black/60 to-transparent" />
+                </div>
+              </div>
+            </div>
+          </section>
         )}
 
         {/* Claim Business Banner */}

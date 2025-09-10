@@ -257,9 +257,9 @@ function MapContent() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                {selectedListing.short_description && (
+                {selectedListing.description && (
                   <p className="text-gunsmith-text-secondary mb-4">
-                    {selectedListing.short_description}
+                    {selectedListing.description}
                   </p>
                 )}
 

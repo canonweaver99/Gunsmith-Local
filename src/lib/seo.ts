@@ -93,7 +93,6 @@ export function generateMetadata(config: SEOConfig = {}): Metadata {
 export function generateListingMetadata(listing: {
   business_name: string
   description?: string
-  short_description?: string
   city?: string
   state_province?: string
   category?: string
@@ -103,7 +102,7 @@ export function generateListingMetadata(listing: {
   slug: string
 }): Metadata {
   const title = `${listing.business_name} - Gunsmith in ${listing.city}, ${listing.state_province}`
-  const description = listing.short_description || listing.description || 
+  const description = listing.description || 
     `Professional gunsmithing services by ${listing.business_name} in ${listing.city}, ${listing.state_province}. ${listing.category || 'Gunsmith services'}.`
 
   const keywords = [

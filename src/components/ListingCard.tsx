@@ -75,7 +75,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
       <Link href={`/listings/${listing.slug}`} className="block">
         {/* Cover Image or Logo */}
         {listing.cover_image_url || listing.logo_url ? (
-          <div className="h-48 -mx-6 -mt-6 mb-4 overflow-hidden rounded-t-lg">
+          <div className="h-56 -mx-6 -mt-6 mb-4 overflow-hidden rounded-t-lg">
             <img 
               src={listing.cover_image_url || listing.logo_url || ''} 
               alt={listing.business_name}
@@ -83,7 +83,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
             />
           </div>
         ) : (
-          <div className="h-48 -mx-6 -mt-6 mb-4 bg-gunsmith-accent flex items-center justify-center rounded-t-lg">
+          <div className="h-56 -mx-6 -mt-6 mb-4 bg-gunsmith-accent flex items-center justify-center rounded-t-lg">
             <div className="text-gunsmith-gold/20">
               <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
@@ -132,10 +132,10 @@ export default function ListingCard({ listing }: ListingCardProps) {
             </div>
           )}
 
-          {/* Short Description */}
-          {listing.short_description && (
-            <p className="text-gunsmith-text-secondary line-clamp-2">
-              {listing.short_description}
+          {/* Description preview */}
+          {listing.description && (
+            <p className="text-gunsmith-text-secondary line-clamp-3">
+              {listing.description}
             </p>
           )}
 
