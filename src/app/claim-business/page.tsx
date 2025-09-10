@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -10,6 +10,7 @@ import { Building2, Shield, Loader2, AlertCircle, CheckCircle, Search } from 'lu
 
 export default function ClaimBusinessPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user } = useAuth()
   const [loading, setLoading] = useState(false)
   const [searchLoading, setSearchLoading] = useState(false)
@@ -27,8 +28,25 @@ export default function ClaimBusinessPage() {
   useEffect(() => {
     if (!user) {
       router.push('/auth/login?redirect=/claim-business')
+      return
     }
-  }, [user, router])
+    // Preselect listing if navigated with ?listingId
+    const listingId = searchParams?.get('listingId')
+    if (listingId) {
+      ;(async () => {
+        try {
+          const { data } = await supabase
+            .from('listings')
+            .select('*')
+            .eq('id', listingId)
+            .maybeSingle()
+          if (data) setSelectedBusiness(data)
+        } catch (e) {
+          // ignore
+        }
+      })()
+    }
+  }, [user, router, searchParams])
 
   // Validate FFL: 15 alphanumeric chars, exactly 14 digits and 1 letter
   const isValidFfl = (value: string): boolean => {
@@ -303,26 +321,36 @@ export default function ClaimBusinessPage() {
                 </h2>
                 
                 <form onSubmit={handleClaim} className="space-y-6">
+                  {/* Listing summary for confirmation */}
+                  <div className="bg-gunsmith-accent/20 border border-gunsmith-border rounded-lg p-4">
+                    <p className="text-gunsmith-text"><span className="text-gunsmith-gold">{selectedBusiness.business_name}</span></p>
+                    <p className="text-gunsmith-text-secondary text-sm">{selectedBusiness.street_address || selectedBusiness.address || ''}{selectedBusiness.city ? `, ${selectedBusiness.city}` : ''}{selectedBusiness.state_province ? `, ${selectedBusiness.state_province}` : ''} {selectedBusiness.postal_code || ''}</p>
+                    {selectedBusiness.phone && (
+                      <p className="text-gunsmith-text-secondary text-sm mt-1">Phone: {selectedBusiness.phone}</p>
+                    )}
+                    {selectedBusiness.website && (
+                      <p className="text-gunsmith-text-secondary text-sm">Website: {selectedBusiness.website}</p>
+                    )}
+                  </div>
+
                   <div className="bg-gunsmith-gold/10 border border-gunsmith-gold/30 rounded-lg p-4 mb-6">
                     <div className="flex items-center gap-2 mb-2">
                       <Shield className="h-5 w-5 text-gunsmith-gold" />
-                      <span className="font-bebas text-lg text-gunsmith-gold">FFL VERIFICATION REQUIRED</span>
+                      <span className="font-bebas text-lg text-gunsmith-gold">OPTIONAL FFL VERIFICATION</span>
                     </div>
                     <p className="text-gunsmith-text-secondary text-sm">
-                      To claim this business, you must provide your FFL license number for verification. 
-                      This ensures only legitimate gunsmith businesses can claim listings.
+                      You can submit this claim now and add your FFL later from your dashboard. We’ll mark it as unverified until an admin reviews your FFL.
                     </p>
                   </div>
 
                   <div>
-                    <label className="label">FFL License Number *</label>
+                    <label className="label">FFL License Number (optional)</label>
                     <input
                       type="text"
                       value={claimData.ffl_license_number}
                       onChange={(e) => setClaimData({ ...claimData, ffl_license_number: e.target.value })}
                       className="input w-full"
                       placeholder="Enter your FFL license number"
-                      required
                     />
                   </div>
 
