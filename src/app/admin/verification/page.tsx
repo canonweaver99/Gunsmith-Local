@@ -30,7 +30,15 @@ export default function AdminVerificationPage() {
   const [detail, setDetail] = useState<any>(null)
 
   useEffect(() => {
-    if (activeTab === 'claims' || activeTab === 'ffl') fetchClaims(); else fetchRows()
+    if (activeTab === 'claims' || activeTab === 'ffl') {
+      fetchClaims('pending')
+    } else if (activeTab === 'verified') {
+      fetchRows()
+      fetchClaims('approved')
+    } else if (activeTab === 'rejected') {
+      fetchRows()
+      fetchClaims('rejected')
+    }
   }, [activeTab, page])
 
   async function fetchRows() {
@@ -61,7 +69,7 @@ export default function AdminVerificationPage() {
     }
   }
 
-  async function fetchClaims() {
+  async function fetchClaims(status: 'pending' | 'approved' | 'rejected') {
     setLoading(true)
     try {
       // Pull pending claims joined with listing basics
@@ -71,7 +79,7 @@ export default function AdminVerificationPage() {
           id, listing_id, claimer_email, ffl_license_number, claim_status, verification_status, submitted_at,
           listings:listing_id (business_name, city, state_province)
         `)
-        .eq('claim_status', 'pending')
+        .eq('claim_status', status)
         .order('submitted_at', { ascending: false })
 
       if (error) throw error
@@ -172,7 +180,7 @@ export default function AdminVerificationPage() {
                 onClick={() => setActiveTab(tab)}
                 className={`px-3 py-1 rounded text-sm capitalize border ${activeTab===tab ? 'bg-gunsmith-gold text-gunsmith-black border-gunsmith-gold' : 'bg-gunsmith-card text-gunsmith-text border-gunsmith-border hover:border-gunsmith-gold/60'}`}
               >
-                {tab}
+                {tab === 'ffl' ? 'FFL' : tab.charAt(0).toUpperCase() + tab.slice(1)}
               </button>
             ))}
           </div>
@@ -249,8 +257,8 @@ export default function AdminVerificationPage() {
             ))}
           </div>
         )
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-gunsmith-text-secondary">No pending submissions</div>
+      ) : filtered.length === 0 && (activeTab === 'verified' || activeTab === 'rejected') && claims.length === 0 ? (
+        <div className="text-center py-12 text-gunsmith-text-secondary">No submissions</div>
       ) : (
         <div className="space-y-3">
           {filtered.map((r) => (
@@ -286,6 +294,26 @@ export default function AdminVerificationPage() {
               </div>
             </div>
           ))}
+          {/* Claims list for verified/rejected */}
+          {(activeTab === 'verified' || activeTab === 'rejected') && claims.length > 0 && (
+            <div className="mt-6">
+              <h4 className="font-bebas text-xl text-gunsmith-gold mb-2">{activeTab === 'verified' ? 'Verified Claims' : 'Rejected Claims'}</h4>
+              <div className="space-y-3">
+                {claims
+                  .filter(c => !search || c.listings?.business_name?.toLowerCase().includes(search.toLowerCase()) || (c.ffl_license_number || '').toLowerCase().includes(search.toLowerCase()))
+                  .map((c) => (
+                  <div key={c.id} className="flex items-center justify-between border border-gunsmith-border rounded p-4">
+                    <div>
+                      <p className="font-oswald text-gunsmith-text"><span className="text-gunsmith-gold">{c.listings?.business_name || 'Unknown'}</span> {c.listings?.city ? `• ${c.listings.city}, ${c.listings.state_province}` : ''}</p>
+                      <p className="text-sm text-gunsmith-text-secondary">FFL: {c.ffl_license_number || '—'} • Claimer: {c.claimer_email || '—'}</p>
+                      <p className="text-xs text-gunsmith-text-secondary">Submitted: {new Date(c.submitted_at).toLocaleString()}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Pagination */}
           <div className="flex items-center justify-between pt-4">
             <button className="btn-secondary text-sm" onClick={() => setPage(p => Math.max(0, p-1))} disabled={page===0}>Previous</button>
