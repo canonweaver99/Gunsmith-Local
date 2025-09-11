@@ -197,8 +197,7 @@ BEGIN
       business_hours = COALESCE(NULLIF(v_edits->'business_hours','null'::jsonb), business_hours),
       owner_id = COALESCE(v_claimer, owner_id),
       claimed_by = COALESCE(v_claimer, claimed_by),
-      claimed_at = now(),
-      updated_at = now()
+      claimed_at = now()
     WHERE id = v_listing_id;
 
     UPDATE public.business_claims

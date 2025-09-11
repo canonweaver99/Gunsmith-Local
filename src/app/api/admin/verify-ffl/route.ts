@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         if (claim?.claimer_id) {
           await adminClient
             .from('listings')
-            .update({ owner_id: claim.claimer_id, updated_at: new Date().toISOString() })
+            .update({ owner_id: claim.claimer_id })
             .eq('id', listingId)
         }
       }

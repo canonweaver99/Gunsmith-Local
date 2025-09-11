@@ -239,7 +239,6 @@ export default function EditListingPage({ params }: PageProps) {
         cover_image_url: coverUrl,
         image_gallery: galleryUrls.length > 0 ? galleryUrls : null,
         business_hours: businessHours,
-        updated_at: new Date().toISOString(),
       }
 
       // Remove empty strings
