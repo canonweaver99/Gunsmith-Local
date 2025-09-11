@@ -17,6 +17,7 @@ import {
   STORAGE_PATHS 
 } from '@/lib/storage'
 import { Loader2, Check, ArrowLeft, Trash2, AlertCircle } from 'lucide-react'
+import { GUNSMITH_SPECIALTIES } from '@/lib/gunsmith-specialties'
 
 interface PageProps {
   params: { id: string }
@@ -46,7 +47,6 @@ export default function EditListingPage({ params }: PageProps) {
     category: '',
     description: '',
     short_description: '',
-    tags: '',
     year_established: '',
     facebook_url: '',
     twitter_url: '',
@@ -54,6 +54,8 @@ export default function EditListingPage({ params }: PageProps) {
     linkedin_url: '',
     youtube_url: '',
   })
+
+  const [selectedServices, setSelectedServices] = useState<string[]>([])
 
   // Image state
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -116,7 +118,6 @@ export default function EditListingPage({ params }: PageProps) {
         category: data.category || '',
         description: data.description || '',
         short_description: data.short_description || '',
-        tags: data.tags?.join(', ') || '',
         year_established: data.year_established?.toString() || '',
         facebook_url: data.facebook_url || '',
         twitter_url: data.twitter_url || '',
@@ -124,6 +125,8 @@ export default function EditListingPage({ params }: PageProps) {
         linkedin_url: data.linkedin_url || '',
         youtube_url: data.youtube_url || '',
       })
+
+      setSelectedServices(Array.isArray(data.tags) ? data.tags : [])
 
       // Set existing images
       if (data.logo_url) {
@@ -230,7 +233,7 @@ export default function EditListingPage({ params }: PageProps) {
       // Prepare data for update
       const dataToUpdate = {
         ...formData,
-        tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()).filter(Boolean) : [],
+        tags: selectedServices,
         year_established: formData.year_established ? parseInt(formData.year_established) : null,
         logo_url: logoUrl,
         cover_image_url: coverUrl,
@@ -522,17 +525,6 @@ export default function EditListingPage({ params }: PageProps) {
                     />
                   </div>
                   <div>
-                    <label className="label">Tags (comma separated)</label>
-                    <input
-                      type="text"
-                      name="tags"
-                      value={formData.tags}
-                      onChange={handleInputChange}
-                      className="input w-full"
-                      placeholder="gunsmith, repairs, custom work, FFL"
-                    />
-                  </div>
-                  <div>
                     <label className="label">Year Established</label>
                     <input
                       type="number"
@@ -544,6 +536,41 @@ export default function EditListingPage({ params }: PageProps) {
                       max={new Date().getFullYear()}
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Services Provided */}
+              <div className="card">
+                <h2 className="font-bebas text-2xl text-gunsmith-gold mb-4">SERVICES PROVIDED</h2>
+                <p className="text-sm text-gunsmith-text-secondary mb-4">Select all that apply. These appear on your profile and are filterable by customers.</p>
+                <div className="space-y-6">
+                  {GUNSMITH_SPECIALTIES.map(group => (
+                    <div key={group.key}>
+                      <h3 className="font-oswald text-gunsmith-text mb-2">{group.label}</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                        {group.items.map(item => {
+                          const checked = selectedServices.includes(item)
+                          return (
+                            <label key={item} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  setSelectedServices(prev => (
+                                    prev.includes(item)
+                                      ? prev.filter(s => s !== item)
+                                      : [...prev, item]
+                                  ))
+                                }}
+                                className="w-4 h-4 rounded border-gunsmith-border bg-gunsmith-accent text-gunsmith-gold focus:ring-gunsmith-gold"
+                              />
+                              <span className="text-sm text-gunsmith-text">{item}</span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 

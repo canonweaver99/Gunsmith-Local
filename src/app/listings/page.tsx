@@ -10,7 +10,7 @@ import ListingCard from '@/components/ListingCard'
 import MapView from '@/components/MapView'
 import AdvancedFilters from '@/components/AdvancedFilters'
 import { useAnalytics } from '@/hooks/useAnalytics'
-import { GUNSMITH_SPECIALTIES } from '@/lib/gunsmith-specialties'
+import { GUNSMITH_SPECIALTIES, ALL_SPECIALTIES } from '@/lib/gunsmith-specialties'
 import { supabase, Listing } from '@/lib/supabase'
 import { Search, Filter, MapPin, Loader2, Map as MapIcon, SlidersHorizontal } from 'lucide-react'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -411,9 +411,8 @@ function ListingsContent() {
   const categories = [...new Set(listings.map(l => l.category).filter(Boolean))]
   const states = [...new Set(listings.map(l => l.state_province).filter(Boolean))]
   
-  // Get unique services/tags
-  const allTags = listings.flatMap(l => l.tags || [])
-  const services = [...new Set(allTags)].sort()
+  // Available services for filters: use canonical list so users can filter by any service
+  const services = ALL_SPECIALTIES
 
   return (
     <div className="min-h-screen flex flex-col">
