@@ -271,6 +271,29 @@ export default function ListingDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
+                {/* Services Provided Section (always render; encourage owner to add) */}
+                <div className="card">
+                  <h2 className="font-bebas text-2xl text-gunsmith-gold mb-4">SERVICES PROVIDED</h2>
+                  {listing.tags && listing.tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {listing.tags.map((tag, idx) => (
+                        <span key={idx} className="bg-gunsmith-accent text-gunsmith-gold px-3 py-1 rounded text-sm">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gunsmith-text-secondary">No services listed yet.</p>
+                  )}
+                  {user && listing.owner_id === user.id && (
+                    <div className="mt-4">
+                      <Link href={`/dashboard/listings/${listing.id}/edit`} className="btn-secondary">
+                        {listing.tags && listing.tags.length > 0 ? 'Edit Services' : 'Add Services'}
+                      </Link>
+                    </div>
+                  )}
+                </div>
+
                 {/* Services Provided Section */}
                 {listing.tags && listing.tags.length > 0 && (
                   <div className="card">
