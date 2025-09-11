@@ -124,16 +124,27 @@ function ListingsContent() {
   function filterListings() {
     let filtered = [...listings]
 
-    // Search filter
+    // Search filter with state normalization (e.g., Texas ↔ TX)
     if (searchTerm) {
-      filtered = filtered.filter(listing => 
-        listing.business_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        listing.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        listing.city?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        listing.postal_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        listing.state_province?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        listing.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-      )
+      const q = String(searchTerm).toLowerCase().trim()
+      const STATE_NAME_TO_CODE: Record<string, string> = {
+        'alabama':'al','alaska':'ak','arizona':'az','arkansas':'ar','california':'ca','colorado':'co','connecticut':'ct','delaware':'de','florida':'fl','georgia':'ga','hawaii':'hi','idaho':'id','illinois':'il','indiana':'in','iowa':'ia','kansas':'ks','kentucky':'ky','louisiana':'la','maine':'me','maryland':'md','massachusetts':'ma','michigan':'mi','minnesota':'mn','mississippi':'ms','missouri':'mo','montana':'mt','nebraska':'ne','nevada':'nv','new hampshire':'nh','new jersey':'nj','new mexico':'nm','new york':'ny','north carolina':'nc','north dakota':'nd','ohio':'oh','oklahoma':'ok','oregon':'or','pennsylvania':'pa','rhode island':'ri','south carolina':'sc','south dakota':'sd','tennessee':'tn','texas':'tx','utah':'ut','vermont':'vt','virginia':'va','washington':'wa','west virginia':'wv','wisconsin':'wi','wyoming':'wy','district of columbia':'dc'
+      }
+      const CODE_TO_NAME: Record<string, string> = Object.fromEntries(Object.entries(STATE_NAME_TO_CODE).map(([k,v]) => [v,k]))
+      const tokens = new Set<string>([q])
+      if (STATE_NAME_TO_CODE[q]) tokens.add(STATE_NAME_TO_CODE[q])
+      if (CODE_TO_NAME[q]) tokens.add(CODE_TO_NAME[q])
+
+      filtered = filtered.filter(listing => {
+        const name = String(listing.business_name || '').toLowerCase()
+        const desc = String(listing.description || '').toLowerCase()
+        const city = String(listing.city || '').toLowerCase()
+        const zip = String(listing.postal_code || '').toLowerCase()
+        const state = String(listing.state_province || '').toLowerCase()
+        const stateNorm = tokens.has(state) || tokens.has(STATE_NAME_TO_CODE[state] || '') || tokens.has(CODE_TO_NAME[state] || '')
+        const tagHit = (listing.tags || []).some((t: string) => String(t).toLowerCase().includes(q))
+        return name.includes(q) || desc.includes(q) || city.includes(q) || zip.includes(q) || state.includes(q) || stateNorm || tagHit
+      })
     }
 
     // Category filter
@@ -148,6 +159,7 @@ function ListingsContent() {
 
     // Apply advanced filters if set
     if (advancedFilters) {
+      let beforeServices = [...filtered]
       // Categories filter (from advanced)
       if (advancedFilters.categories.length > 0) {
         filtered = filtered.filter(listing => 
@@ -249,6 +261,10 @@ function ListingsContent() {
         filtered = filtered.filter(listing => 
           listing.year_established && listing.year_established <= advancedFilters.yearEstablishedMax
         )
+      }
+      // If no results and services were requested, allow listings without tags as fallback
+      if (advancedFilters.services.length > 0 && filtered.length === 0) {
+        filtered = beforeServices.filter(l => !l.tags || l.tags.length === 0)
       }
     }
 
