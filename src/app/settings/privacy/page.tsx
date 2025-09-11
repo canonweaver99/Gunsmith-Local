@@ -55,18 +55,42 @@ export default function PrivacySettingsPage() {
     setSuccess(false)
 
     try {
-      const { error } = await supabase
+      // Check if a preferences row already exists for this user
+      const { data: existing, error: fetchErr } = await supabase
         .from('user_preferences')
-        .upsert({
-          user_id: user?.id,
-          show_email: privacy.showEmail,
-          show_phone: privacy.showPhone,
-          allow_analytics: privacy.allowAnalytics,
-          allow_marketing: privacy.allowMarketing,
-          updated_at: new Date()
-        })
+        .select('user_id')
+        .eq('user_id', user?.id)
+        .maybeSingle()
 
-      if (error) throw error
+      if (fetchErr) throw fetchErr
+
+      if (existing) {
+        const { error: updErr } = await supabase
+          .from('user_preferences')
+          .update({
+            show_email: privacy.showEmail,
+            show_phone: privacy.showPhone,
+            allow_analytics: privacy.allowAnalytics,
+            allow_marketing: privacy.allowMarketing,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user?.id)
+
+        if (updErr) throw updErr
+      } else {
+        const { error: insErr } = await supabase
+          .from('user_preferences')
+          .insert({
+            user_id: user?.id!,
+            show_email: privacy.showEmail,
+            show_phone: privacy.showPhone,
+            allow_analytics: privacy.allowAnalytics,
+            allow_marketing: privacy.allowMarketing,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+        if (insErr) throw insErr
+      }
 
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
