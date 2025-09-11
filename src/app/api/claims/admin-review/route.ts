@@ -6,17 +6,23 @@ export async function POST(req: NextRequest) {
     const { claimId, approve } = await req.json()
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!supabaseUrl || !serviceKey) {
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (!supabaseUrl || !anonKey) {
       return NextResponse.json({ error: 'Server not configured' }, { status: 500 })
     }
 
-    const adminClient = createClient(supabaseUrl, serviceKey)
-    const { error } = await adminClient.rpc('admin_review_claim', {
+    // Use user's auth token so auth.uid() is set inside the RPC
+    const authHeader = req.headers.get('authorization') || ''
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    })
+
+    const { error } = await userClient.rpc('admin_review_claim', {
       in_claim_id: claimId,
       in_approve: !!approve,
     })
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+    if (error) return NextResponse.json({ error: error.message || 'RPC failed' }, { status: 400 })
 
     return NextResponse.json({ success: true })
   } catch (e: any) {

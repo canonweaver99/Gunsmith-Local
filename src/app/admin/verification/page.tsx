@@ -212,9 +212,13 @@ export default function AdminVerificationPage() {
                     onClick={async () => {
                       setUpdatingId(c.id)
                       try {
-                        const res = await fetch('/api/claims/admin-review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ claimId: c.id, approve: false }) })
-                        if (!res.ok) throw new Error('Reject failed')
+                        const token = (await supabase.auth.getSession()).data.session?.access_token
+                        const res = await fetch('/api/claims/admin-review', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ claimId: c.id, approve: false }) })
+                        const json = await res.json().catch(() => ({}))
+                        if (!res.ok) throw new Error(json.error || 'Reject failed')
                         await fetchClaims()
+                      } catch (e:any) {
+                        alert(e.message)
                       } finally { setUpdatingId(null) }
                     }}
                     className="btn-ghost text-sm"
@@ -226,9 +230,13 @@ export default function AdminVerificationPage() {
                     onClick={async () => {
                       setUpdatingId(c.id)
                       try {
-                        const res = await fetch('/api/claims/admin-review', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ claimId: c.id, approve: true }) })
-                        if (!res.ok) throw new Error('Approve failed')
+                        const token = (await supabase.auth.getSession()).data.session?.access_token
+                        const res = await fetch('/api/claims/admin-review', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ claimId: c.id, approve: true }) })
+                        const json = await res.json().catch(() => ({}))
+                        if (!res.ok) throw new Error(json.error || 'Approve failed')
                         await fetchClaims();
+                      } catch (e:any) {
+                        alert(e.message)
                       } finally { setUpdatingId(null) }
                     }}
                     className="btn-primary text-sm"
