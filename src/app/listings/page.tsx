@@ -373,6 +373,20 @@ function ListingsContent() {
       }
     }
 
+    // Gun-type specialization bonus using listing.specialties (Rifle, Pistol, Sniper, Shotgun, Other)
+    if (Array.isArray(listing.specialties) && listing.specialties.length > 0) {
+      const listingSpecs = (listing.specialties || []).map((s: string) => String(s).toLowerCase())
+      const userTypes = (prefs.gunTypes || []).map((s: string) => String(s).toLowerCase())
+      let matches = 0
+      userTypes.forEach((t: string) => { if (listingSpecs.includes(t)) matches += 1 })
+      if (matches > 0) {
+        // +12 per match, capped at +18
+        score += Math.min(18, matches * 12)
+      } else if (userTypes.includes('other') && listingSpecs.includes('other')) {
+        score += 8
+      }
+    }
+
     // Delivery preference
     const pref = prefs.delivery
     const offersBoth = listing.delivery_method === 'both'
