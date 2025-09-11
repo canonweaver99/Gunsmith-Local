@@ -7,6 +7,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { supabase } from '@/lib/supabase'
 import { Building2, Shield, Loader2, AlertCircle, CheckCircle, Search } from 'lucide-react'
+import { GUNSMITH_SPECIALTIES } from '@/lib/gunsmith-specialties'
 
 export default function ClaimBusinessPage() {
   const router = useRouter()
@@ -24,7 +25,9 @@ export default function ClaimBusinessPage() {
     verification_documents: '',
     additional_info: ''
   })
-  const [edits, setEdits] = useState<any>({})
+  const [edits, setEdits] = useState<any>({ tags: [], specialties: [], delivery_method: null })
+  const SPECIALTIES = ['Rifle','Pistol','Sniper','Shotgun','Other']
+  const DELIVERY_OPTIONS: Array<'in-person'|'shipping'|'both'> = ['in-person','shipping','both']
 
   useEffect(() => {
     if (!user) {
@@ -61,7 +64,10 @@ export default function ClaimBusinessPage() {
         phone: selectedBusiness.phone || '',
         email: selectedBusiness.email || '',
         website: selectedBusiness.website || '',
-        description: selectedBusiness.description || ''
+        description: selectedBusiness.description || '',
+        tags: Array.isArray(selectedBusiness.tags) ? selectedBusiness.tags : [],
+        specialties: Array.isArray((selectedBusiness as any).specialties) ? (selectedBusiness as any).specialties : [],
+        delivery_method: (selectedBusiness as any).delivery_method || null
       })
     }
   }, [selectedBusiness])
@@ -383,6 +389,74 @@ export default function ClaimBusinessPage() {
                     <div className="md:col-span-2">
                       <label className="label">Description</label>
                       <textarea className="input w-full h-28 resize-none" value={edits.description || ''} onChange={(e)=>setEdits({...edits, description:e.target.value})}/>
+                    </div>
+                  </div>
+
+                  {/* Services Provided */}
+                  <div className="card">
+                    <h3 className="font-bebas text-xl text-gunsmith-gold mb-3">SERVICES PROVIDED</h3>
+                    <div className="space-y-4">
+                      {GUNSMITH_SPECIALTIES.map(group => (
+                        <div key={group.key}>
+                          <p className="text-gunsmith-text mb-2">{group.label}</p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                            {group.items.map(item => (
+                              <label key={item} className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={(edits.tags || []).includes(item)}
+                                  onChange={() => {
+                                    const curr = new Set(edits.tags || [])
+                                    curr.has(item) ? curr.delete(item) : curr.add(item)
+                                    setEdits({ ...edits, tags: Array.from(curr) })
+                                  }}
+                                  className="w-4 h-4 rounded border-gunsmith-border bg-gunsmith-accent text-gunsmith-gold focus:ring-gunsmith-gold"
+                                />
+                                <span className="text-sm text-gunsmith-text">{item}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Specialties */}
+                  <div className="card">
+                    <h3 className="font-bebas text-xl text-gunsmith-gold mb-3">SPECIALTIES</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                      {SPECIALTIES.map(sp => (
+                        <label key={sp} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={(edits.specialties || []).includes(sp)}
+                            onChange={() => {
+                              const curr = new Set(edits.specialties || [])
+                              curr.has(sp) ? curr.delete(sp) : curr.add(sp)
+                              setEdits({ ...edits, specialties: Array.from(curr) })
+                            }}
+                            className="w-4 h-4 rounded border-gunsmith-border bg-gunsmith-accent text-gunsmith-gold focus:ring-gunsmith-gold"
+                          />
+                          <span className="text-sm text-gunsmith-text">{sp}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Delivery Method */}
+                  <div className="card">
+                    <h3 className="font-bebas text-xl text-gunsmith-gold mb-3">DELIVERY METHOD</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      {DELIVERY_OPTIONS.map((opt) => (
+                        <button
+                          type="button"
+                          key={opt}
+                          onClick={() => setEdits({ ...edits, delivery_method: opt })}
+                          className={`px-3 py-2 rounded text-sm ${edits.delivery_method===opt ? 'bg-gunsmith-gold text-gunsmith-black' : 'bg-gunsmith-accent text-gunsmith-text hover:bg-gunsmith-gold/80 hover:text-gunsmith-black'}`}
+                        >
+                          {opt === 'in-person' ? 'In Person' : opt === 'shipping' ? 'Shipped' : 'Both'}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
