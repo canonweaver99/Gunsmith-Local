@@ -18,7 +18,7 @@ interface PendingListing {
 export default function AdminVerificationPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'claims' | 'pending' | 'verified' | 'rejected'>('claims')
+  const [activeTab, setActiveTab] = useState<'claims' | 'ffl' | 'verified' | 'rejected'>('claims')
   const [search, setSearch] = useState('')
   const [rows, setRows] = useState<PendingListing[]>([])
   const [claims, setClaims] = useState<any[]>([])
@@ -30,7 +30,7 @@ export default function AdminVerificationPage() {
   const [detail, setDetail] = useState<any>(null)
 
   useEffect(() => {
-    if (activeTab === 'claims') fetchClaims(); else fetchRows()
+    if (activeTab === 'claims' || activeTab === 'ffl') fetchClaims(); else fetchRows()
   }, [activeTab, page])
 
   async function fetchRows() {
@@ -75,7 +75,8 @@ export default function AdminVerificationPage() {
         .order('submitted_at', { ascending: false })
 
       if (error) throw error
-      setClaims(data || [])
+      const rows = (data || []).filter(c => activeTab === 'ffl' ? (c.ffl_license_number && c.ffl_license_number.length > 0) : true)
+      setClaims(rows)
     } catch (e) {
       console.error('Load claims error:', e)
     } finally {
@@ -161,11 +162,11 @@ export default function AdminVerificationPage() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-gunsmith-gold" />
-          <h2 className="font-bebas text-2xl text-gunsmith-gold">FFL VERIFICATION QUEUE</h2>
+          <h2 className="font-bebas text-2xl text-gunsmith-gold">VERIFICATION QUEUE</h2>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 mr-4">
-            {(['claims','pending','verified','rejected'] as const).map(tab => (
+            {(['claims','ffl','verified','rejected'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}

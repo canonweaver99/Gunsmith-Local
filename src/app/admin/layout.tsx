@@ -56,7 +56,7 @@ export default function AdminLayout({
     },
     {
       href: '/admin/verification',
-      label: 'FFL Verification',
+      label: 'Verification',
       icon: Shield,
     },
     {
