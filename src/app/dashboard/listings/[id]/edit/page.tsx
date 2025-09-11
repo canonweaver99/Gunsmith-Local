@@ -56,6 +56,8 @@ export default function EditListingPage({ params }: PageProps) {
   })
 
   const [selectedServices, setSelectedServices] = useState<string[]>([])
+  const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([])
+  const SPECIALTIES = ['Rifle','Pistol','Sniper','Shotgun','Other']
 
   // Image state
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -127,6 +129,7 @@ export default function EditListingPage({ params }: PageProps) {
       })
 
       setSelectedServices(Array.isArray(data.tags) ? data.tags : [])
+      setSelectedSpecialties(Array.isArray((data as any).specialties) ? (data as any).specialties : [])
 
       // Set existing images
       if (data.logo_url) {
@@ -234,6 +237,7 @@ export default function EditListingPage({ params }: PageProps) {
       const dataToUpdate = {
         ...formData,
         tags: selectedServices,
+        specialties: selectedSpecialties,
         year_established: formData.year_established ? parseInt(formData.year_established) : null,
         logo_url: logoUrl,
         cover_image_url: coverUrl,
@@ -569,6 +573,25 @@ export default function EditListingPage({ params }: PageProps) {
                         })}
                       </div>
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Specialties */}
+              <div className="card">
+                <h2 className="font-bebas text-2xl text-gunsmith-gold mb-4">SPECIALTIES</h2>
+                <p className="text-sm text-gunsmith-text-secondary mb-4">Choose the firearm types you specialize in.</p>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {SPECIALTIES.map(item => (
+                    <label key={item} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={selectedSpecialties.includes(item)}
+                        onChange={() => setSelectedSpecialties(prev => prev.includes(item) ? prev.filter(s => s !== item) : [...prev, item])}
+                        className="w-4 h-4 rounded border-gunsmith-border bg-gunsmith-accent text-gunsmith-gold focus:ring-gunsmith-gold"
+                      />
+                      <span className="text-sm text-gunsmith-text">{item}</span>
+                    </label>
                   ))}
                 </div>
               </div>

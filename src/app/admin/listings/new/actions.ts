@@ -20,6 +20,13 @@ const listingSchema = z.object({
   website: z.string().url().optional(),
   cover_image_url: z.string().url().optional(),
   business_hours: z.any().optional(),
+  specialties: z
+    .preprocess(v => {
+      if (typeof v === 'string') {
+        try { return JSON.parse(v) } catch { return undefined }
+      }
+      return v
+    }, z.array(z.string()).optional()),
   is_featured: z.boolean().optional().default(false),
   status: z.enum(['Active','Inactive'])
 })
@@ -93,6 +100,7 @@ export async function createListing(formData: FormData) {
     website: values.website || null,
     cover_image_url: values.cover_image_url || null,
     business_hours: values.business_hours || null,
+    specialties: values.specialties || null,
     is_featured: values.is_featured || false,
     status: values.status,
   }

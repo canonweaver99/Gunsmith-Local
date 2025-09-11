@@ -22,6 +22,7 @@ export interface Listing {
   category?: string
   subcategory?: string
   tags?: string[]
+  specialties?: string[]
   business_hours?: Record<string, any>
   year_established?: number
   facebook_url?: string

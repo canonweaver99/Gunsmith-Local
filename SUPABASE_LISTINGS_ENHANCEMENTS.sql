@@ -73,6 +73,13 @@ create index if not exists listings_h3_idx
 create index if not exists listings_tags_gin_idx
   on public.listings using gin (tags);
 
+-- New: specialties array for firearm type focus
+alter table public.listings
+  add column if not exists specialties text[];
+
+create index if not exists listings_specialties_gin_idx
+  on public.listings using gin (specialties);
+
 create index if not exists listings_payment_methods_gin_idx
   on public.listings using gin (payment_methods);
 

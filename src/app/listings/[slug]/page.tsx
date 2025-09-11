@@ -282,6 +282,29 @@ export default function ListingDetailPage({ params }: PageProps) {
                   )}
                 </div>
 
+                {/* Specialties Section */}
+                <div className="card">
+                  <h2 className="font-bebas text-2xl text-gunsmith-gold mb-4">SPECIALTIES</h2>
+                  {listing.specialties && listing.specialties.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {listing.specialties.map((sp, idx) => (
+                        <span key={idx} className="bg-gunsmith-accent text-gunsmith-gold px-3 py-1 rounded text-sm">
+                          {sp}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gunsmith-text-secondary">No specialties listed yet.</p>
+                  )}
+                  {user && listing.owner_id === user.id && (
+                    <div className="mt-4">
+                      <Link href={`/dashboard/listings/${listing.id}/edit`} className="btn-secondary">
+                        {listing.specialties && listing.specialties.length > 0 ? 'Edit Specialties' : 'Add Specialties'}
+                      </Link>
+                    </div>
+                  )}
+                </div>
+
                 {/* Image Gallery */}
                 {listing.image_gallery && listing.image_gallery.length > 0 && (
                   <div className="card">

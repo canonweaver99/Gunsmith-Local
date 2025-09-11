@@ -178,6 +178,28 @@ export default function AdminNewListingPage() {
               </div>
 
               <div>
+                <label className="label">Specialties (multi-select)</label>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                  {['Rifle','Pistol','Sniper','Shotgun','Other'].map(opt => (
+                    <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        onChange={(e) => {
+                          const current = (watch('specialties') as any) || []
+                          const next = e.target.checked ? [...current, opt] : current.filter((v: string) => v !== opt)
+                          setValue('specialties' as any, next as any)
+                        }}
+                        className="w-4 h-4 rounded border-gunsmith-border bg-gunsmith-accent text-gunsmith-gold focus:ring-gunsmith-gold"
+                      />
+                      <span className="text-sm text-gunsmith-text">{opt}</span>
+                    </label>
+                  ))}
+                </div>
+                {/* store as hidden JSON string for server action parsing */}
+                <input type="hidden" value={JSON.stringify((watch('specialties') as any) || [])} {...register('specialties' as any)} />
+              </div>
+
+              <div>
                 <label className="label">Business Hours</label>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
