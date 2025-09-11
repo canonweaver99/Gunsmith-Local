@@ -46,12 +46,32 @@ export default function ContactForm({ listingId, listingName, businessEmail, bus
           sender_phone: formData.phone || null,
           subject: formData.subject,
           message: formData.message,
-          contact_method: formData.contactMethod,
+          // Some databases may not have contact_method column; map to generic field
+          contact_method: undefined,
           status: 'unread',
           created_at: new Date().toISOString(),
         }])
 
-      if (messageError) throw messageError
+      if (messageError) {
+        // Retry without contact_method if column doesn't exist
+        if (String(messageError.message || '').toLowerCase().includes("contact_method") || String(messageError.hint || '').toLowerCase().includes('column')) {
+          const { error: retryErr } = await supabase
+            .from('contact_messages')
+            .insert([{
+              listing_id: listingId,
+              sender_name: formData.name,
+              sender_email: formData.email,
+              sender_phone: formData.phone || null,
+              subject: formData.subject,
+              message: formData.message,
+              status: 'unread',
+              created_at: new Date().toISOString(),
+            }])
+          if (retryErr) throw retryErr
+        } else {
+          throw messageError
+        }
+      }
 
       // Send email notification
       try {
