@@ -67,12 +67,12 @@ export async function createListing(formData: FormData) {
     raw.business_hours = null
   }
 
-  // Normalize status to lower-case labels used in DB if applicable
   const parsed = listingSchema.safeParse(raw)
   if (!parsed.success) {
     return { ok: false, error: parsed.error.errors.map(e => e.message).join(', ') }
   }
   const values = parsed.data
+  const normalizedStatus = values.status === 'Active' ? 'active' : 'inactive'
 
   // Generate/ensure unique slug
   let base = slugify(values.slug || values.business_name)
@@ -102,7 +102,7 @@ export async function createListing(formData: FormData) {
     business_hours: values.business_hours || null,
     specialties: values.specialties || null,
     is_featured: values.is_featured || false,
-    status: values.status,
+    status: normalizedStatus,
   }
 
   // Try insert, handle duplicate slug race by suffix loop
