@@ -239,19 +239,7 @@ export default function ListingDetailPage({ params }: PageProps) {
                     </div>
                   </div>
 
-                  {/* Tags */}
-                  {listing.tags && listing.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-4">
-                      {listing.tags.map((tag, index) => (
-                        <span 
-                          key={index}
-                          className="bg-gunsmith-accent text-gunsmith-gold px-3 py-1 rounded text-sm"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  {/* Tags removed here to avoid duplicate with Services Provided card below */}
                     </div>
                   </div>
                 </div>
@@ -410,7 +398,12 @@ export default function ListingDetailPage({ params }: PageProps) {
                 {/* Business Hours */}
                 {listing.business_hours && (
                   <div className="card">
-                    <h3 className="font-bebas text-2xl text-gunsmith-gold mb-4">HOURS</h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bebas text-2xl text-gunsmith-gold">HOURS</h3>
+                      {user && listing.owner_id === user.id && (
+                        <Link href={`/dashboard/listings/${listing.id}/edit`} className="btn-secondary btn-sm">Edit Hours</Link>
+                      )}
+                    </div>
                     <BusinessHours hours={listing.business_hours} />
                   </div>
                 )}
