@@ -175,6 +175,13 @@ export default function ListingCard({ listing }: ListingCardProps) {
             )}
           </div>
 
+          {/* Delivery Method */}
+          {listing.delivery_method && (
+            <div className="text-sm text-gunsmith-text-secondary">
+              <span className="text-gunsmith-gold">Delivery:</span> {listing.delivery_method === 'in-person' ? 'In Person' : listing.delivery_method === 'shipping' ? 'Shipped' : 'Both'}
+            </div>
+          )}
+
           {/* Tags */}
           {listing.tags && listing.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
