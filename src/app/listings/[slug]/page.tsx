@@ -259,7 +259,7 @@ export default function ListingDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
-                {/* Services Provided Section (always render; encourage owner to add) */}
+                {/* Services Provided Section (single) */}
                 <div className="card">
                   <h2 className="font-bebas text-2xl text-gunsmith-gold mb-4">SERVICES PROVIDED</h2>
                   {listing.tags && listing.tags.length > 0 ? (
@@ -281,27 +281,6 @@ export default function ListingDetailPage({ params }: PageProps) {
                     </div>
                   )}
                 </div>
-
-                {/* Services Provided Section */}
-                {listing.tags && listing.tags.length > 0 && (
-                  <div className="card">
-                    <h2 className="font-bebas text-2xl text-gunsmith-gold mb-4">SERVICES PROVIDED</h2>
-                    <div className="flex flex-wrap gap-2">
-                      {listing.tags.map((tag, idx) => (
-                        <span key={idx} className="bg-gunsmith-accent text-gunsmith-gold px-3 py-1 rounded text-sm">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                    {user && listing.owner_id === user.id && (
-                      <div className="mt-4">
-                        <Link href={`/dashboard/listings/${listing.id}/edit`} className="btn-secondary">
-                          Edit Services
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* Image Gallery */}
                 {listing.image_gallery && listing.image_gallery.length > 0 && (
