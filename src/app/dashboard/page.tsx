@@ -9,7 +9,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase, Listing } from '@/lib/supabase'
-import { Plus, Edit, Eye, Trash2, Loader2, Building2, Star, MapPin, Phone, Mail, Globe, User, MessageSquare, Sparkles, Heart } from 'lucide-react'
+import { Plus, Edit, Eye, Trash2, Loader2, Building2, Star, MapPin, Phone, Mail, Globe, User, MessageSquare, Sparkles, Heart, ShieldOff } from 'lucide-react'
 import FeaturedCheckout from '@/components/FeaturedCheckout'
 import FeaturedSection from '@/components/dashboard/FeaturedSection'
 import ListingCard from '@/components/ListingCard'
@@ -80,21 +80,29 @@ export default function DashboardPage() {
   }
 
   async function deleteListing(id: string) {
-    if (!confirm('Are you sure you want to delete this listing?')) return
-
     try {
-      const { error } = await supabase
-        .from('listings')
-        .delete()
-        .eq('id', id)
-        .eq('owner_id', user?.id)
-
+      const res = confirm('Are you sure you want to delete this listing? This cannot be undone.')
+      if (!res) return
+      const { error } = await supabase.from('listings').delete().eq('id', id).eq('owner_id', user?.id)
       if (error) throw error
-      
       setListings(listings.filter(l => l.id !== id))
     } catch (error) {
       console.error('Error deleting listing:', error)
       alert('Failed to delete listing')
+    }
+  }
+
+  async function unclaimListing(id: string) {
+    try {
+      const res = confirm('Unclaim this listing? This will remove it from your dashboard but keep the listing live.')
+      if (!res) return
+      const resp = await fetch('/api/admin/listings/unclaim', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ listingId: id }) })
+      const json = await resp.json().catch(()=>({}))
+      if (!resp.ok) throw new Error(json.error || 'Unclaim failed')
+      setListings(listings.filter(l => l.id !== id))
+    } catch (e:any) {
+      console.error('Unclaim error:', e)
+      alert(e.message || 'Failed to unclaim')
     }
   }
 
@@ -324,13 +332,21 @@ export default function DashboardPage() {
                           <User className="h-4 w-4" />
                           Edit Profile
                         </Link>
-                        <Link 
-                          href={`/dashboard/listings/${listing.id}/delete`}
-                          className="btn-ghost flex items-center gap-2 text-gunsmith-error"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete Listing
-                        </Link>
+                        <div className="relative">
+                          <button
+                            onClick={async () => {
+                              const choice = window.prompt('Type "unclaim" to unclaim, or "delete" to permanently delete this listing')
+                              if (!choice) return
+                              if (choice.toLowerCase() === 'unclaim') return unclaimListing(listing.id)
+                              if (choice.toLowerCase() === 'delete') return deleteListing(listing.id)
+                              alert('No action taken')
+                            }}
+                            className="btn-ghost flex items-center gap-2 text-gunsmith-error"
+                          >
+                            <ShieldOff className="h-4 w-4" />
+                            Unclaim / Delete
+                          </button>
+                        </div>
                         <Link 
                           href="/dashboard/messages"
                           className="btn-secondary flex items-center gap-2 relative"
