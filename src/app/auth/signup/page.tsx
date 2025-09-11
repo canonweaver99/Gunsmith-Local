@@ -91,7 +91,21 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
-      await signUp(formData.email, formData.password, formData.fullName)
+      const data = await signUp(formData.email, formData.password, formData.fullName)
+      try {
+        const newUserId = (data as any)?.user?.id
+        if (newUserId) {
+          await supabase.from('profiles').upsert({
+            id: newUserId,
+            email: formData.email,
+            full_name: formData.fullName || null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+        }
+      } catch (profileErr) {
+        console.warn('Profiles upsert after signup failed:', profileErr)
+      }
       
       // Send welcome email
       try {
