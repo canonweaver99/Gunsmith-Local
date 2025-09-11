@@ -195,6 +195,7 @@ BEGIN
       state_province = COALESCE(v_edits->>'state_province', state_province),
       postal_code = COALESCE(v_edits->>'postal_code', postal_code),
       specialties = COALESCE(NULLIF((v_edits->'specialties')::text,'null')::jsonb::text[] , specialties),
+      delivery_method = COALESCE(v_edits->>'delivery_method', delivery_method),
       business_hours = COALESCE(NULLIF(v_edits->'business_hours','null'::jsonb), business_hours),
       owner_id = COALESCE(v_claimer, owner_id),
       claimed_by = COALESCE(v_claimer, claimed_by),

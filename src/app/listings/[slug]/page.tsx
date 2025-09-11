@@ -344,6 +344,12 @@ export default function ListingDetailPage({ params }: PageProps) {
                 <div className="card">
                   <h3 className="font-bebas text-2xl text-gunsmith-gold mb-4">CONTACT</h3>
                   <div className="space-y-3">
+                    {/* Delivery Method */}
+                    {listing.delivery_method && (
+                      <div className="text-gunsmith-text-secondary">
+                        <p className="text-sm"><span className="text-gunsmith-gold">Delivery:</span> {listing.delivery_method === 'in-person' ? 'In Person' : listing.delivery_method === 'shipping' ? 'Shipped' : 'Both'}</p>
+                      </div>
+                    )}
                     {/* Address */}
                     {listing.street_address && (
                       <div className="flex items-start gap-3">

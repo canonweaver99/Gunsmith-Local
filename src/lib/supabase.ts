@@ -23,6 +23,7 @@ export interface Listing {
   subcategory?: string
   tags?: string[]
   specialties?: string[]
+  delivery_method?: 'in-person' | 'shipping' | 'both'
   business_hours?: Record<string, any>
   year_established?: number
   facebook_url?: string

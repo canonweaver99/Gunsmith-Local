@@ -58,6 +58,8 @@ export default function EditListingPage({ params }: PageProps) {
   const [selectedServices, setSelectedServices] = useState<string[]>([])
   const [selectedSpecialties, setSelectedSpecialties] = useState<string[]>([])
   const SPECIALTIES = ['Rifle','Pistol','Sniper','Shotgun','Other']
+  const DELIVERY_OPTIONS: Array<'in-person'|'shipping'|'both'> = ['in-person','shipping','both']
+  const [deliveryMethod, setDeliveryMethod] = useState<'in-person'|'shipping'|'both'|'none'>('none')
 
   // Image state
   const [logoFile, setLogoFile] = useState<File | null>(null)
@@ -130,6 +132,7 @@ export default function EditListingPage({ params }: PageProps) {
 
       setSelectedServices(Array.isArray(data.tags) ? data.tags : [])
       setSelectedSpecialties(Array.isArray((data as any).specialties) ? (data as any).specialties : [])
+      setDeliveryMethod((data as any).delivery_method || 'none')
 
       // Set existing images
       if (data.logo_url) {
@@ -238,6 +241,7 @@ export default function EditListingPage({ params }: PageProps) {
         ...formData,
         tags: selectedServices,
         specialties: selectedSpecialties,
+        delivery_method: deliveryMethod === 'none' ? null : deliveryMethod,
         year_established: formData.year_established ? parseInt(formData.year_established) : null,
         logo_url: logoUrl,
         cover_image_url: coverUrl,
@@ -592,6 +596,23 @@ export default function EditListingPage({ params }: PageProps) {
                       />
                       <span className="text-sm text-gunsmith-text">{item}</span>
                     </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* Delivery Method */}
+              <div className="card">
+                <h2 className="font-bebas text-2xl text-gunsmith-gold mb-4">DELIVERY METHOD</h2>
+                <div className="grid grid-cols-3 gap-2">
+                  {DELIVERY_OPTIONS.map(opt => (
+                    <button
+                      type="button"
+                      key={opt}
+                      onClick={() => setDeliveryMethod(opt)}
+                      className={`px-3 py-2 rounded text-sm ${deliveryMethod===opt ? 'bg-gunsmith-gold text-gunsmith-black' : 'bg-gunsmith-accent text-gunsmith-text hover:bg-gunsmith-gold/80 hover:text-gunsmith-black'}`}
+                    >
+                      {opt === 'in-person' ? 'In Person' : opt === 'shipping' ? 'Shipped' : 'Both'}
+                    </button>
                   ))}
                 </div>
               </div>

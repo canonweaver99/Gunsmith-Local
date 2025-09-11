@@ -80,6 +80,11 @@ alter table public.listings
 create index if not exists listings_specialties_gin_idx
   on public.listings using gin (specialties);
 
+-- Delivery method: in-person, shipping, or both
+alter table public.listings
+  add column if not exists delivery_method text
+    check (delivery_method in ('in-person','shipping','both'));
+
 create index if not exists listings_payment_methods_gin_idx
   on public.listings using gin (payment_methods);
 
