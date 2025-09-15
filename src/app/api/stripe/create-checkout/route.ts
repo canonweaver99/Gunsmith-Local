@@ -41,41 +41,29 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Define pricing based on duration
-    const pricing = {
-      '30': { amount: 5000, name: 'Monthly Featured' }, // $50.00
-    }
-
-    const selectedPricing = pricing[duration as keyof typeof pricing]
-    if (!selectedPricing) {
+    // Use a recurring Price for subscription
+    const priceId = process.env.STRIPE_FEATURED_PRICE_ID
+    if (!priceId) {
       return NextResponse.json(
-        { error: 'Invalid duration. Must be 30 days' },
-        { status: 400 }
+        { error: 'Missing STRIPE_FEATURED_PRICE_ID environment variable' },
+        { status: 500 }
       )
     }
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session (subscription)
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      mode: 'subscription',
       line_items: [
         {
-          price_data: {
-            currency: 'usd',
-            product_data: {
-              name: `${selectedPricing.name} - ${listing.business_name}`,
-              description: `Feature your gunsmith business listing for ${duration} days`,
-            },
-            unit_amount: selectedPricing.amount,
-          },
+          price: priceId,
           quantity: 1,
         },
       ],
-      mode: 'payment',
       success_url: successUrl || `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?featured=success`,
       cancel_url: cancelUrl || `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard?featured=cancelled`,
       metadata: {
         listingId: listingId,
-        duration: duration,
+        duration: duration || '30',
         userId: 'temp-user-id',
       },
     })
