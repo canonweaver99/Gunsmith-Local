@@ -31,6 +31,8 @@ function ListingsContent() {
   const [listingsWithRatings, setListingsWithRatings] = useState<any[]>([])
   const [sortBy, setSortBy] = useState<'featured' | 'name' | 'rating' | 'newest'>('featured')
   const [showWizardMessage, setShowWizardMessage] = useState(false)
+  const PAGE_SIZE = 30
+  const [page, setPage] = useState(1)
 
   useEffect(() => {
     fetchListings()
@@ -71,6 +73,7 @@ function ListingsContent() {
 
   useEffect(() => {
     filterListings()
+    setPage(1) // reset to first page on filter/sort changes
   }, [listings, searchTerm, selectedCategory, selectedState, advancedFilters, listingsWithRatings, sortBy])
 
   function handleSearch(e?: React.FormEvent) {
@@ -308,6 +311,9 @@ function ListingsContent() {
     }
 
     setFilteredListings(filtered)
+    // If current page overflows after filtering, clamp it
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+    if (page > totalPages) setPage(totalPages)
     
     // Track search if there's a search term or filters
     if (searchTerm || selectedCategory || selectedState || (advancedFilters && Object.values(advancedFilters).some(v => v !== null && v !== '' && (Array.isArray(v) ? v.length > 0 : true)))) {
@@ -517,7 +523,12 @@ function ListingsContent() {
             {/* Results Count and View Toggle */}
             <div className="mt-4 flex flex-wrap justify-between items-center gap-4">
               <div className="text-sm text-gunsmith-text-secondary">
-                Showing {filteredListings.length} of {listings.length} listings
+                {(() => {
+                  const total = filteredListings.length
+                  const start = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
+                  const end = Math.min(total, page * PAGE_SIZE)
+                  return `Showing ${start}-${end} of ${total} listings`
+                })()}
               </div>
               
               <div className="flex items-center gap-4">
@@ -580,6 +591,26 @@ function ListingsContent() {
         {/* Listings Grid */}
         <section className="py-12 px-4">
           <div className="container mx-auto">
+            {/* Top pagination */}
+            {filteredListings.length > PAGE_SIZE && (
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  className="btn-secondary text-sm"
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-gunsmith-text-secondary">Page {page} of {Math.max(1, Math.ceil(filteredListings.length / PAGE_SIZE))}</span>
+                <button
+                  className="btn-secondary text-sm"
+                  onClick={() => setPage(p => Math.min(Math.ceil(filteredListings.length / PAGE_SIZE), p + 1))}
+                  disabled={page >= Math.ceil(filteredListings.length / PAGE_SIZE)}
+                >
+                  Next
+                </button>
+              </div>
+            )}
             {loading ? (
               <div className="flex justify-center items-center py-20">
                 <Loader2 className="h-8 w-8 text-gunsmith-gold animate-spin" />
@@ -595,11 +626,35 @@ function ListingsContent() {
                 </p>
               </div>
             ) : viewMode === 'list' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredListings.map(listing => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredListings
+                    .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+                    .map(listing => (
+                      <ListingCard key={listing.id} listing={listing} />
+                  ))}
+                </div>
+                {/* Bottom pagination */}
+                {filteredListings.length > PAGE_SIZE && (
+                  <div className="flex items-center justify-between mt-8">
+                    <button
+                      className="btn-secondary text-sm"
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                    >
+                      Previous
+                    </button>
+                    <span className="text-sm text-gunsmith-text-secondary">Page {page} of {Math.max(1, Math.ceil(filteredListings.length / PAGE_SIZE))}</span>
+                    <button
+                      className="btn-secondary text-sm"
+                      onClick={() => setPage(p => Math.min(Math.ceil(filteredListings.length / PAGE_SIZE), p + 1))}
+                      disabled={page >= Math.ceil(filteredListings.length / PAGE_SIZE)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="card p-0 overflow-hidden">
                 <MapView
