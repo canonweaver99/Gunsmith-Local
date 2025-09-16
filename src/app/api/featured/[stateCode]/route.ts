@@ -9,11 +9,16 @@ export async function GET(
     const { stateCode } = params
 
     // Fetch featured listings for the state
+    // Support two schemas:
+    // - New: is_featured_in_state = stateCode
+    // - Legacy: is_featured = true AND state_province = stateCode
     const { data: featuredListings, error: featuredError } = await supabase
       .from('listings')
       .select('*')
-      .eq('is_featured_in_state', stateCode)
       .eq('status', 'active')
+      .or(`is_featured_in_state.eq.${stateCode},and(is_featured.eq.true,state_province.eq.${stateCode})`)
+      .order('is_featured', { ascending: false })
+      .order('is_verified', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(3)
 

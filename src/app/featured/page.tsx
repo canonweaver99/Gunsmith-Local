@@ -142,13 +142,13 @@ function FeaturedContent() {
       // Fetch top 3 listings for the selected state
       // Rank by earliest featured purchase (featured_until farthest in future first implies earliest purchase if fixed duration)
       // Fallback: verified, then created_at
+      // Prefer featured in this state; fallback to best listings in the state
       const { data: listings, error } = await supabase
         .from('listings')
         .select('*')
         .eq('state_province', stateCode)
         .eq('status', 'active')
         .order('is_featured', { ascending: false })
-        .order('featured_until', { ascending: true, nullsFirst: false })
         .order('is_verified', { ascending: false })
         .order('created_at', { ascending: true })
         .limit(3)
