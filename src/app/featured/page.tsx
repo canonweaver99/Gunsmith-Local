@@ -163,14 +163,21 @@ function FeaturedContent() {
     try {
       setLoading(true)
       
-      // Fetch top 3 listings for the selected state
-      // Rank by earliest featured purchase (featured_until farthest in future first implies earliest purchase if fixed duration)
-      // Fallback: verified, then created_at
+      // Convert state code to full name for database query
+      const stateName = US_STATES.find(s => s.code === stateCode)?.name
+      if (!stateName) {
+        console.error('Invalid state code:', stateCode)
+        setTopListings([])
+        return
+      }
+
+      console.log('Searching for listings in:', stateName, '(code:', stateCode, ')')
+      
       // Get featured listings first, then fill with regular listings
       const { data: featuredListings, error: featuredError } = await supabase
         .from('listings')
         .select('*')
-        .eq('state_province', stateCode)
+        .eq('state_province', stateName)
         .eq('status', 'active')
         .eq('is_featured', true)
         .order('is_verified', { ascending: false })
@@ -189,7 +196,7 @@ function FeaturedContent() {
         const { data: regularListings, error: regularError } = await supabase
           .from('listings')
           .select('*')
-          .eq('state_province', stateCode)
+          .eq('state_province', stateName)
           .eq('status', 'active')
           .neq('is_featured', true)
           .order('is_verified', { ascending: false })
