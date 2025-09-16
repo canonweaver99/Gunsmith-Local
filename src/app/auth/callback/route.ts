@@ -13,7 +13,43 @@ export async function GET(request: Request) {
     )
     
     try {
-      await supabase.auth.exchangeCodeForSession(code)
+      const { data } = await supabase.auth.exchangeCodeForSession(code)
+      
+      // Check if this is a new user (first time signup via Google)
+      if (data?.user && data?.user?.email) {
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', data.user.email)
+          .single()
+
+        // If no existing profile, this is a new signup
+        if (!existingProfile) {
+          // Create profile
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            email: data.user.email,
+            full_name: data.user.user_metadata?.full_name || null,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+
+          // Notify admin of new Google signup
+          try {
+            await fetch(`${requestUrl.origin}/api/email/admin-signup-notification`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userEmail: data.user.email,
+                userName: data.user.user_metadata?.full_name || 'Google User',
+                signupMethod: 'google'
+              })
+            })
+          } catch (adminEmailError) {
+            console.error('Failed to send admin notification:', adminEmailError)
+          }
+        }
+      }
     } catch (error) {
       console.error('Error exchanging code for session:', error)
     }

@@ -117,6 +117,22 @@ export default function SignupPage() {
         console.error('Failed to send welcome email:', emailError)
         // Don't fail signup if email fails
       }
+
+      // Notify admin of new signup
+      try {
+        await fetch('/api/email/admin-signup-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userEmail: formData.email,
+            userName: formData.fullName,
+            signupMethod: 'email'
+          })
+        })
+      } catch (adminEmailError) {
+        console.error('Failed to send admin notification:', adminEmailError)
+        // Don't fail signup if admin email fails
+      }
       
       setSuccess(true)
       setVerificationEmail(formData.email)
