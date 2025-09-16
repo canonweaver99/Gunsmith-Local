@@ -43,6 +43,10 @@ export default function LocationSettingsPage() {
       }
     } catch (error) {
       console.error('Error fetching preferences:', error)
+      // Set error message if table doesn't exist
+      if (error.message?.includes('does not exist')) {
+        setError('Location preferences feature not yet configured. Contact support.')
+      }
     }
   }
 
@@ -63,7 +67,13 @@ export default function LocationSettingsPage() {
           updated_at: new Date()
         })
 
-      if (error) throw error
+      if (error) {
+        console.error('Upsert error:', error)
+        if (error.message?.includes('does not exist')) {
+          throw new Error('Location preferences feature not yet configured. Contact support.')
+        }
+        throw error
+      }
 
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
