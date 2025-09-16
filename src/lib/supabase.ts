@@ -132,16 +132,6 @@ export interface Profile {
   updated_at: string
 }
 
-export interface NotificationSettings {
-  id: string
-  user_id: string
-  email_contact_messages: boolean
-  email_reviews: boolean
-  email_weekly_digest: boolean
-  email_marketing: boolean
-  created_at: string
-  updated_at: string
-}
 
 export interface FeaturedListing {
   id: string
@@ -198,11 +188,6 @@ export interface Database {
         Row: Favorite
         Insert: Omit<Favorite, 'id' | 'created_at' | 'listing'>
         Update: Partial<Omit<Favorite, 'id' | 'created_at' | 'listing'>>
-      }
-      notification_settings: {
-        Row: NotificationSettings
-        Insert: Omit<NotificationSettings, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<NotificationSettings, 'id' | 'created_at' | 'updated_at'>>
       }
     }
   }

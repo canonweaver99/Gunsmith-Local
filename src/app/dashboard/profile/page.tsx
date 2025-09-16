@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import NotificationSettings from '@/components/NotificationSettings'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
 import { updatePassword } from '@/lib/auth'
@@ -386,8 +385,6 @@ export default function ProfilePage() {
               </form>
             </div>
 
-            {/* Notification Settings */}
-            <NotificationSettings />
 
             {/* Additional Business Locations */}
             {hasListing && (
