@@ -13,12 +13,14 @@ interface PendingListing {
   ffl_license_number: string | null
   verification_status: string | null
   email: string | null
+  status: string | null
+  pending_reason?: string
 }
 
 export default function AdminVerificationPage() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'claims' | 'ffl' | 'verified' | 'rejected'>('claims')
+  const [activeTab, setActiveTab] = useState<'pending' | 'claims' | 'ffl' | 'verified' | 'rejected'>('pending')
   const [search, setSearch] = useState('')
   const [rows, setRows] = useState<PendingListing[]>([])
   const [claims, setClaims] = useState<any[]>([])
@@ -30,7 +32,9 @@ export default function AdminVerificationPage() {
   const [detail, setDetail] = useState<any>(null)
 
   useEffect(() => {
-    if (activeTab === 'claims' || activeTab === 'ffl') {
+    if (activeTab === 'pending') {
+      fetchPendingItems()
+    } else if (activeTab === 'claims' || activeTab === 'ffl') {
       fetchClaims('pending')
     } else if (activeTab === 'verified') {
       fetchRows()
@@ -41,17 +45,59 @@ export default function AdminVerificationPage() {
     }
   }, [activeTab, page])
 
+  async function fetchPendingItems() {
+    setLoading(true)
+    try {
+      // Get all listings that need attention
+      const { data: listings, error: listingsError } = await supabase
+        .from('listings')
+        .select('id,business_name,city,state_province,ffl_license_number,verification_status,email,status')
+        .or('verification_status.eq.pending,status.eq.inactive,verification_status.is.null')
+        .order('created_at', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1)
+
+      if (listingsError) throw listingsError
+
+      // Add pending reasons
+      const pendingListings = (listings || []).map(listing => ({
+        ...listing,
+        pending_reason: 
+          listing.verification_status === 'pending' ? 'Verification Pending' :
+          listing.status === 'inactive' ? 'Inactive Status' :
+          !listing.verification_status ? 'No Verification Status' :
+          'Needs Review'
+      }))
+
+      // Get pending claims
+      const { data: pendingClaims, error: claimsError } = await supabase
+        .from('business_claims')
+        .select(`
+          id, listing_id, claimer_email, ffl_license_number, claim_status, verification_status, submitted_at,
+          listings:listing_id (business_name, city, state_province)
+        `)
+        .eq('claim_status', 'pending')
+        .order('submitted_at', { ascending: false })
+
+      if (claimsError) throw claimsError
+
+      setClaims(pendingClaims || [])
+      setRows(pendingListings)
+    } catch (e) {
+      console.error('Load pending items error:', e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function fetchRows() {
     setLoading(true)
     try {
       let query = supabase
         .from('listings')
-        .select('id,business_name,city,state_province,ffl_license_number,verification_status,email')
+        .select('id,business_name,city,state_province,ffl_license_number,verification_status,email,status')
         .order('created_at', { ascending: false })
 
-      if (activeTab === 'pending') {
-        query = query.eq('verification_status', 'pending')
-      } else if (activeTab === 'verified') {
+      if (activeTab === 'verified') {
         query = query.eq('verification_status', 'verified')
       } else {
         query = query.eq('verification_status', 'rejected')
@@ -63,7 +109,7 @@ export default function AdminVerificationPage() {
       if (error) throw error
       setRows(data || [])
     } catch (e) {
-      console.error('Load pending verifications error:', e)
+      console.error('Load verifications error:', e)
     } finally {
       setLoading(false)
     }
@@ -106,7 +152,11 @@ export default function AdminVerificationPage() {
         .eq('id', id)
 
       if (error) throw error
-      await fetchRows()
+      if (activeTab === 'pending') {
+        await fetchPendingItems()
+      } else {
+        await fetchRows()
+      }
       if (detail?.id === id) {
         setDetail((d: any) => d ? { ...d, verification_status: status, is_verified: status === 'verified', verified_at: status === 'verified' ? new Date().toISOString() : null, verified_by: user?.id || null } : d)
       }
@@ -174,7 +224,7 @@ export default function AdminVerificationPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 mr-4">
-            {(['claims','ffl','verified','rejected'] as const).map(tab => (
+            {(['pending','claims','ffl','verified','rejected'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -200,6 +250,137 @@ export default function AdminVerificationPage() {
       {loading ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-6 w-6 text-gunsmith-gold animate-spin" />
+        </div>
+      ) : activeTab === 'pending' ? (
+        <div className="space-y-4">
+          {/* Pending Listings */}
+          {rows.length > 0 && (
+            <div>
+              <h4 className="font-bebas text-xl text-gunsmith-gold mb-3">LISTINGS NEEDING ATTENTION ({rows.length})</h4>
+              <div className="space-y-3">
+                {rows
+                  .filter(r => !search || r.business_name.toLowerCase().includes(search.toLowerCase()) || (r.city || '').toLowerCase().includes(search.toLowerCase()))
+                  .map((r) => (
+                  <div key={r.id} className="flex items-center justify-between border border-gunsmith-border rounded p-4">
+                    <div className="cursor-pointer" onClick={() => openDetails(r.id)}>
+                      <p className="font-oswald text-gunsmith-text">
+                        <span className="text-gunsmith-gold">{r.business_name}</span>
+                        {r.city ? ` • ${r.city}, ${r.state_province}` : ''}
+                      </p>
+                      <p className="text-sm text-gunsmith-text-secondary">FFL: {r.ffl_license_number || '—'}</p>
+                      <p className="text-xs text-yellow-400 font-medium">⚠️ {r.pending_reason}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {r.status === 'inactive' && (
+                        <button
+                          onClick={async () => {
+                            setUpdatingId(r.id)
+                            try {
+                              const { error } = await supabase
+                                .from('listings')
+                                .update({ status: 'active' })
+                                .eq('id', r.id)
+                              if (error) throw error
+                              await fetchPendingItems()
+                            } catch (e) {
+                              console.error('Activate error:', e)
+                            } finally { setUpdatingId(null) }
+                          }}
+                          className="btn-secondary text-sm"
+                          disabled={updatingId === r.id}
+                        >
+                          Activate
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setStatus(r.id, 'rejected')}
+                        className="btn-ghost flex items-center gap-1"
+                        disabled={updatingId === r.id}
+                      >
+                        <XCircle className="h-4 w-4" /> Reject
+                      </button>
+                      <button
+                        onClick={() => setStatus(r.id, 'verified')}
+                        className="btn-primary flex items-center gap-1"
+                        disabled={updatingId === r.id}
+                      >
+                        {updatingId === r.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <CheckCircle className="h-4 w-4" />
+                        )}
+                        Verify
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Pending Claims */}
+          {claims.length > 0 && (
+            <div>
+              <h4 className="font-bebas text-xl text-gunsmith-gold mb-3">PENDING CLAIMS ({claims.length})</h4>
+              <div className="space-y-3">
+                {claims
+                  .filter(c => !search || c.listings?.business_name?.toLowerCase().includes(search.toLowerCase()) || (c.ffl_license_number || '').toLowerCase().includes(search.toLowerCase()))
+                  .map((c) => (
+                  <div key={c.id} className="flex items-center justify-between border border-gunsmith-border rounded p-4">
+                    <div>
+                      <p className="font-oswald text-gunsmith-text"><span className="text-gunsmith-gold">{c.listings?.business_name || 'Unknown'}</span> {c.listings?.city ? `• ${c.listings.city}, ${c.listings.state_province}` : ''}</p>
+                      <p className="text-sm text-gunsmith-text-secondary">FFL: {c.ffl_license_number || '—'} • Claimer: {c.claimer_email || '—'}</p>
+                      <p className="text-xs text-yellow-400 font-medium">⚠️ Business Claim Pending</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={async () => {
+                          setUpdatingId(c.id)
+                          try {
+                            const token = (await supabase.auth.getSession()).data.session?.access_token
+                            const res = await fetch('/api/claims/admin-review', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ claimId: c.id, approve: false }) })
+                            const json = await res.json().catch(() => ({}))
+                            if (!res.ok) throw new Error(json.error || 'Reject failed')
+                            await fetchPendingItems()
+                          } catch (e:any) {
+                            alert(e.message)
+                          } finally { setUpdatingId(null) }
+                        }}
+                        className="btn-ghost text-sm"
+                        disabled={updatingId === c.id}
+                      >
+                        <XCircle className="h-4 w-4" /> Reject
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setUpdatingId(c.id)
+                          try {
+                            const token = (await supabase.auth.getSession()).data.session?.access_token
+                            const res = await fetch('/api/claims/admin-review', { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify({ claimId: c.id, approve: true }) })
+                            const json = await res.json().catch(() => ({}))
+                            if (!res.ok) throw new Error(json.error || 'Approve failed')
+                            await fetchPendingItems()
+                          } catch (e:any) {
+                            alert(e.message)
+                          } finally { setUpdatingId(null) }
+                        }}
+                        className="btn-primary text-sm"
+                        disabled={updatingId === c.id}
+                      >
+                        {updatingId === c.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />} Approve
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {(rows.length === 0 && claims.length === 0) && (
+            <div className="text-center py-12 text-gunsmith-text-secondary">
+              🎉 No pending items - everything is up to date!
+            </div>
+          )}
         </div>
       ) : activeTab === 'claims' ? (
         claims.length === 0 ? (
