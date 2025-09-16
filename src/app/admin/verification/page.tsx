@@ -184,8 +184,6 @@ export default function AdminVerificationPage() {
         .update({ 
           is_verified: status === 'verified', 
           verification_status: status, 
-          verified_at: status === 'verified' ? new Date().toISOString() : null,
-          verified_by: user?.id || null,
           status: 'active' // Also set to active when verifying
         })
         .eq('id', id)
@@ -205,7 +203,7 @@ export default function AdminVerificationPage() {
       }
       
       if (detail?.id === id) {
-        setDetail((d: any) => d ? { ...d, verification_status: status, is_verified: status === 'verified', verified_at: status === 'verified' ? new Date().toISOString() : null, verified_by: user?.id || null, status: 'active' } : d)
+        setDetail((d: any) => d ? { ...d, verification_status: status, is_verified: status === 'verified', status: 'active' } : d)
       }
     } catch (e) {
       console.error('Update verification status error:', e)
@@ -622,13 +620,8 @@ export default function AdminVerificationPage() {
                 )}
                 <div>
                   <p className="font-oswald text-gunsmith-gold mb-1">Audit</p>
-                  <p className="text-gunsmith-text-secondary text-sm">Status: {detail.verification_status || 'pending'}</p>
-                  {detail.verified_at && (
-                    <p className="text-gunsmith-text-secondary text-sm">Verified at: {new Date(detail.verified_at).toLocaleString()}</p>
-                  )}
-                  {detail.verified_by && (
-                    <p className="text-gunsmith-text-secondary text-sm">Verified by (user id): {detail.verified_by}</p>
-                  )}
+                  <p className="text-gunsmith-text-secondary text-sm">Verification: {detail.verification_status || 'pending'}</p>
+                  <p className="text-gunsmith-text-secondary text-sm">Listing Status: {detail.status || 'unknown'}</p>
                 </div>
               </div>
             ) : (
