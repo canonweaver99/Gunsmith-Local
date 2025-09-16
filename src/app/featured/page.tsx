@@ -166,20 +166,47 @@ function FeaturedContent() {
       // Fetch top 3 listings for the selected state
       // Rank by earliest featured purchase (featured_until farthest in future first implies earliest purchase if fixed duration)
       // Fallback: verified, then created_at
-      // Simple query: get top listings for state, prioritize featured
-      const { data: listings, error } = await supabase
+      // Get featured listings first, then fill with regular listings
+      const { data: featuredListings, error: featuredError } = await supabase
         .from('listings')
         .select('*')
         .eq('state_province', stateCode)
         .eq('status', 'active')
-        .order('is_featured', { ascending: false })
+        .eq('is_featured', true)
         .order('is_verified', { ascending: false })
         .order('created_at', { ascending: true })
         .limit(3)
 
-      if (error) throw error
+      if (featuredError) {
+        console.error('Featured listings error:', featuredError)
+        throw featuredError
+      }
 
-      setTopListings(listings || [])
+      let allListings = featuredListings || []
+
+      // If we need more listings to fill 3 spots, get regular ones
+      if (allListings.length < 3) {
+        const { data: regularListings, error: regularError } = await supabase
+          .from('listings')
+          .select('*')
+          .eq('state_province', stateCode)
+          .eq('status', 'active')
+          .neq('is_featured', true)
+          .order('is_verified', { ascending: false })
+          .order('created_at', { ascending: true })
+          .limit(3 - allListings.length)
+
+        if (regularError) {
+          console.error('Regular listings error:', regularError)
+        } else {
+          allListings = [...allListings, ...(regularListings || [])]
+        }
+      }
+
+      console.log('Featured listings found:', featuredListings?.length || 0)
+      console.log('Total listings for state:', allListings.length)
+      
+      setTopListings(allListings)
 
     } catch (error) {
       console.error('Error fetching top listings:', error)
