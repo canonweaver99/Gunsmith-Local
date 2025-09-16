@@ -52,6 +52,7 @@ export default function DashboardPage() {
         .from('listings')
         .select('*')
         .eq('owner_id', user?.id)
+        .neq('status', 'rejected')
         .order('created_at', { ascending: false })
 
       if (error) {
