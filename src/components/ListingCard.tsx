@@ -113,6 +113,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
               <VerificationBadge 
                 isVerified={listing.is_verified || false}
                 verificationStatus={listing.verification_status || 'pending'}
+                fflLicenseNumber={listing.ffl_license_number}
                 showLabel={false}
                 size="sm"
               />

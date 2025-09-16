@@ -182,6 +182,19 @@ export default function AdminVerificationPage() {
     setUpdatingId(id)
     try {
       console.log('Updating listing status:', { id, status })
+      // Only allow verification if listing has FFL number
+      if (status === 'verified') {
+        const { data: listing } = await supabase
+          .from('listings')
+          .select('ffl_license_number')
+          .eq('id', id)
+          .single()
+        
+        if (!listing?.ffl_license_number || listing.ffl_license_number.trim() === '') {
+          throw new Error('Cannot verify: FFL license number required for verification')
+        }
+      }
+
       const { error } = await supabase
         .from('listings')
         .update({ 

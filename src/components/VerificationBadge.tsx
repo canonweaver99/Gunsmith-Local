@@ -5,6 +5,7 @@ import { Shield, ShieldCheck, Clock, AlertCircle } from 'lucide-react'
 interface VerificationBadgeProps {
   isVerified: boolean
   verificationStatus: 'pending' | 'verified' | 'rejected'
+  fflLicenseNumber?: string | null
   showLabel?: boolean
   size?: 'sm' | 'md' | 'lg'
   className?: string
@@ -13,6 +14,7 @@ interface VerificationBadgeProps {
 export default function VerificationBadge({ 
   isVerified, 
   verificationStatus, 
+  fflLicenseNumber,
   showLabel = true,
   size = 'md',
   className = '' 
@@ -29,7 +31,8 @@ export default function VerificationBadge({
     lg: 'text-base'
   }
 
-  if (verificationStatus === 'verified' && isVerified) {
+  // Only show verified badge if they have an FFL number
+  if (verificationStatus === 'verified' && isVerified && fflLicenseNumber && fflLicenseNumber.trim() !== '') {
     return (
       <div className={`flex items-center gap-1 ${className}`}>
         <div className="relative">
