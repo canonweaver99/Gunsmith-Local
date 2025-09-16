@@ -181,10 +181,6 @@ export default function Header() {
                         <div className="px-4 py-2 border-b border-t border-gunsmith-border mt-2">
                           <p className="text-xs font-bebas text-gunsmith-gold uppercase tracking-wider">Preferences</p>
                         </div>
-                        <Link href="/settings/location" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
-                          <MapPin className="inline-block h-4 w-4 mr-2" />
-                          Location
-                        </Link>
                         <Link href="/settings/notifications" className="block px-4 py-2 text-sm text-gunsmith-text hover:bg-gunsmith-accent hover:text-gunsmith-gold transition-colors">
                           <Bell className="inline-block h-4 w-4 mr-2" />
                           Notifications
@@ -357,13 +353,6 @@ export default function Header() {
                       onClick={() => setIsMenuOpen(false)}
                     >
                       Password
-                    </Link>
-                    <Link
-                      href="/settings/location"
-                      className="block py-2 pl-4 text-sm text-gunsmith-text hover:text-gunsmith-gold transition-colors"
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      Location
                     </Link>
                     <Link
                       href="/settings/notifications"
