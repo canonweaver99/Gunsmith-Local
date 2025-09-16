@@ -307,6 +307,10 @@ export default function BusinessRegistrationForm() {
       // Ensure required slug exists for insertion
       const slug = await generateUniqueSlug(values.business_name, values.city)
 
+      // Identify current user to set as owner for dashboard visibility
+      const { data: authData } = await supabase.auth.getUser()
+      const ownerId = authData?.user?.id || null
+
       const payload = {
         business_name: values.business_name,
         year_established: Number(values.year_started),
@@ -331,6 +335,7 @@ export default function BusinessRegistrationForm() {
         logo_url: logoUrl || null,
         cover_image_url: coverUrl || null,
         image_gallery: galleryUrls.length ? galleryUrls : null,
+        owner_id: ownerId,
       }
 
       const { error } = await supabase.from('listings').insert(payload)
