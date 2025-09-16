@@ -66,9 +66,12 @@ export default function AdminVerificationPage() {
         pending_reason: 
           listing.verification_status === 'pending' ? 'Verification Pending' :
           listing.status === 'inactive' ? 'Inactive Status' :
-          !listing.verification_status ? 'No Verification Status' :
+          !listing.verification_status || listing.verification_status === 'null' ? 'No Verification Status' :
           'Needs Review'
       }))
+
+      console.log('Pending listings query result:', listings?.length, 'listings found')
+      console.log('Sample pending reasons:', pendingListings.slice(0, 3).map(l => ({ name: l.business_name, reason: l.pending_reason, status: l.status, verification: l.verification_status })))
 
       // Get pending claims
       const { data: pendingClaims, error: claimsError } = await supabase
