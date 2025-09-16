@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.EMAIL_API_KEY)
-
 export async function POST(request: NextRequest) {
   try {
     const { userEmail, userName, signupMethod } = await request.json()
@@ -13,6 +11,14 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    const apiKey = process.env.EMAIL_API_KEY
+    if (!apiKey) {
+      console.warn('EMAIL_API_KEY is not set; skipping admin-signup-notification email send')
+      return NextResponse.json({ success: true, skipped: true })
+    }
+
+    const resend = new Resend(apiKey)
 
     // Send notification to admin (you)
     const { data, error } = await resend.emails.send({
