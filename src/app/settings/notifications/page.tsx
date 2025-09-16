@@ -30,21 +30,25 @@ export default function NotificationSettingsPage() {
   const fetchNotificationPreferences = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_preferences')
-        .select('email_new_reviews, email_new_messages, email_promotions, email_weekly_digest')
+        .from('notification_settings')
+        .select('email_reviews, email_contact_messages, email_marketing, email_weekly_digest')
         .eq('user_id', user?.id)
         .single()
 
       if (data) {
         setNotifications({
-          emailNewReviews: data.email_new_reviews ?? true,
-          emailNewMessages: data.email_new_messages ?? true,
-          emailPromotions: data.email_promotions ?? false,
+          emailNewReviews: data.email_reviews ?? true,
+          emailNewMessages: data.email_contact_messages ?? true,
+          emailPromotions: data.email_marketing ?? false,
           emailWeeklyDigest: data.email_weekly_digest ?? false
         })
       }
     } catch (error) {
       console.error('Error fetching preferences:', error)
+      // Set error message if table doesn't exist
+      if (error.message?.includes('does not exist')) {
+        setError('Notification settings feature not yet configured. Contact support.')
+      }
     }
   }
 
@@ -56,17 +60,23 @@ export default function NotificationSettingsPage() {
 
     try {
       const { error } = await supabase
-        .from('user_preferences')
+        .from('notification_settings')
         .upsert({
           user_id: user?.id,
-          email_new_reviews: notifications.emailNewReviews,
-          email_new_messages: notifications.emailNewMessages,
-          email_promotions: notifications.emailPromotions,
+          email_reviews: notifications.emailNewReviews,
+          email_contact_messages: notifications.emailNewMessages,
+          email_marketing: notifications.emailPromotions,
           email_weekly_digest: notifications.emailWeeklyDigest,
           updated_at: new Date()
         })
 
-      if (error) throw error
+      if (error) {
+        console.error('Upsert error:', error)
+        if (error.message?.includes('does not exist')) {
+          throw new Error('Notification settings feature not yet configured. Contact support.')
+        }
+        throw error
+      }
 
       setSuccess(true)
       setTimeout(() => setSuccess(false), 3000)
