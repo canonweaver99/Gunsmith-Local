@@ -34,8 +34,10 @@ export default function AdminVerificationPage() {
   useEffect(() => {
     if (activeTab === 'pending') {
       fetchPendingItems()
-    } else if (activeTab === 'claims' || activeTab === 'ffl') {
+    } else if (activeTab === 'claims') {
       fetchClaims('pending')
+    } else if (activeTab === 'ffl') {
+      fetchFFLListings()
     } else if (activeTab === 'verified') {
       fetchRows()
       fetchClaims('approved')
@@ -115,10 +117,46 @@ export default function AdminVerificationPage() {
     }
   }
 
+  async function fetchFFLListings() {
+    setLoading(true)
+    try {
+      // Get listings with FFL numbers that need verification
+      const { data: listings, error: listingsError } = await supabase
+        .from('listings')
+        .select('id,business_name,city,state_province,ffl_license_number,verification_status,email,status')
+        .not('ffl_license_number', 'is', null)
+        .neq('ffl_license_number', '')
+        .order('created_at', { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1)
+
+      if (listingsError) throw listingsError
+      setRows(listings || [])
+
+      // Get FFL claims (claims with FFL numbers)
+      const { data: fflClaims, error: claimsError } = await supabase
+        .from('business_claims')
+        .select(`
+          id, listing_id, claimer_email, ffl_license_number, claim_status, verification_status, submitted_at,
+          listings:listing_id (business_name, city, state_province)
+        `)
+        .eq('claim_status', 'pending')
+        .not('ffl_license_number', 'is', null)
+        .neq('ffl_license_number', '')
+        .order('submitted_at', { ascending: false })
+
+      if (claimsError) throw claimsError
+      setClaims(fflClaims || [])
+    } catch (e) {
+      console.error('Load FFL items error:', e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function fetchClaims(status: 'pending' | 'approved' | 'rejected') {
     setLoading(true)
     try {
-      // Pull pending claims joined with listing basics
+      // Pull claims joined with listing basics
       const { data, error } = await supabase
         .from('business_claims')
         .select(`
@@ -129,8 +167,7 @@ export default function AdminVerificationPage() {
         .order('submitted_at', { ascending: false })
 
       if (error) throw error
-      const rows = (data || []).filter(c => activeTab === 'ffl' ? (c.ffl_license_number && c.ffl_license_number.length > 0) : true)
-      setClaims(rows)
+      setClaims(data || [])
     } catch (e) {
       console.error('Load claims error:', e)
     } finally {
@@ -141,6 +178,7 @@ export default function AdminVerificationPage() {
   async function setStatus(id: string, status: 'verified' | 'rejected') {
     setUpdatingId(id)
     try {
+      console.log('Updating listing status:', { id, status })
       const { error } = await supabase
         .from('listings')
         .update({ 
@@ -148,20 +186,30 @@ export default function AdminVerificationPage() {
           verification_status: status, 
           verified_at: status === 'verified' ? new Date().toISOString() : null,
           verified_by: user?.id || null,
+          status: 'active' // Also set to active when verifying
         })
         .eq('id', id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Supabase update error:', error)
+        throw error
+      }
+      
+      console.log('Status updated successfully, refreshing data...')
       if (activeTab === 'pending') {
         await fetchPendingItems()
+      } else if (activeTab === 'ffl') {
+        await fetchFFLListings()
       } else {
         await fetchRows()
       }
+      
       if (detail?.id === id) {
-        setDetail((d: any) => d ? { ...d, verification_status: status, is_verified: status === 'verified', verified_at: status === 'verified' ? new Date().toISOString() : null, verified_by: user?.id || null } : d)
+        setDetail((d: any) => d ? { ...d, verification_status: status, is_verified: status === 'verified', verified_at: status === 'verified' ? new Date().toISOString() : null, verified_by: user?.id || null, status: 'active' } : d)
       }
     } catch (e) {
       console.error('Update verification status error:', e)
+      alert(`Failed to update status: ${e.message}`)
     } finally {
       setUpdatingId(null)
     }
@@ -449,8 +497,8 @@ export default function AdminVerificationPage() {
                   <span className="text-gunsmith-gold">{r.business_name}</span>
                   {r.city ? ` • ${r.city}, ${r.state_province}` : ''}
                 </p>
-                <p className="text-sm text-gunsmith-text-secondary">FFL: {r.ffl_license_number || '—'}</p>
-                <p className="text-xs text-gunsmith-text-secondary">Status: {r.verification_status}</p>
+                      <p className="text-sm text-gunsmith-text-secondary">FFL: {r.ffl_license_number || '—'}</p>
+                      <p className="text-xs text-gunsmith-text-secondary">Status: {r.verification_status || 'unverified'} • Listing: {r.status || 'unknown'}</p>
               </div>
               <div className="flex items-center gap-2">
                 <button
