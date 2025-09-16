@@ -16,19 +16,35 @@ export async function GET() {
 
     const supabase = createClient(supabaseUrl, supabaseAnon)
 
-    // Count current active featured listings
-    const { data: featuredListings, error } = await supabase
-      .from('listings')
-      .select('id')
-      .eq('is_featured', true)
-      .gt('featured_until', new Date().toISOString())
+    // Prefer new featured_listings table if present
+    // Active where status='active' and end_date >= today
+    const today = new Date().toISOString().slice(0, 10)
+    let currentFeatured = 0
 
-    if (error) {
-      console.error('Error checking featured listings:', error)
-      return NextResponse.json({ available: 0, total: 3 })
+    try {
+      const { data: fl, error: flErr } = await supabase
+        .from('featured_listings')
+        .select('id')
+        .eq('status', 'active')
+        .gte('end_date', today)
+
+      if (!flErr) {
+        currentFeatured = fl?.length || 0
+      } else {
+        // Fallback to legacy flags if featured_listings is not available
+        const { data: legacy, error: legacyErr } = await supabase
+          .from('listings')
+          .select('id')
+          .eq('is_featured', true)
+
+        if (!legacyErr) {
+          currentFeatured = legacy?.length || 0
+        }
+      }
+    } catch (e) {
+      // Swallow and treat as zero if any schema issues occur
+      currentFeatured = 0
     }
-
-    const currentFeatured = featuredListings?.length || 0
     const maxFeatured = 3
     const available = Math.max(0, maxFeatured - currentFeatured)
 
