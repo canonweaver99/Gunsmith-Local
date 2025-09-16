@@ -83,7 +83,7 @@ function FeaturedContent() {
         return
       }
 
-      // Try to get user's location
+      // Try to get user's location (geolocation)
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
@@ -114,12 +114,34 @@ function FeaturedContent() {
             }
             setDetectingLocation(false)
           },
-          (error) => {
+          async (error) => {
             console.error('Geolocation error:', error)
+            // Fallback: IP-based state lookup via ipapi.co (no key needed)
+            try {
+              const res = await fetch('https://ipapi.co/json/')
+              const ip = await res.json()
+              if (ip && ip.region_code) {
+                const stateCode = ip.region_code
+                if (US_STATES.find(s => s.code === stateCode)) {
+                  setSelectedState(stateCode)
+                }
+              }
+            } catch {}
             setDetectingLocation(false)
           }
         )
       } else {
+        // No geolocation: IP fallback
+        try {
+          const res = await fetch('https://ipapi.co/json/')
+          const ip = await res.json()
+          if (ip && ip.region_code) {
+            const stateCode = ip.region_code
+            if (US_STATES.find(s => s.code === stateCode)) {
+              setSelectedState(stateCode)
+            }
+          }
+        } catch {}
         setDetectingLocation(false)
       }
     }
@@ -149,7 +171,7 @@ function FeaturedContent() {
         .select('*')
         .eq('state_province', stateCode)
         .eq('status', 'active')
-        .gte('featured_until', today)
+        .or(`featured_until.is.null,featured_until.gte.${today}`)
         .order('is_featured', { ascending: false })
         .order('featured_until', { ascending: true })
         .order('is_verified', { ascending: false })

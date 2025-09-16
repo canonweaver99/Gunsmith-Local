@@ -19,7 +19,7 @@ export async function GET(
       .eq('status', 'active')
       .eq('state_province', stateCode)
       .or(`is_featured_in_state.eq.${stateCode},is_featured.eq.true`)
-      .gte('featured_until', today)
+      .or(`featured_until.is.null,featured_until.gte.${today}`)
       .order('is_featured', { ascending: false })
       .order('featured_until', { ascending: true })
       .order('is_verified', { ascending: false })
