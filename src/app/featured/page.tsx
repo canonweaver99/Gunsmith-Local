@@ -317,37 +317,35 @@ function FeaturedContent() {
                   TOP 3 GUNSMITHS IN {US_STATES.find(s => s.code === selectedState)?.name.toUpperCase()}
                 </h2>
                 
-                {/* Arrange: center #1, left #2, right #3 */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12 items-stretch">
+                {/* Single row layout: #1 larger, #2 and #3 same size */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12 items-start">
                   {topListings.map((listing, index) => (
                     <div
                       key={listing.id}
                       className={`relative ${
                         index === 0
-                          ? 'lg:col-start-2'
-                          : index === 1
-                          ? 'lg:col-start-1'
-                          : 'lg:col-start-3'
+                          ? 'md:col-span-2'  // First place takes 2 columns (larger)
+                          : 'md:col-span-1'   // Second and third take 1 column each
                       }`}
                     >
                       {/* Position Badge */}
                       <div className="absolute -top-4 left-6 z-10">
-                        <div className={`px-6 py-2 rounded-full flex items-center gap-2 shadow-xl ${
+                        <div className={`px-4 py-2 rounded-full flex items-center gap-2 shadow-xl ${
                           index === 0 
                             ? 'bg-gradient-to-r from-gunsmith-gold to-gunsmith-goldenrod text-gunsmith-black' 
                             : index === 1
                             ? 'bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800'
                             : 'bg-gradient-to-r from-amber-600 to-amber-700 text-white'
                         }`}>
-                          <Trophy className="h-5 w-5 fill-current" />
-                          <span className="font-bebas text-lg tracking-wide">
+                          <Trophy className={`${index === 0 ? 'h-5 w-5' : 'h-4 w-4'} fill-current`} />
+                          <span className={`font-bebas ${index === 0 ? 'text-lg' : 'text-base'} tracking-wide`}>
                             {index === 0 ? '#1 TOP RATED' : index === 1 ? '#2 GUNSMITH' : '#3 GUNSMITH'}
                           </span>
                         </div>
                       </div>
                       
                       {/* Card with special styling for #1 */}
-                      <div className={`mt-3 ${index === 0 ? 'ring-2 ring-gunsmith-gold' : ''}`}>
+                      <div className={`mt-3 ${index === 0 ? 'ring-2 ring-gunsmith-gold transform scale-105' : ''}`}>
                         <ListingCard listing={listing} />
                       </div>
                     </div>
