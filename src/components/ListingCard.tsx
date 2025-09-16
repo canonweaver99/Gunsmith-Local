@@ -16,14 +16,25 @@ export default function ListingCard({ listing }: ListingCardProps) {
 
   // Check if business is currently open
   const isOpen = () => {
-    if (!listing.business_hours) return null
-    
     const now = new Date()
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
     const currentDay = days[now.getDay()]
     const currentTime = now.getHours() * 60 + now.getMinutes()
     
-    const todayHours = listing.business_hours[currentDay]
+    // Default hours: 9-5 Mon-Fri if no hours posted
+    const defaultHours = {
+      monday: { open: '09:00', close: '17:00' },
+      tuesday: { open: '09:00', close: '17:00' },
+      wednesday: { open: '09:00', close: '17:00' },
+      thursday: { open: '09:00', close: '17:00' },
+      friday: { open: '09:00', close: '17:00' },
+      saturday: { closed: true },
+      sunday: { closed: true }
+    }
+    
+    const businessHours = listing.business_hours || defaultHours
+    const todayHours = businessHours[currentDay]
+    
     if (!todayHours || todayHours.closed) return false
     
     const [openHour, openMin] = todayHours.open.split(':').map(Number)
@@ -147,17 +158,18 @@ export default function ListingCard({ listing }: ListingCardProps) {
             </div>
           )}
 
-          {/* Open/Closed Status */}
-          {listing.business_hours && (
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="h-4 w-4 text-gunsmith-gold" />
-              {isOpen() ? (
-                <span className="text-green-500 font-medium">Open Now</span>
-              ) : (
-                <span className="text-gunsmith-error font-medium">Closed</span>
-              )}
-            </div>
-          )}
+          {/* Open/Closed Status - always show with default hours if none posted */}
+          <div className="flex items-center gap-2 text-sm">
+            <Clock className="h-4 w-4 text-gunsmith-gold" />
+            {isOpen() ? (
+              <span className="text-green-500 font-medium">Open Now</span>
+            ) : (
+              <span className="text-gunsmith-error font-medium">Closed</span>
+            )}
+            {!listing.business_hours && (
+              <span className="text-gunsmith-text-secondary text-xs ml-1">(Default: 9-5 M-F)</span>
+            )}
+          </div>
 
           {/* Contact Info */}
           <div className="space-y-1">
