@@ -83,16 +83,37 @@ function FeaturedContent() {
         return
       }
 
-      // Try to get user's location (geolocation)
+      // Simple IP-based detection first
+      try {
+        console.log('Attempting IP-based location detection...')
+        const res = await fetch('https://ipapi.co/json/')
+        const ip = await res.json()
+        console.log('IP detection result:', ip)
+        if (ip && ip.region_code) {
+          const stateCode = ip.region_code
+          if (US_STATES.find(s => s.code === stateCode)) {
+            console.log('Setting state from IP:', stateCode)
+            setSelectedState(stateCode)
+            setDetectingLocation(false)
+            return
+          }
+        }
+      } catch (error) {
+        console.error('IP detection failed:', error)
+      }
+
+      // Fallback to geolocation if IP detection fails
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
             try {
+              console.log('Geolocation success, trying reverse geocoding...')
               // Use reverse geocoding to get state from coordinates
               const response = await fetch(
                 `https://maps.googleapis.com/maps/api/geocode/json?latlng=${position.coords.latitude},${position.coords.longitude}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
               )
               const data = await response.json()
+              console.log('Geocoding result:', data)
               
               if (data.results && data.results.length > 0) {
                 // Find the state component
@@ -102,46 +123,27 @@ function FeaturedContent() {
                       const stateCode = component.short_name
                       // Check if it's a valid US state
                       if (US_STATES.find(s => s.code === stateCode)) {
+                        console.log('Setting state from geocoding:', stateCode)
                         setSelectedState(stateCode)
-                        break
+                        setDetectingLocation(false)
+                        return
                       }
                     }
                   }
                 }
               }
             } catch (error) {
-              console.error('Error detecting location:', error)
+              console.error('Error with reverse geocoding:', error)
             }
             setDetectingLocation(false)
           },
-          async (error) => {
+          (error) => {
             console.error('Geolocation error:', error)
-            // Fallback: IP-based state lookup via ipapi.co (no key needed)
-            try {
-              const res = await fetch('https://ipapi.co/json/')
-              const ip = await res.json()
-              if (ip && ip.region_code) {
-                const stateCode = ip.region_code
-                if (US_STATES.find(s => s.code === stateCode)) {
-                  setSelectedState(stateCode)
-                }
-              }
-            } catch {}
             setDetectingLocation(false)
           }
         )
       } else {
-        // No geolocation: IP fallback
-        try {
-          const res = await fetch('https://ipapi.co/json/')
-          const ip = await res.json()
-          if (ip && ip.region_code) {
-            const stateCode = ip.region_code
-            if (US_STATES.find(s => s.code === stateCode)) {
-              setSelectedState(stateCode)
-            }
-          }
-        } catch {}
+        console.log('No geolocation available')
         setDetectingLocation(false)
       }
     }
@@ -164,16 +166,13 @@ function FeaturedContent() {
       // Fetch top 3 listings for the selected state
       // Rank by earliest featured purchase (featured_until farthest in future first implies earliest purchase if fixed duration)
       // Fallback: verified, then created_at
-      // Prefer featured in this state; fallback to best listings in the state
-      const today = new Date().toISOString().slice(0,10)
+      // Simple query: get top listings for state, prioritize featured
       const { data: listings, error } = await supabase
         .from('listings')
         .select('*')
         .eq('state_province', stateCode)
         .eq('status', 'active')
-        .or(`featured_until.is.null,featured_until.gte.${today}`)
         .order('is_featured', { ascending: false })
-        .order('featured_until', { ascending: true })
         .order('is_verified', { ascending: false })
         .order('created_at', { ascending: true })
         .limit(3)
@@ -184,6 +183,7 @@ function FeaturedContent() {
 
     } catch (error) {
       console.error('Error fetching top listings:', error)
+      console.error('Query details:', { stateCode, error })
     } finally {
       setLoading(false)
     }
