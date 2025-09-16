@@ -16,30 +16,28 @@ export async function GET() {
 
     const supabase = createClient(supabaseUrl, supabaseAnon)
 
-    // Prefer new featured_listings table if present
-    // Active where status='active' and end_date >= today
+    // Prefer listings table columns if present: featured_until in the future
     const today = new Date().toISOString().slice(0, 10)
     let currentFeatured = 0
 
     try {
-      const { data: fl, error: flErr } = await supabase
-        .from('featured_listings')
+      // Primary: featured_until column (date) and is_featured flag
+      const { data: flagged, error: flaggedErr } = await supabase
+        .from('listings')
         .select('id')
-        .eq('status', 'active')
-        .gte('end_date', today)
+        .eq('is_featured', true)
+        .gte('featured_until', today)
 
-      if (!flErr) {
-        currentFeatured = fl?.length || 0
+      if (!flaggedErr) {
+        currentFeatured = flagged?.length || 0
       } else {
-        // Fallback to legacy flags if featured_listings is not available
+        // Fallback to presence of is_featured only
         const { data: legacy, error: legacyErr } = await supabase
           .from('listings')
           .select('id')
           .eq('is_featured', true)
 
-        if (!legacyErr) {
-          currentFeatured = legacy?.length || 0
-        }
+        if (!legacyErr) currentFeatured = legacy?.length || 0
       }
     } catch (e) {
       // Swallow and treat as zero if any schema issues occur

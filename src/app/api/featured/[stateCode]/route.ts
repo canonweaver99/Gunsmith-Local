@@ -12,12 +12,16 @@ export async function GET(
     // Support two schemas:
     // - New: is_featured_in_state = stateCode
     // - Legacy: is_featured = true AND state_province = stateCode
+    const today = new Date().toISOString().slice(0,10)
     const { data: featuredListings, error: featuredError } = await supabase
       .from('listings')
       .select('*')
       .eq('status', 'active')
-      .or(`is_featured_in_state.eq.${stateCode},and(is_featured.eq.true,state_province.eq.${stateCode})`)
+      .eq('state_province', stateCode)
+      .or(`is_featured_in_state.eq.${stateCode},is_featured.eq.true`)
+      .gte('featured_until', today)
       .order('is_featured', { ascending: false })
+      .order('featured_until', { ascending: true })
       .order('is_verified', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(3)
