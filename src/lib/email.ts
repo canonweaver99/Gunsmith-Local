@@ -39,7 +39,7 @@ export class EmailService {
   private apiKey: string
 
   constructor() {
-    this.apiKey = process.env.EMAIL_API_KEY || 'mock-key'
+    this.apiKey = process.env.RESEND_API_KEY || 'mock-key'
   }
 
   static getInstance(): EmailService {

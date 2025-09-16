@@ -12,9 +12,9 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const apiKey = process.env.EMAIL_API_KEY
+    const apiKey = process.env.RESEND_API_KEY
     if (!apiKey) {
-      console.warn('EMAIL_API_KEY is not set; skipping admin-business-notification email send')
+      console.warn('RESEND_API_KEY is not set; skipping admin-business-notification email send')
       return NextResponse.json({ success: true, skipped: true })
     }
 
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
 
     // Send notification to admin (you)
     const { data, error } = await resend.emails.send({
-      from: 'GunsmithLocal <noreply@gunsmithlocal.com>',
+      from: 'GunsmithLocal <contact@gunsmithlocal.com>',
       to: ['canonweaver@loopline.design'],
       subject,
       html: `
