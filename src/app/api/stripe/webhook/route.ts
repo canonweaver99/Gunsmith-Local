@@ -90,6 +90,23 @@ export async function POST(request: NextRequest) {
         }
 
         console.log(`Successfully featured listing ${listingId} for ${duration} days`)
+
+        // Notify admin of featured purchase
+        try {
+          await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/email/admin-business-notification`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'featured_purchase',
+              userEmail: session.customer_details?.email || 'Unknown',
+              userName: session.customer_details?.name || 'Unknown User',
+              businessName: `Listing ${listingId}`,
+              businessDetails: `Duration: ${duration} days, Amount: $${(session.amount_total || 0) / 100}, Session: ${session.id}`
+            })
+          })
+        } catch (emailError) {
+          console.error('Failed to send admin notification for featured purchase:', emailError)
+        }
         
       } catch (error) {
         console.error('Error processing checkout completion:', error)

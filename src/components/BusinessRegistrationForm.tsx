@@ -335,6 +335,24 @@ export default function BusinessRegistrationForm() {
 
       const { error } = await supabase.from('listings').insert(payload)
       if (error) throw error
+
+      // Notify admin of new business addition
+      try {
+        await fetch('/api/email/admin-business-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'business_added',
+            userEmail: values.email,
+            userName: values.contact_name || 'Business Owner',
+            businessName: values.business_name,
+            businessDetails: `Location: ${values.city}, ${values.state_province}, FFL: ${values.ffl_license_number || 'Not provided'}, Services: ${selectedServices.join(', ')}`
+          })
+        })
+      } catch (emailError) {
+        console.error('Failed to send admin notification for new business:', emailError)
+      }
+
       setMessage('SUCCESS! Your business has been submitted for review. We will contact you within 2-3 business days.')
       setShowSuccess(true)
     } catch (e: any) {

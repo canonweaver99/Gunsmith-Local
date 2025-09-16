@@ -30,6 +30,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
 
+    // Get business and user info for admin notification
+    try {
+      const { data: listing } = await userClient
+        .from('listings')
+        .select('business_name')
+        .eq('id', listingId)
+        .single()
+
+      const { data: profile } = await userClient
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', userId)
+        .single()
+
+      // Notify admin of business claim
+      await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/email/admin-business-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'business_claimed',
+          userEmail: profile?.email || 'Unknown',
+          userName: profile?.full_name || 'Unknown User',
+          businessName: listing?.business_name || 'Unknown Business',
+          businessDetails: `FFL: ${fflLicenseNumber || 'Not provided'}, Claim ID: ${data}`
+        })
+      })
+    } catch (emailError) {
+      console.error('Failed to send admin notification for claim:', emailError)
+    }
+
     return NextResponse.json({ claimId: data })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Internal server error' }, { status: 500 })
