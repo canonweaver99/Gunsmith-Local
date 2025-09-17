@@ -19,6 +19,8 @@ export default function GetFeaturedPage() {
   const [loading, setLoading] = useState(false)
   const [availableSlots, setAvailableSlots] = useState<number>(0)
   const [checkingOut, setCheckingOut] = useState(false)
+  const [joiningWaitlist, setJoiningWaitlist] = useState(false)
+  const [onWaitlist, setOnWaitlist] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -61,8 +63,53 @@ export default function GetFeaturedPage() {
   useEffect(() => {
     if (selectedListing) {
       fetchAvailableSlots()
+      checkWaitlistStatus()
     }
   }, [selectedListing])
+
+  async function checkWaitlistStatus() {
+    if (!selectedListing || !user) return
+    
+    try {
+      const { data } = await supabase
+        .from('featured_waitlist')
+        .select('id')
+        .eq('listing_id', selectedListing.id)
+        .eq('user_id', user.id)
+        .eq('status', 'waiting')
+        .maybeSingle()
+      
+      setOnWaitlist(!!data)
+    } catch (error) {
+      console.error('Error checking waitlist status:', error)
+    }
+  }
+
+  async function joinWaitlist() {
+    if (!selectedListing || !user) return
+
+    setJoiningWaitlist(true)
+    try {
+      const response = await fetch('/api/featured/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          listingId: selectedListing.id,
+          userId: user.id,
+          stateCode: selectedListing.state_province
+        })
+      })
+
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error)
+      
+      setOnWaitlist(true)
+    } catch (error: any) {
+      alert(error.message || 'Failed to join waitlist')
+    } finally {
+      setJoiningWaitlist(false)
+    }
+  }
 
   async function handleGetFeatured() {
     if (!selectedListing || !user) return
@@ -414,9 +461,27 @@ export default function GetFeaturedPage() {
                   <p className="text-gunsmith-text-secondary mb-4">
                     All featured slots in {selectedListing?.state_province} are currently occupied.
                   </p>
-                  <button className="btn-secondary" disabled>
-                    Join Waitlist (Coming Soon)
-                  </button>
+                  {onWaitlist ? (
+                    <div className="bg-green-500/20 border border-green-500 text-green-500 p-3 rounded">
+                      <CheckCircle className="h-5 w-5 mx-auto mb-1" />
+                      <span className="text-sm">You're on the waitlist! We'll notify you when a slot opens.</span>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={joinWaitlist}
+                      disabled={joiningWaitlist}
+                      className="btn-secondary disabled:opacity-50"
+                    >
+                      {joiningWaitlist ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Joining...
+                        </>
+                      ) : (
+                        'Join Waitlist'
+                      )}
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -533,14 +598,37 @@ export default function GetFeaturedPage() {
                 )}
               </button>
             ) : (
-              <div className="text-center">
-                <p className="text-gunsmith-text-secondary mb-4">
-                  No slots available in {selectedListing?.state_province || 'your state'} right now.
-                </p>
-                <Link href="/dashboard" className="btn-secondary">
-                  Return to Dashboard
-                </Link>
-              </div>
+                <div className="text-center">
+                  <p className="text-gunsmith-text-secondary mb-4">
+                    No slots available in {selectedListing?.state_province || 'your state'} right now.
+                  </p>
+                  {onWaitlist ? (
+                    <div className="bg-green-500/20 border border-green-500 text-green-500 p-3 rounded mb-4">
+                      <CheckCircle className="h-5 w-5 mx-auto mb-1" />
+                      <span className="text-sm">You're on the waitlist! We'll notify you when a slot opens.</span>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={joinWaitlist}
+                      disabled={joiningWaitlist}
+                      className="btn-primary mb-4 disabled:opacity-50"
+                    >
+                      {joiningWaitlist ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                          Joining...
+                        </>
+                      ) : (
+                        'Join Waitlist'
+                      )}
+                    </button>
+                  )}
+                  <div>
+                    <Link href="/dashboard" className="btn-secondary">
+                      Return to Dashboard
+                    </Link>
+                  </div>
+                </div>
             )}
           </div>
         </section>
