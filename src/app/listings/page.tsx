@@ -31,8 +31,10 @@ function ListingsContent() {
   const [listingsWithRatings, setListingsWithRatings] = useState<any[]>([])
   const [sortBy, setSortBy] = useState<'featured' | 'name' | 'rating' | 'newest'>('featured')
   const [showWizardMessage, setShowWizardMessage] = useState(false)
+  const [bestMatch, setBestMatch] = useState<Listing | null>(null)
   const PAGE_SIZE = 30
   const [page, setPage] = useState(1)
+  const cameFromWizard = searchParams.get('fromWizard') === 'true'
 
   useEffect(() => {
     fetchListings()
@@ -283,6 +285,10 @@ function ListingsContent() {
       })
       // Sort by score desc first; stable sort by featured/date remains via fallback later
       filtered.sort((a, b) => (scoresMap!.get(b.id)! - scoresMap!.get(a.id)!))
+      // Set best match for highlight card
+      setBestMatch(filtered[0] || null)
+    } else {
+      setBestMatch(null)
     }
 
     // Apply sorting (UI-driven override after wizard sort)
@@ -467,6 +473,18 @@ function ListingsContent() {
                 : "Browse our directory of professional gunsmiths across the country. Find the right expert for your firearm needs."
               }
             </p>
+
+            {/* Best Match highlight when coming from wizard */}
+            {cameFromWizard && bestMatch && (
+              <div className="mt-8">
+                <div className="max-w-4xl mx-auto">
+                  <div className="mb-3 inline-flex items-center gap-2 bg-gunsmith-gold text-gunsmith-black px-4 py-2 rounded-full">
+                    <span className="font-montserrat font-semibold">Best Match</span>
+                  </div>
+                  <ListingCard listing={bestMatch as any} />
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
