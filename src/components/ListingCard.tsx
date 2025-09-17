@@ -32,13 +32,19 @@ export default function ListingCard({ listing }: ListingCardProps) {
       sunday: { closed: true }
     }
     
-    const businessHours = listing.business_hours || defaultHours
-    const todayHours = businessHours[currentDay]
-    
-    if (!todayHours || todayHours.closed) return false
-    
-    const [openHour, openMin] = todayHours.open.split(':').map(Number)
-    const [closeHour, closeMin] = todayHours.close.split(':').map(Number)
+    const businessHours = listing.business_hours || {}
+    const rawToday = (businessHours as any)[currentDay]
+    // Merge with defaults and guard against missing fields
+    const todayHours: any = rawToday && typeof rawToday === 'object'
+      ? { ...((defaultHours as any)[currentDay] || {}), ...rawToday }
+      : (defaultHours as any)[currentDay]
+
+    if (!todayHours || todayHours.closed === true) return false
+
+    const openStr: string = todayHours.open || '09:00'
+    const closeStr: string = todayHours.close || '17:00'
+    const [openHour, openMin] = String(openStr).split(':').map((v: string) => parseInt(v, 10))
+    const [closeHour, closeMin] = String(closeStr).split(':').map((v: string) => parseInt(v, 10))
     
     const openTime = openHour * 60 + openMin
     const closeTime = closeHour * 60 + closeMin
