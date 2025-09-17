@@ -46,7 +46,7 @@ const defaultSEO: SEOConfig = {
     description: 'The premier directory for finding professional gunsmiths in your area.',
     images: [
       {
-        url: '/og-image.svg',
+        url: '/og-image.jpg',
         width: 1200,
         height: 630,
         alt: 'GunsmithLocal - Professional Gunsmith Directory',
