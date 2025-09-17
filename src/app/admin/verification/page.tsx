@@ -54,7 +54,8 @@ export default function AdminVerificationPage() {
       const { data: listings, error: listingsError } = await supabase
         .from('listings')
         .select('id,business_name,city,state_province,ffl_license_number,verification_status,email,status')
-        .or('verification_status.eq.pending,status.eq.inactive,verification_status.is.null')
+        // Only show listings that are NOT active (e.g., pending/inactive)
+        .neq('status', 'active')
         .order('created_at', { ascending: false })
         .range(page * pageSize, (page + 1) * pageSize - 1)
 
@@ -63,11 +64,10 @@ export default function AdminVerificationPage() {
       // Add pending reasons
       const pendingListings = (listings || []).map(listing => ({
         ...listing,
-        pending_reason: 
-          listing.verification_status === 'pending' ? 'Verification Pending' :
+        pending_reason:
+          listing.status === 'pending' ? 'Awaiting Activation' :
           listing.status === 'inactive' ? 'Inactive Status' :
-          !listing.verification_status || listing.verification_status === 'null' ? 'No Verification Status' :
-          'Needs Review'
+          'Needs Activation'
       }))
 
       console.log('Pending listings query result:', listings?.length, 'listings found')
