@@ -50,26 +50,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Fetch all active listings (best-effort; do not fail the sitemap if unavailable)
-  let listings: any[] = []
-  try {
-    const { data } = await supabase
-      .from('listings')
-      .select('slug, updated_at')
-      .eq('status', 'active')
-      .order('updated_at', { ascending: false })
-    listings = data || []
-  } catch (_) {
-    listings = []
-  }
-
-  // Generate listing pages
-  const listingPages: MetadataRoute.Sitemap = listings?.map((listing) => ({
-    url: `${baseUrl}/listings/${listing.slug}`,
-    lastModified: new Date(listing.updated_at),
-    changeFrequency: 'weekly',
-    priority: 0.8,
-  })) || []
-
-  return [...staticPages, ...listingPages]
+  // Static sitemap only to avoid server-side DB issues during generation
+  // Listings will be discovered via crawling instead
+  
+  return staticPages
 }

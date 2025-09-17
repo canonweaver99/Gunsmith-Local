@@ -22,7 +22,7 @@ create policy "Users can view own waitlist entries"
 
 create policy "Users can insert own waitlist entries"
   on public.featured_waitlist for insert
-  with check (auth.uid() = user_id);
+  with check (auth.uid() = user_id and auth.uid() is not null);
 
 create policy "Users can update own waitlist entries"
   on public.featured_waitlist for update
