@@ -34,7 +34,7 @@ function DynamicVerifiedCount() {
       <div className="font-montserrat font-black text-5xl text-gunsmith-gold mb-2 tabular-nums">
         {count === null ? '—' : count.toLocaleString()}
       </div>
-      <div className="text-gunsmith-text-secondary font-inter">Active</div>
+      <div className="text-gunsmith-text-secondary font-inter">Active Gunsmiths</div>
     </div>
   )
 }

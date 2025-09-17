@@ -23,8 +23,8 @@ function FooterVerifiedCount() {
     const t = setInterval(fetchCount, 60_000)
     return () => { isMounted = false; clearInterval(t) }
   }, [])
-  if (count === null) return <span>Active</span>
-  return <span><span className="text-gunsmith-gold">{count.toLocaleString()}</span> Active</span>
+  if (count === null) return <span>Active Gunsmiths</span>
+  return <span><span className="text-gunsmith-gold">{count.toLocaleString()}</span> Active Gunsmiths</span>
 }
 
 export default function Footer() {
