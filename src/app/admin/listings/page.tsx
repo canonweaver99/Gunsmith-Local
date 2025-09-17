@@ -281,7 +281,7 @@ export default function AdminListingsPage() {
                         value={listing.status || 'pending'}
                         onChange={(e) => updateListingStatus(listing.id, e.target.value)}
                         disabled={actionLoading === listing.id}
-                        className="text-xs bg-gunsmith-accent text-gunsmith-text px-2 py-1 rounded border border-gunsmith-border"
+                        className="text-xs appearance-none bg-gunsmith-surface-2 text-gunsmith-text px-2 py-1 rounded-full border border-white/10 focus:outline-none focus:ring-1 focus:ring-gunsmith-gold/40 focus:border-gunsmith-gold/40"
                       >
                         <option value="active">Active</option>
                         <option value="pending">Pending</option>

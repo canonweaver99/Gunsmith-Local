@@ -161,7 +161,7 @@ export default function GunsmithWizard() {
           <div className="space-y-6">
             <div className="text-center">
               <MapPin className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
-              <h3 className="font-bebas text-3xl text-gunsmith-gold mb-2">
+              <h3 className="font-bebas text-3xl text-gunsmith-gold mb-2 tracking-wider">
                 WHERE ARE YOU LOCATED?
               </h3>
               <p className="text-gunsmith-text-secondary">
@@ -186,7 +186,7 @@ export default function GunsmithWizard() {
           <div className="space-y-6">
             <div className="text-center">
               <Target className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
-              <h3 className="font-bebas text-3xl text-gunsmith-gold mb-2">
+              <h3 className="font-bebas text-3xl text-gunsmith-gold mb-2 tracking-wider">
                 WHAT TYPE OF FIREARM?
               </h3>
               <p className="text-gunsmith-text-secondary">
@@ -248,7 +248,7 @@ export default function GunsmithWizard() {
           <div className="space-y-6">
             <div className="text-center">
               <Wrench className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
-              <h3 className="font-bebas text-3xl text-gunsmith-gold mb-2">
+              <h3 className="font-bebas text-3xl text-gunsmith-gold mb-2 tracking-wider">
                 WHAT SERVICES DO YOU NEED?
               </h3>
               <p className="text-gunsmith-text-secondary">
@@ -306,7 +306,7 @@ export default function GunsmithWizard() {
           <div className="space-y-6">
             <div className="text-center">
               <Package className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
-              <h3 className="font-bebas text-3xl text-gunsmith-gold mb-2">
+              <h3 className="font-bebas text-3xl text-gunsmith-gold mb-2 tracking-wider">
                 HOW DO YOU PREFER TO WORK?
               </h3>
               <p className="text-gunsmith-text-secondary">

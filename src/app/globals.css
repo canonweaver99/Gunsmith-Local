@@ -59,6 +59,11 @@
     font-weight: 700;
   }
   
+  /* Increase default letter-spacing for Bebas Neue across the site */
+  .font-bebas {
+    letter-spacing: 0.045em;
+  }
+  
   /* Premium text selection */
   ::selection {
     @apply bg-gunsmith-gold text-gunsmith-black;
@@ -102,6 +107,7 @@
     @apply translate-y-[1px];
     transition-duration: 80ms;
   }
+  
 
   .btn-secondary {
     @apply relative border border-white/5 text-gunsmith-gold 
@@ -275,3 +281,5 @@
     opacity: 1;
   }
 }
+
+@layer utilities {}
