@@ -565,11 +565,11 @@ export default function BusinessRegistrationForm() {
                     </select>
                   </div>
 
-                  <div className="col-span-2">
+                  <div className="col-span-2 flex items-center justify-center">
                     <button
                       type="button"
                       onClick={() => copyHoursToAll(day)}
-                      className="btn-secondary text-sm h-12 w-full"
+                      className="btn-secondary text-sm h-12 w-32"
                     >
                       Copy to All
                     </button>

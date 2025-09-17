@@ -326,11 +326,11 @@ function FeaturedContent() {
                     
                     return (
                       <div key={listing.id} className="relative">
-                        {/* Position Badge */}
-                        <div className="absolute -top-4 left-6 z-10">
+                        {/* Position Badge - keep fully visible above card */}
+                        <div className="absolute -top-4 left-6 z-50 pointer-events-none">
                           <div className={`px-4 py-2 rounded-full flex items-center gap-2 shadow-xl ${
                             originalIndex === 0 
-                              ? 'bg-gradient-to-r from-gunsmith-gold to-gunsmith-goldenrod text-gunsmith-black' 
+                              ? 'bg-gradient-to-r from-gunsmith-gold to-gunsmith-gold/80 text-gunsmith-black' 
                               : originalIndex === 1
                               ? 'bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800'
                               : 'bg-gradient-to-r from-amber-600 to-amber-700 text-white'
