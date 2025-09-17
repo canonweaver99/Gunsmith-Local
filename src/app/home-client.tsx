@@ -7,6 +7,38 @@ import Footer from '@/components/Footer'
 import GunsmithWizard from '@/components/GunsmithWizard'
 import { MapPin, Shield, Wrench, Star, CheckCircle, Award, Clock } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+
+function DynamicVerifiedCount() {
+  const [count, setCount] = useState<number | null>(null)
+  useEffect(() => {
+    let isMounted = true
+    const fetchCount = async () => {
+      try {
+        const { count } = await supabase
+          .from('listings')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'active')
+          .eq('is_verified', true)
+        if (isMounted) setCount(count || 0)
+      } catch (_) {
+        if (isMounted) setCount(null)
+      }
+    }
+    fetchCount()
+    // refresh occasionally while page open
+    const t = setInterval(fetchCount, 60_000)
+    return () => { isMounted = false; clearInterval(t) }
+  }, [])
+  return (
+    <div className="group">
+      <div className="font-montserrat font-black text-5xl text-gunsmith-gold mb-2 tabular-nums">
+        {count === null ? '—' : count.toLocaleString()}
+      </div>
+      <div className="text-gunsmith-text-secondary font-inter">{count === 1 ? 'Verified Gunsmith' : 'Verified Gunsmiths'}</div>
+    </div>
+  )
+}
 
 export default function HomePageClient() {
   const router = useRouter()
@@ -245,12 +277,7 @@ export default function HomePageClient() {
             
             {/* Realistic Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-10 text-center max-w-5xl mx-auto">
-              <div className="group">
-                <div className="font-montserrat font-black text-5xl text-gunsmith-gold mb-2 tabular-nums">
-                  523
-                </div>
-                <div className="text-gunsmith-text-secondary font-inter">Verified Shops</div>
-              </div>
+              <DynamicVerifiedCount />
               <div className="group">
                 <div className="font-montserrat font-black text-5xl text-gunsmith-gold mb-2 tabular-nums">
                   2,347

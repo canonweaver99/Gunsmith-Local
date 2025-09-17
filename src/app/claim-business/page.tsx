@@ -72,13 +72,17 @@ export default function ClaimBusinessPage() {
     }
   }, [selectedBusiness])
 
-  // Validate FFL: 15 alphanumeric chars, exactly 14 digits and 1 letter
+  // Validate FFL: format X-XX-XXX-XX-XX-XXXXX (15 digits with hyphens)
   const isValidFfl = (value: string): boolean => {
-    const raw = value.replace(/[^A-Za-z0-9]/g, '')
-    if (raw.length !== 15) return false
-    const digits = (raw.match(/\d/g) || []).length
-    const letters = (raw.match(/[A-Za-z]/g) || []).length
-    return digits === 14 && letters === 1
+    const rawDigits = value.replace(/\D/g, '')
+    if (rawDigits.length !== 15) return false
+    // optional: enforce hyphen groups if user included separators
+    const cleaned = value.trim()
+    const hasHyphen = cleaned.includes('-')
+    if (hasHyphen) {
+      return /^\d-\d{2}-\d{3}-\d{2}-\d{2}-\d{5}$/.test(cleaned)
+    }
+    return true
   }
 
   const searchBusinesses = async () => {
@@ -188,7 +192,7 @@ export default function ClaimBusinessPage() {
       // FFL is optional at claim time
       const ffl = claimData.ffl_license_number?.trim()
       if (ffl && !isValidFfl(ffl)) {
-        throw new Error('Invalid FFL number. It must be 15 characters with 14 digits and 1 letter.')
+        throw new Error('Invalid FFL number. Expected 15 digits, optionally formatted as X-XX-XXX-XX-XX-XXXXX.')
       }
 
       const proposedEdits: any = edits
@@ -395,6 +399,19 @@ export default function ClaimBusinessPage() {
                   {/* Services Provided */}
                   <div className="card">
                     <h3 className="font-bebas text-xl text-gunsmith-gold mb-3">SERVICES PROVIDED</h3>
+                    <div className="flex justify-end mb-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const all = new Set<string>(edits.tags || [])
+                          GUNSMITH_SPECIALTIES.forEach(g => g.items.forEach(i => all.add(i)))
+                          setEdits({ ...edits, tags: Array.from(all) })
+                        }}
+                        className="btn-secondary text-xs"
+                      >
+                        Select All
+                      </button>
+                    </div>
                     <div className="space-y-4">
                       {GUNSMITH_SPECIALTIES.map(group => (
                         <div key={group.key}>
@@ -418,6 +435,41 @@ export default function ClaimBusinessPage() {
                           </div>
                         </div>
                       ))}
+                      {/* Other service input */}
+                      <div className="mt-4">
+                        <label className="label">Other Service</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            placeholder="Add a service not listed"
+                            className="input flex-1"
+                            onKeyDown={(e) => {
+                              const val = (e.target as HTMLInputElement).value.trim()
+                              if (e.key === 'Enter' && val) {
+                                const curr = new Set(edits.tags || [])
+                                curr.add(val)
+                                setEdits({ ...edits, tags: Array.from(curr) })
+                                ;(e.target as HTMLInputElement).value = ''
+                              }
+                            }}
+                          />
+                          <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={(e) => {
+                              const input = (e.currentTarget.previousSibling as HTMLInputElement)
+                              const val = input?.value?.trim()
+                              if (!val) return
+                              const curr = new Set(edits.tags || [])
+                              curr.add(val)
+                              setEdits({ ...edits, tags: Array.from(curr) })
+                              if (input) input.value = ''
+                            }}
+                          >
+                            Add
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -477,7 +529,7 @@ export default function ClaimBusinessPage() {
                       value={claimData.ffl_license_number}
                       onChange={(e) => setClaimData({ ...claimData, ffl_license_number: e.target.value })}
                       className="input w-full"
-                      placeholder="Enter your FFL license number"
+                      placeholder="e.g., 1-23-456-78-90-12345"
                     />
                   </div>
 

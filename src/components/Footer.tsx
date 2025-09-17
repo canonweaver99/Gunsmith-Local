@@ -1,5 +1,31 @@
 import Link from 'next/link'
 import { Crosshair } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+
+function FooterVerifiedCount() {
+  const [count, setCount] = useState<number | null>(null)
+  useEffect(() => {
+    let isMounted = true
+    const fetchCount = async () => {
+      try {
+        const { count } = await supabase
+          .from('listings')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'active')
+          .eq('is_verified', true)
+        if (isMounted) setCount(count || 0)
+      } catch (_) {
+        if (isMounted) setCount(null)
+      }
+    }
+    fetchCount()
+    const t = setInterval(fetchCount, 60_000)
+    return () => { isMounted = false; clearInterval(t) }
+  }, [])
+  if (count === null) return <span>Verified Gunsmiths</span>
+  return <span><span className="text-gunsmith-gold">{count.toLocaleString()}</span> {count === 1 ? 'Verified Gunsmith' : 'Verified Gunsmiths'}</span>
+}
 
 export default function Footer() {
   return (
@@ -14,9 +40,9 @@ export default function Footer() {
             <span className="text-gunsmith-text-muted/50">•</span>
             <span>Last updated: {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
           </div>
-          <div className="text-gunsmith-text-muted">
-            <span className="text-gunsmith-gold">523</span> verified listings
-          </div>
+        <div className="text-gunsmith-text-muted">
+          <FooterVerifiedCount />
+        </div>
         </div>
       </div>
       
