@@ -220,16 +220,13 @@ export default function DashboardPage() {
                       Get featured in your state for premium placement and increased customer inquiries
                     </p>
                     {listings.find(l => !l.is_featured) ? (
-                      <button
-                        onClick={() => {
-                          const first = listings.find(l => !l.is_featured)
-                          if (first) setShowFeaturedCheckout(first.id)
-                        }}
+                      <Link
+                        href="/get-featured"
                         className="btn-primary inline-flex items-center gap-2"
                       >
                         <Sparkles className="h-5 w-5" />
                         Get Featured Now
-                      </button>
+                      </Link>
                     ) : (
                       <span className="text-gunsmith-text-secondary">All your listings are already featured</span>
                     )}

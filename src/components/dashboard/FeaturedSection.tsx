@@ -220,7 +220,7 @@ export default function FeaturedSection({ listings }: FeaturedSectionProps) {
             {!isActive && (
               <div className="mt-4 pt-4 border-t border-gunsmith-border">
                 <Link 
-                  href={`/featured?state=${listing.state_province}`}
+                  href="/get-featured"
                   className="btn-primary text-sm inline-block"
                 >
                   Get Featured
