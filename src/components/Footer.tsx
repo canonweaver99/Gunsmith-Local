@@ -1,3 +1,4 @@
+"use client"
 import Link from 'next/link'
 import { Crosshair } from 'lucide-react'
 import { useEffect, useState } from 'react'
