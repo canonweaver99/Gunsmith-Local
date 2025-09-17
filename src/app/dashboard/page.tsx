@@ -9,7 +9,7 @@ import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase, Listing } from '@/lib/supabase'
-import { Plus, Edit, Eye, Trash2, Loader2, Building2, Star, MapPin, Phone, Mail, Globe, User, MessageSquare, Sparkles, Heart, ShieldOff } from 'lucide-react'
+import { Plus, Edit, Eye, Trash2, Loader2, Building2, Star, MapPin, Phone, Mail, Globe, User, MessageSquare, Sparkles, Heart, ShieldOff, Shield } from 'lucide-react'
 import FeaturedCheckout from '@/components/FeaturedCheckout'
 import FeaturedSection from '@/components/dashboard/FeaturedSection'
 import ListingCard from '@/components/ListingCard'
@@ -357,6 +357,36 @@ export default function DashboardPage() {
                             </span>
                           )}
                         </Link>
+                        {!listing.is_verified && (
+                          <button
+                            onClick={async () => {
+                              const input = window.prompt('Enter your FFL License Number (15 digits, e.g., 1-23-456-78-90-12345):')
+                              if (!input) return
+                              const rawDigits = input.replace(/\D/g, '')
+                              if (rawDigits.length !== 15) {
+                                alert('Invalid FFL number. Expected 15 digits.')
+                                return
+                              }
+                              try {
+                                const { error } = await supabase
+                                  .from('listings')
+                                  .update({ ffl_license_number: input })
+                                  .eq('id', listing.id)
+                                  .eq('owner_id', user?.id)
+                                if (error) throw error
+                                alert('FFL number saved. An admin will review for verification.')
+                                fetchUserListings()
+                              } catch (e:any) {
+                                console.error('FFL save error:', e)
+                                alert(e.message || 'Failed to save FFL number')
+                              }
+                            }}
+                            className="btn-secondary flex items-center gap-2"
+                          >
+                            <Shield className="h-4 w-4" />
+                            Verify Listing
+                          </button>
+                        )}
                       </div>
                     </div>
 
