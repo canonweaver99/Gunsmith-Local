@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -179,12 +180,9 @@ export default function BillingPage() {
                                   Boost visibility with premium placement
                                 </p>
                               </div>
-                              <button
-                                onClick={() => setShowFeaturedCheckout(listing.id)}
-                                className="btn-primary text-sm"
-                              >
+                              <Link href={`/get-featured?listingId=${listing.id}`} className="btn-primary text-sm">
                                 $50/month
-                              </button>
+                              </Link>
                             </div>
                           </div>
                         )}
