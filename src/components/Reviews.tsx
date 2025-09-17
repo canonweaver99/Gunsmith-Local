@@ -195,10 +195,10 @@ export default function Reviews({ listingId, listingName }: ReviewsProps) {
             </div>
 
             <div>
-              <label className="label">Title</label>
+              <label className="label">Title (optional)</label>
               <input
                 type="text"
-                required
+                required={false}
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="input w-full"
