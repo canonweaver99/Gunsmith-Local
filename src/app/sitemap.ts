@@ -50,12 +50,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Fetch all active listings
-  const { data: listings } = await supabase
-    .from('listings')
-    .select('slug, updated_at')
-    .eq('status', 'active')
-    .order('updated_at', { ascending: false })
+  // Fetch all active listings (best-effort; do not fail the sitemap if unavailable)
+  let listings: any[] = []
+  try {
+    const { data } = await supabase
+      .from('listings')
+      .select('slug, updated_at')
+      .eq('status', 'active')
+      .order('updated_at', { ascending: false })
+    listings = data || []
+  } catch (_) {
+    listings = []
+  }
 
   // Generate listing pages
   const listingPages: MetadataRoute.Sitemap = listings?.map((listing) => ({
