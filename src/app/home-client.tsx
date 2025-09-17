@@ -18,11 +18,22 @@ export default function HomePageClient() {
       
       <main className="flex-grow">
         {/* Hero Section with Premium Background */}
-        <section className="relative overflow-hidden">
+        <section className="relative overflow-hidden min-h-[640px] md:min-h-[720px]">
           {/* Subtle background with noise texture */}
           <div className="absolute inset-0">
+            {/* Background image layer (add /public/hero-rifle.jpg) */}
+            <div 
+              className="absolute inset-0 opacity-60 md:opacity-70"
+              style={{
+                backgroundImage: "url('/hero-rifle.jpg')",
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                filter: 'brightness(0.7) contrast(1.05)'
+              }}
+            />
+            {/* Edge vignette to preserve legibility while keeping center visible */}
             <div className="absolute inset-0" style={{
-              background: 'radial-gradient(circle at center, rgba(18, 19, 23, 0.3) 0%, transparent 70%)'
+              background: 'radial-gradient(circle at center, transparent 0%, rgba(12, 13, 15, 0.45) 68%)'
             }} />
             <div className="absolute inset-0 opacity-[0.03]" style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' seed='5' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E")`,
