@@ -9,29 +9,31 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Dark backgrounds
-        'gunsmith-black': '#1a1a1a',
-        'gunsmith-header': '#0D0D0D',
-        'gunsmith-card': '#2a2a2a',
-        'gunsmith-accent': '#3a3a3a',
+        // Core palette - disciplined color system
+        'gunsmith-black': '#000000',        // Pure black for page edges only
+        'gunsmith-surface-1': '#0C0D0F',    // Primary surface
+        'gunsmith-surface-2': '#121317',    // Secondary surface
+        'gunsmith-surface-3': '#1A1C22',    // Tertiary surface
         
-        // Gold variants - Enhanced and more vibrant
-        'gunsmith-gold': '#FFE55C',
-        'gunsmith-gold-bright': '#FFED4E',
-        'gunsmith-gold-deep': '#E6CC00',
-        'gunsmith-sandy': '#F4A460',
-        'gunsmith-goldenrod': '#E6B800',
-        'gunsmith-dark-gold': '#CC9900',
-        'gunsmith-peru': '#CD853F',
+        // Primary accent - single gold
+        'gunsmith-gold': '#F8D23C',         // Primary gold
         
-        // Text colors
-        'gunsmith-text': '#F5F5F5',
-        'gunsmith-text-secondary': '#E5E5E5',
+        // Secondary accent
+        'gunsmith-gunmetal': '#213041',     // Gunmetal blue for section bands
+        
+        // Text hierarchy
+        'gunsmith-text': '#EAEAEA',         // Primary text on dark
+        'gunsmith-text-secondary': '#A8A8A8', // Secondary text
+        'gunsmith-text-muted': '#6B6B6B',   // Muted text
+        
+        // Functional
         'gunsmith-error': '#d4183d',
+        'gunsmith-border': 'rgba(255, 255, 255, 0.05)', // 5% white borders
       },
       fontFamily: {
         'bebas': ['var(--font-bebas)', 'Bebas Neue', 'sans-serif'],
-        'oswald': ['var(--font-oswald)', 'Oswald', 'sans-serif'],
+        'montserrat': ['var(--font-montserrat)', 'Montserrat', 'sans-serif'],
+        'inter': ['var(--font-inter)', 'Inter', 'sans-serif'],
       },
       borderColor: {
         'gunsmith-border': 'rgba(255, 215, 0, 0.2)',

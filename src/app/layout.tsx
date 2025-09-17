@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 import type { Metadata } from 'next'
-import { Bebas_Neue, Oswald } from 'next/font/google'
+import { Bebas_Neue, Inter, Montserrat } from 'next/font/google'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { FavoritesProvider } from '@/contexts/FavoritesContext'
 import AnalyticsProvider from '@/components/AnalyticsProvider'
@@ -12,7 +12,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import './globals.css'
 
-// Configure fonts with Next.js font optimization
+// Premium font configuration for a high-end brand feel
 const bebasNeue = Bebas_Neue({
   weight: '400',
   subsets: ['latin'],
@@ -20,10 +20,17 @@ const bebasNeue = Bebas_Neue({
   display: 'swap',
 })
 
-const oswald = Oswald({
+const montserrat = Montserrat({
+  weight: ['400', '500', '600', '700', '800', '900'],
+  subsets: ['latin'],
+  variable: '--font-montserrat',
+  display: 'swap',
+})
+
+const inter = Inter({
   weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
-  variable: '--font-oswald',
+  variable: '--font-inter',
   display: 'swap',
 })
 
@@ -59,7 +66,7 @@ export default function RootLayout({
   })
 
   return (
-    <html lang="en" className={`${bebasNeue.variable} ${oswald.variable}`}>
+    <html lang="en" className={`${bebasNeue.variable} ${montserrat.variable} ${inter.variable}`}>
       <head>
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
@@ -75,7 +82,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={websiteData}
         />
       </head>
-      <body className="min-h-screen bg-gunsmith-black">
+      <body className="min-h-screen bg-gunsmith-black pt-20">
         <ErrorBoundary>
           <AnalyticsProvider>
             <AuthProvider>

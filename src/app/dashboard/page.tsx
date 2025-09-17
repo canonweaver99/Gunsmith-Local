@@ -267,7 +267,7 @@ export default function DashboardPage() {
 
                       <div className="grid md:grid-cols-2 gap-6">
                         <div>
-                          <h3 className="font-oswald text-gunsmith-gold mb-3">Business Details</h3>
+                          <h3 className="font-montserrat text-gunsmith-gold mb-3">Business Details</h3>
                           <div className="space-y-2 text-gunsmith-text">
                             <p className="flex items-center gap-2">
                               <MapPin className="h-4 w-4 text-gunsmith-gold" />
@@ -297,7 +297,7 @@ export default function DashboardPage() {
                         </div>
 
                         <div>
-                          <h3 className="font-oswald text-gunsmith-gold mb-3">Performance</h3>
+                          <h3 className="font-montserrat text-gunsmith-gold mb-3">Performance</h3>
                           <div className="space-y-3">
                             <div>
                               <p className="text-gunsmith-text-secondary text-sm">Total Views</p>

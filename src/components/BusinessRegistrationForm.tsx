@@ -613,7 +613,7 @@ export default function BusinessRegistrationForm() {
             {GUNSMITH_SPECIALTIES.map(group => (
               <div key={group.key} className="border border-gunsmith-border rounded-md">
                 <details>
-                  <summary className="cursor-pointer select-none px-4 py-3 font-oswald text-lg text-gunsmith-gold">
+                  <summary className="cursor-pointer select-none px-4 py-3 font-montserrat text-lg text-gunsmith-gold">
                     {group.label}
                   </summary>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 p-4">

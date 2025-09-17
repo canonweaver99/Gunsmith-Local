@@ -147,7 +147,7 @@ export default function GunsmithWizard() {
             {step === 4 && 'Delivery Preference'}
           </span>
         </div>
-        <div className="h-2 bg-gunsmith-accent rounded-full overflow-hidden">
+        <div className="h-2 bg-gunsmith-surface-3 rounded-full overflow-hidden">
           <div 
             className="h-full bg-gunsmith-gold transition-all duration-300"
             style={{ width: `${(step / 4) * 100}%` }}

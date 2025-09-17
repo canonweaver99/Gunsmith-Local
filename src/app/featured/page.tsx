@@ -421,9 +421,9 @@ function FeaturedContent() {
                 </div>
                 <div className="card text-center">
                   <CheckCircle className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
-                  <h3 className="font-bebas text-xl text-gunsmith-gold mb-2">VERIFIED STATUS</h3>
+                  <h3 className="font-bebas text-xl text-gunsmith-gold mb-2">BUSINESS ANALYTICS</h3>
                   <p className="text-gunsmith-text-secondary text-sm">
-                    Build trust with the verified business checkmark
+                    Access traffic, views, and leads analytics for your listing
                   </p>
                 </div>
               </div>

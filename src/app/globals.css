@@ -5,23 +5,24 @@
 
 @layer base {
   :root {
-    --background: #1a1a1a;
-    --foreground: #F5F5F5;
-    --card: #2a2a2a;
-    --card-foreground: #F5F5F5;
-    --primary: #FFD700;
-    --primary-foreground: #1a1a1a;
-    --secondary: #3a3a3a;
-    --secondary-foreground: #F5F5F5;
-    --muted: #3a3a3a;
-    --muted-foreground: rgba(255, 255, 255, 0.6);
-    --accent: #FFD700;
-    --accent-foreground: #1a1a1a;
+    /* Disciplined color system */
+    --background: #0C0D0F;
+    --foreground: #EAEAEA;
+    --card: #121317;
+    --card-foreground: #EAEAEA;
+    --primary: #F8D23C;
+    --primary-foreground: #0C0D0F;
+    --secondary: #1A1C22;
+    --secondary-foreground: #EAEAEA;
+    --muted: #213041;
+    --muted-foreground: #A8A8A8;
+    --accent: #F8D23C;
+    --accent-foreground: #0C0D0F;
     --destructive: #d4183d;
-    --destructive-foreground: #F5F5F5;
-    --border: rgba(255, 215, 0, 0.2);
-    --input: rgba(255, 215, 0, 0.3);
-    --ring: #FFD700;
+    --destructive-foreground: #EAEAEA;
+    --border: rgba(255, 255, 255, 0.05);
+    --input: rgba(255, 255, 255, 0.08);
+    --ring: rgba(248, 210, 60, 0.5);
   }
 
   * {
@@ -29,68 +30,150 @@
   }
 
   body {
-    @apply bg-gunsmith-black text-gunsmith-text;
-    font-family: var(--font-oswald), sans-serif;
-    line-height: 1.5;
+    @apply bg-black text-gunsmith-text antialiased;
+    font-family: var(--font-inter), sans-serif;
+    font-size: 16px;
+    line-height: 1.75;
+    font-weight: 400;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-bebas), sans-serif;
-    @apply tracking-wide;
+    font-family: var(--font-montserrat), sans-serif;
+    @apply tracking-tight font-bold;
+    font-weight: 700;
+  }
+  
+  h1 {
+    @apply text-5xl md:text-6xl lg:text-7xl;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  
+  h2 {
+    @apply text-4xl md:text-5xl;
+    font-weight: 800;
+  }
+  
+  h3 {
+    @apply text-2xl md:text-3xl;
+    font-weight: 700;
+  }
+  
+  /* Premium text selection */
+  ::selection {
+    @apply bg-gunsmith-gold text-gunsmith-black;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-black;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gunsmith-surface-3 rounded;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gunsmith-gunmetal;
   }
 }
 
 @layer components {
+  /* Refined button styles - no glows, subtle shadows */
   .btn-primary {
-    @apply bg-gradient-to-b from-gunsmith-gold-bright to-gunsmith-gold text-gunsmith-black font-oswald font-medium py-2 px-6 rounded-lg 
-           shadow-lg hover:from-gunsmith-gold hover:to-gunsmith-gold-deep hover:shadow-xl 
-           transform hover:scale-105 transition-all duration-200 
-           border border-gunsmith-gold-deep/30;
-    box-shadow: 0 4px 15px rgba(255, 229, 92, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    @apply relative bg-gunsmith-gold text-gunsmith-surface-1 
+           font-montserrat font-semibold py-3 px-8 rounded-lg
+           transform transition-all duration-150 ease-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+  
+  .btn-primary:hover {
+    @apply translate-y-[-2px];
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  }
+  
+  .btn-primary:active {
+    @apply translate-y-[1px];
+    transition-duration: 80ms;
   }
 
   .btn-secondary {
-    @apply border-2 border-gunsmith-gold text-gunsmith-gold bg-gradient-to-b from-transparent to-gunsmith-gold/5 
-           font-oswald font-medium py-2 px-6 rounded-lg 
-           hover:from-gunsmith-gold/10 hover:to-gunsmith-gold/20 hover:border-gunsmith-gold-bright
-           shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200;
-    box-shadow: 0 2px 10px rgba(255, 229, 92, 0.2), inset 0 1px 0 rgba(255, 229, 92, 0.1);
+    @apply relative border border-white/5 text-gunsmith-gold 
+           bg-gunsmith-surface-2
+           font-montserrat font-medium py-3 px-8 rounded-lg 
+           transform transition-all duration-150 ease-out;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-secondary:hover {
+    @apply translate-y-[-2px] border-gunsmith-gold/50 bg-gunsmith-surface-3;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .btn-secondary:active {
+    @apply translate-y-[1px];
+    transition-duration: 80ms;
   }
 
   .btn-ghost {
-    @apply text-gunsmith-gold font-oswald font-medium py-2 px-6 rounded-lg 
-           hover:bg-gradient-to-b hover:from-gunsmith-gold/10 hover:to-gunsmith-gold/20
-           transform hover:scale-105 transition-all duration-200;
+    @apply relative text-gunsmith-gold font-montserrat font-medium py-3 px-8 rounded-lg 
+           transform transition-all duration-150 ease-out;
+  }
+  
+  .btn-ghost:hover {
+    @apply translate-y-[-2px] bg-white/5;
+  }
+  
+  .btn-ghost:active {
+    @apply translate-y-[1px];
+    transition-duration: 80ms;
   }
 
+  /* Refined card - subtle borders, no glow */
   .card {
-    @apply bg-gunsmith-card border border-gunsmith-border rounded-lg p-6 hover:border-gunsmith-gold/40 transition-all duration-200;
+    @apply relative bg-gunsmith-surface-2 
+           border border-white/5 rounded-xl p-8
+           ring-1 ring-white/5
+           transition-all duration-150 ease-out;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1),
+                0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+  
+  .card:hover {
+    @apply translate-y-[-2px] border-gunsmith-gold/20;
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1),
+                0 4px 6px rgba(0, 0, 0, 0.05);
   }
 
-  /* Glossy wizard buttons */
+  /* Wizard buttons */
   .wizard-button {
-    @apply p-4 rounded-lg border-2 transition-all duration-200 transform hover:scale-105
-           bg-gradient-to-b from-gunsmith-card to-gunsmith-black/50
+    @apply p-4 rounded-lg border transition-all duration-200 transform hover:scale-105
+           bg-gunsmith-surface-2 border-white/5
            shadow-md hover:shadow-lg;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   }
 
   .wizard-button.selected {
-    @apply border-gunsmith-gold bg-gradient-to-b from-gunsmith-gold/20 to-gunsmith-gold/10
+    @apply border-gunsmith-gold bg-gunsmith-surface-3
            shadow-lg;
-    box-shadow: 0 4px 12px rgba(255, 229, 92, 0.3), inset 0 1px 0 rgba(255, 229, 92, 0.2);
+    box-shadow: 0 4px 12px rgba(248, 210, 60, 0.15);
   }
 
   .wizard-button:not(.selected) {
-    @apply border-gunsmith-border hover:border-gunsmith-gold/50;
+    @apply hover:border-gunsmith-gold/50;
   }
 
   .input {
-    @apply bg-gunsmith-card border border-gunsmith-border rounded px-4 py-2 text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-gunsmith-gold focus:border-gunsmith-gold transition-all duration-200;
+    @apply bg-gunsmith-surface-2 border border-white/5 rounded px-4 py-2 text-gunsmith-text placeholder:text-gunsmith-text-muted focus:outline-none focus:ring-1 focus:ring-gunsmith-gold/50 focus:border-gunsmith-gold/50 transition-all duration-150;
   }
 
   .label {
-    @apply text-gunsmith-text font-oswald font-medium mb-2 block;
+    @apply text-gunsmith-text font-montserrat font-medium mb-2 block;
   }
 
   /* Custom checkbox styling */
@@ -101,6 +184,94 @@
   input[type="checkbox"]:focus {
     @apply outline-none ring-2 ring-gunsmith-gold;
   }
-
-  /* (Deprecated) Gold outline class removed; using dedicated gold SVG icon instead */
+  
+  /* Core animations */
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  @keyframes pulse-gold {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 0.8; }
+  }
+  
+  @keyframes recoil {
+    0% { transform: translateY(0) scaleX(1); }
+    50% { transform: translateY(4px) scaleX(0.98); }
+    100% { transform: translateY(0) scaleX(1); }
+  }
+  
+  @keyframes gold-sweep {
+    0% { transform: translateX(-100%) skewX(-15deg); }
+    100% { transform: translateX(200%) skewX(-15deg); }
+  }
+  
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.2), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 3s infinite;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  .animate-pulse-gold {
+    animation: pulse-gold 2s ease-in-out infinite;
+  }
+  
+  /* Premium focus states */
+  .input:focus {
+    @apply ring-2 ring-gunsmith-gold ring-offset-2 ring-offset-gunsmith-black;
+    box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+  }
+  
+  /* Premium link hover effect */
+  a {
+    @apply transition-all duration-200;
+  }
+  
+  /* Loading skeleton */
+  .skeleton {
+    @apply bg-gradient-to-r from-gunsmith-surface-2 via-gunsmith-surface-3 to-gunsmith-surface-2 bg-[length:200%_100%];
+    animation: shimmer 1.5s infinite;
+  }
+  
+  /* Recoil button animation */
+  .btn-recoil {
+    @apply transition-none;
+  }
+  
+  .btn-recoil:active {
+    animation: recoil 150ms ease-out;
+  }
+  
+  /* Featured card gold reflect */
+  .featured-card {
+    @apply relative overflow-hidden;
+  }
+  
+  .featured-card::before {
+    content: '';
+    @apply absolute inset-0 opacity-0;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      rgba(248, 210, 60, 0.2) 50%,
+      transparent 60%
+    );
+    transform: translateX(-100%) skewX(-15deg);
+    transition: opacity 0.3s;
+  }
+  
+  .featured-card:hover::before {
+    animation: gold-sweep 0.8s ease-in-out;
+    opacity: 1;
+  }
 }
