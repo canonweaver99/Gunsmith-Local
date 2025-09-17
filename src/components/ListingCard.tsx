@@ -76,8 +76,8 @@ export default function ListingCard({ listing }: ListingCardProps) {
   }
   return (
     <div className="card h-full hover:shadow-lg hover:shadow-gunsmith-gold/10 transition-all duration-300 relative">
-      {/* Featured Badge */}
-      {(listing.is_featured || listing.is_featured_in_state) && (
+      {/* Featured Badge - source of truth: listings.is_featured */}
+      {listing.is_featured && (
         <div className="absolute top-4 right-4 bg-gunsmith-gold text-gunsmith-black px-3 py-1 rounded font-bebas text-sm tracking-wider z-10 flex items-center gap-1">
           <Star className="h-3 w-3 fill-current" />
           <span>FEATURED</span>

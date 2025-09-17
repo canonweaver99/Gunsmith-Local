@@ -14,7 +14,6 @@ function FooterVerifiedCount() {
           .from('listings')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'active')
-          .eq('is_verified', true)
         if (isMounted) setCount(count || 0)
       } catch (_) {
         if (isMounted) setCount(null)
@@ -24,8 +23,8 @@ function FooterVerifiedCount() {
     const t = setInterval(fetchCount, 60_000)
     return () => { isMounted = false; clearInterval(t) }
   }, [])
-  if (count === null) return <span>Verified Gunsmiths</span>
-  return <span><span className="text-gunsmith-gold">{count.toLocaleString()}</span> {count === 1 ? 'Verified Gunsmith' : 'Verified Gunsmiths'}</span>
+  if (count === null) return <span>Active</span>
+  return <span><span className="text-gunsmith-gold">{count.toLocaleString()}</span> Active</span>
 }
 
 export default function Footer() {

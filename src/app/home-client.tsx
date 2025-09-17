@@ -19,7 +19,6 @@ function DynamicVerifiedCount() {
           .from('listings')
           .select('id', { count: 'exact', head: true })
           .eq('status', 'active')
-          .eq('is_verified', true)
         if (isMounted) setCount(count || 0)
       } catch (_) {
         if (isMounted) setCount(null)
@@ -35,7 +34,7 @@ function DynamicVerifiedCount() {
       <div className="font-montserrat font-black text-5xl text-gunsmith-gold mb-2 tabular-nums">
         {count === null ? '—' : count.toLocaleString()}
       </div>
-      <div className="text-gunsmith-text-secondary font-inter">{count === 1 ? 'Verified Gunsmith' : 'Verified Gunsmiths'}</div>
+      <div className="text-gunsmith-text-secondary font-inter">Active</div>
     </div>
   )
 }

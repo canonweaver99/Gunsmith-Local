@@ -8,19 +8,16 @@ export async function GET(
   try {
     const { stateCode } = params
 
-    // Fetch featured listings for the state
-    // Support two schemas:
-    // - New: is_featured_in_state = stateCode
-    // - Legacy: is_featured = true AND state_province = stateCode
+    // Source of truth: listings.is_featured
+    // A listing is considered featured if is_featured=true and (optional) featured_until is in the future
     const today = new Date().toISOString().slice(0,10)
     const { data: featuredListings, error: featuredError } = await supabase
       .from('listings')
       .select('*')
       .eq('status', 'active')
       .eq('state_province', stateCode)
-      .or(`is_featured_in_state.eq.${stateCode},is_featured.eq.true`)
+      .eq('is_featured', true)
       .or(`featured_until.is.null,featured_until.gte.${today}`)
-      .order('is_featured', { ascending: false })
       .order('featured_until', { ascending: true })
       .order('is_verified', { ascending: false })
       .order('created_at', { ascending: false })
@@ -36,7 +33,7 @@ export async function GET(
         .select('*')
         .eq('state_province', stateCode)
         .eq('status', 'active')
-        .is('is_featured_in_state', null)
+        .neq('is_featured', true)
         .order('is_verified', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(3 - (featuredListings?.length || 0))
