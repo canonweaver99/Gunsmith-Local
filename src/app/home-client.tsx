@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import GunsmithWizard from '@/components/GunsmithWizard'
-import { MapPin, Shield, Wrench, Star, CheckCircle, Award, Clock } from 'lucide-react'
+import { MapPin, Shield, Wrench, Star, CheckCircle, Award, Clock, Target } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
@@ -41,6 +41,16 @@ function DynamicVerifiedCount() {
 
 export default function HomePageClient() {
   const router = useRouter()
+  const [searchLocation, setSearchLocation] = useState('')
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (searchLocation.trim()) {
+      router.push(`/listings?location=${encodeURIComponent(searchLocation.trim())}`)
+    } else {
+      router.push('/listings')
+    }
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-gunsmith-black">
@@ -98,20 +108,22 @@ export default function HomePageClient() {
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-gunsmith-gold/20 to-gunsmith-gold/10 rounded-2xl blur-xl"></div>
                   <div className="relative bg-gunsmith-surface-2 border-2 border-gunsmith-gold/30 rounded-2xl p-8 shadow-2xl">
-                    <form className="flex flex-col md:flex-row gap-4">
+                    <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
                       <div className="flex-1">
                         <input
                           type="text"
+                          value={searchLocation}
+                          onChange={(e) => setSearchLocation(e.target.value)}
                           placeholder="Enter your city, state, or ZIP code..."
                           className="w-full text-lg px-6 py-4 bg-gunsmith-surface-3 border border-white/10 rounded-xl text-gunsmith-text placeholder:text-gunsmith-text-muted focus:outline-none focus:ring-2 focus:ring-gunsmith-gold focus:border-gunsmith-gold transition-all"
                         />
                       </div>
-                      <Link
-                        href="/listings"
+                      <button
+                        type="submit"
                         className="btn-primary text-lg px-8 py-4 whitespace-nowrap font-semibold"
                       >
                         Find Gunsmiths
-                      </Link>
+                      </button>
                     </form>
                     <p className="text-center text-sm text-gunsmith-text-muted mt-4">
                       Or use our guided wizard below to find specialists
@@ -122,7 +134,7 @@ export default function HomePageClient() {
               
               {/* Gunsmith Wizard - Secondary option */}
               <div className="max-w-4xl mx-auto">
-                <GunsmithWizard />
+                <GunsmithWizard initialLocation={searchLocation} />
               </div>
               
               {/* Trust Signals */}
@@ -183,11 +195,11 @@ export default function HomePageClient() {
               <div className="group relative">
                 <div className="card text-center h-full transform transition-all duration-150 group-hover:translate-y-[-2px]">
                   <div className="inline-flex items-center justify-center w-20 h-20 bg-gunsmith-surface-3 rounded-full mb-6 ring-1 ring-white/5">
-                    <Wrench className="h-10 w-10 text-gunsmith-gold" />
+                    <Target className="h-10 w-10 text-gunsmith-gold" />
                   </div>
-                  <h3 className="font-montserrat font-bold text-2xl text-gunsmith-gold mb-3">FULL SERVICE</h3>
+                  <h3 className="font-montserrat font-bold text-2xl text-gunsmith-gold mb-3">SERVICE MATCHED</h3>
                   <p className="text-gunsmith-text-secondary leading-relaxed">
-                    From basic repairs to custom builds. Find exactly the expertise you need.
+                    Smart matching connects you with gunsmiths who specialize in exactly what you need.
                   </p>
                 </div>
               </div>

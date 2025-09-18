@@ -25,12 +25,16 @@ const SERVICE_OPTIONS = [
   { id: 'restoration', label: 'Restoration' },
 ]
 
-export default function GunsmithWizard() {
+interface GunsmithWizardProps {
+  initialLocation?: string
+}
+
+export default function GunsmithWizard({ initialLocation = '' }: GunsmithWizardProps) {
   const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [wizardData, setWizardData] = useState<WizardData>({
-    location: '',
+    location: initialLocation,
     gunTypes: [],
     customGunType: '',
     services: [],
@@ -62,13 +66,11 @@ export default function GunsmithWizard() {
   const canProceed = () => {
     switch (step) {
       case 1:
-        return wizardData.location.trim() !== ''
-      case 2:
         return wizardData.gunTypes.length > 0 && 
                (!wizardData.gunTypes.includes('other') || wizardData.customGunType.trim() !== '')
-      case 3:
+      case 2:
         return wizardData.services.length > 0
-      case 4:
+      case 3:
         return true
       default:
         return false
@@ -76,7 +78,7 @@ export default function GunsmithWizard() {
   }
 
   const handleNext = () => {
-    if (step < 4) {
+    if (step < 3) {
       setStep(step + 1)
     } else {
       searchGunsmiths()
@@ -139,18 +141,17 @@ export default function GunsmithWizard() {
       {/* Progress Bar */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gunsmith-text-secondary">Step {step} of 4</span>
+          <span className="text-sm text-gunsmith-text-secondary">Step {step} of 3</span>
           <span className="text-sm text-gunsmith-text-secondary">
-            {step === 1 && 'Location'}
-            {step === 2 && 'Gun Type'}
-            {step === 3 && 'Services Needed'}
-            {step === 4 && 'Delivery Preference'}
+            {step === 1 && 'Gun Type'}
+            {step === 2 && 'Services Needed'}
+            {step === 3 && 'Delivery Preference'}
           </span>
         </div>
         <div className="h-2 bg-gunsmith-surface-3 rounded-full overflow-hidden">
           <div 
             className="h-full bg-gunsmith-gold transition-all duration-300"
-            style={{ width: `${(step / 4) * 100}%` }}
+            style={{ width: `${(step / 3) * 100}%` }}
           />
         </div>
       </div>
@@ -158,31 +159,6 @@ export default function GunsmithWizard() {
       {/* Step Content */}
       <div className="card">
         {step === 1 && (
-          <div className="space-y-6">
-            <div className="text-center">
-              <MapPin className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
-              <h3 className="font-bebas text-3xl text-gunsmith-gold mb-2 tracking-wider">
-                WHERE ARE YOU LOCATED?
-              </h3>
-              <p className="text-gunsmith-text-secondary">
-                Enter your city or state to find gunsmiths near you
-              </p>
-            </div>
-            
-            <div>
-              <input
-                type="text"
-                value={wizardData.location}
-                onChange={handleLocationChange}
-                placeholder="e.g., Denver, CO or Colorado"
-                className="input w-full text-lg py-3"
-                autoFocus
-              />
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
           <div className="space-y-6">
             <div className="text-center">
               <Target className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
@@ -244,7 +220,7 @@ export default function GunsmithWizard() {
           </div>
         )}
 
-        {step === 3 && (
+        {step === 2 && (
           <div className="space-y-6">
             <div className="text-center">
               <Wrench className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
@@ -302,7 +278,7 @@ export default function GunsmithWizard() {
           </div>
         )}
 
-        {step === 4 && (
+        {step === 3 && (
           <div className="space-y-6">
             <div className="text-center">
               <Package className="h-12 w-12 text-gunsmith-gold mx-auto mb-4" />
@@ -379,7 +355,7 @@ export default function GunsmithWizard() {
                 <Loader2 className="h-5 w-5 animate-spin" />
                 Searching...
               </>
-            ) : step === 4 ? (
+            ) : step === 3 ? (
               <>
                 Find Gunsmiths
                 <CheckCircle className="h-5 w-5" />
