@@ -3,7 +3,7 @@
 export const dynamic = 'force-dynamic'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
@@ -16,6 +16,7 @@ import { supabase } from '@/lib/supabase'
 
 export default function SignupPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, loading: authLoading } = useAuth()
   const analytics = useAnalytics()
   const [loading, setLoading] = useState(false)
@@ -134,10 +135,26 @@ export default function SignupPage() {
         // Don't fail signup if admin email fails
       }
       
+      // Try to auto-login immediately (works when email verification is disabled)
+      try {
+        const { data: loginData } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        })
+
+        if (loginData?.user) {
+          const redirect = searchParams.get('redirect') || '/dashboard'
+          analytics.trackUserRegistration('email')
+          router.push(redirect)
+          return
+        }
+      } catch (_) {
+        // ignore and fall back to email verification flow
+      }
+
+      // Fallback: show verify email flow if auto-login did not succeed
       setSuccess(true)
       setVerificationEmail(formData.email)
-      
-      // Track successful registration
       analytics.trackUserRegistration('email')
     } catch (err: any) {
       setError(err.message || 'Failed to create account')
