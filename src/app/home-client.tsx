@@ -84,17 +84,44 @@ export default function HomePageClient() {
                 </div>
               </div>
               
-              <div className="text-center mb-16 max-w-5xl mx-auto">
-                <h1 className="font-montserrat font-black text-5xl md:text-6xl lg:text-7xl text-transparent bg-clip-text bg-gradient-to-b from-gunsmith-gold to-gunsmith-gold/80 mb-6 leading-none tracking-tighter">
-                  FIND THE PERFECT<br/>GUNSMITH
+              <div className="text-center mb-12 max-w-4xl mx-auto">
+                <h1 className="font-montserrat font-black text-4xl md:text-5xl lg:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-gunsmith-gold to-gunsmith-gold/80 mb-4 leading-tight tracking-tighter">
+                  FIND YOUR PERFECT GUNSMITH
                 </h1>
-                <p className="font-inter text-xl md:text-2xl text-gunsmith-text-secondary max-w-3xl mx-auto leading-relaxed">
-                  Nation's #1 verified gunsmith directory. Every professional is reviewed, vetted, and ranked so you know exactly who you're working with.
+                <p className="font-inter text-lg md:text-xl text-gunsmith-text-secondary max-w-2xl mx-auto leading-relaxed mb-8">
+                  Verified professionals, real reviews, instant results.
                 </p>
               </div>
               
-              {/* Gunsmith Wizard - Prominent placement */}
-              <div className="mt-12 max-w-4xl mx-auto">
+              {/* Enhanced Search Box - Primary focal point */}
+              <div className="max-w-3xl mx-auto mb-12">
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-r from-gunsmith-gold/20 to-gunsmith-gold/10 rounded-2xl blur-xl"></div>
+                  <div className="relative bg-gunsmith-surface-2 border-2 border-gunsmith-gold/30 rounded-2xl p-8 shadow-2xl">
+                    <form className="flex flex-col md:flex-row gap-4">
+                      <div className="flex-1">
+                        <input
+                          type="text"
+                          placeholder="Enter your city, state, or ZIP code..."
+                          className="w-full text-lg px-6 py-4 bg-gunsmith-surface-3 border border-white/10 rounded-xl text-gunsmith-text placeholder:text-gunsmith-text-muted focus:outline-none focus:ring-2 focus:ring-gunsmith-gold focus:border-gunsmith-gold transition-all"
+                        />
+                      </div>
+                      <Link
+                        href="/listings"
+                        className="btn-primary text-lg px-8 py-4 whitespace-nowrap font-semibold"
+                      >
+                        Find Gunsmiths
+                      </Link>
+                    </form>
+                    <p className="text-center text-sm text-gunsmith-text-muted mt-4">
+                      Or use our guided wizard below to find specialists
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Gunsmith Wizard - Secondary option */}
+              <div className="max-w-4xl mx-auto">
                 <GunsmithWizard />
               </div>
               

@@ -141,20 +141,31 @@
     transition-duration: 80ms;
   }
 
-  /* Refined card - subtle borders, no glow */
+  /* Refined card - subtle borders and enhanced shadows */
   .card {
     @apply relative bg-gunsmith-surface-2 
            border border-white/5 rounded-xl p-8
            ring-1 ring-white/5
            transition-all duration-150 ease-out;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1),
-                0 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15),
+                0 1px 3px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
   }
   
   .card:hover {
     @apply translate-y-[-2px] border-gunsmith-gold/20;
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1),
-                0 4px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2),
+                0 6px 12px rgba(0, 0, 0, 0.15),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  /* Enhanced spacing rhythm utilities */
+  .section-spacing {
+    @apply py-24;
+  }
+  
+  .content-spacing {
+    @apply space-y-12;
   }
 
   /* Wizard buttons */
