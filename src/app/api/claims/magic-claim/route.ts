@@ -30,9 +30,9 @@ export async function GET(req: NextRequest) {
     const { data: sessionData } = await supabaseAuth.auth.getUser()
     const userId = sessionData?.user?.id
     if (!userId) {
-      // If not logged in, send to login, then bounce back to this URL
+      // If not logged in, send to signup, then bounce back to this URL
       const redirectTo = encodeURIComponent(url.toString())
-      return NextResponse.redirect(new URL(`/auth/login?redirect=${redirectTo}`, url.origin))
+      return NextResponse.redirect(new URL(`/auth/signup?redirect=${redirectTo}`, url.origin))
     }
 
     // Validate token and fetch target listing

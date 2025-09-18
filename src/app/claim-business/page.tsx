@@ -31,7 +31,7 @@ export default function ClaimBusinessPage() {
 
   useEffect(() => {
     if (!user) {
-      router.push('/auth/login?redirect=/claim-business')
+      router.push('/auth/signup?redirect=/claim-business')
       return
     }
     // Preselect listing if navigated with ?listingId
