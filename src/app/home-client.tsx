@@ -59,7 +59,7 @@ export default function HomePageClient() {
       
       <main className="flex-grow">
         {/* Hero Section with Premium Background */}
-        <section className="relative overflow-hidden min-h-[640px] md:min-h-[720px]">
+        <section className="relative overflow-hidden min-h-[720px] md:min-h-[820px]">
           {/* Subtle background with noise texture */}
           <div className="absolute inset-0">
             {/* Background image layer (add /public/hero-rifle.jpg) */}
@@ -82,7 +82,7 @@ export default function HomePageClient() {
             }} />
           </div>
           
-          <div className="relative z-10 py-24 px-4">
+          <div className="relative z-10 py-28 md:py-32 px-4">
             <div className="container mx-auto">
               {/* Authority Badge */}
               <div className="text-center mb-8">
@@ -94,7 +94,7 @@ export default function HomePageClient() {
                 </div>
               </div>
               
-              <div className="text-center mb-12 max-w-4xl mx-auto">
+              <div className="text-center mb-10 max-w-4xl mx-auto">
                 <h1 className="font-montserrat font-black text-4xl md:text-5xl lg:text-6xl text-transparent bg-clip-text bg-gradient-to-b from-gunsmith-gold to-gunsmith-gold/80 mb-4 leading-tight tracking-tighter">
                   FIND YOUR PERFECT GUNSMITH
                 </h1>
@@ -108,19 +108,19 @@ export default function HomePageClient() {
                 <div className="relative">
                   <div className="absolute inset-0 bg-gradient-to-r from-gunsmith-gold/20 to-gunsmith-gold/10 rounded-2xl blur-xl"></div>
                   <div className="relative bg-gunsmith-surface-2 border-2 border-gunsmith-gold/30 rounded-2xl p-8 shadow-2xl">
-                    <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
-                      <div className="flex-1">
+                    <form onSubmit={handleSearch} className="flex flex-col items-center gap-4">
+                      <div className="w-full md:w-3/4">
                         <input
                           type="text"
                           value={searchLocation}
                           onChange={(e) => setSearchLocation(e.target.value)}
                           placeholder="Enter your city, state, or ZIP code..."
-                          className="w-full text-lg px-6 py-4 bg-gunsmith-surface-3 border border-white/10 rounded-xl text-gunsmith-text placeholder:text-gunsmith-text-muted focus:outline-none focus:ring-2 focus:ring-gunsmith-gold focus:border-gunsmith-gold transition-all"
+                          className="w-full text-lg px-6 py-4 bg-gunsmith-surface-3 border border-white/10 rounded-xl text-gunsmith-text placeholder:text-gunsmith-text-muted focus:outline-none focus:ring-2 focus:ring-gunsmith-gold focus:border-gunsmith-gold transition-all text-center"
                         />
                       </div>
                       <button
                         type="submit"
-                        className="btn-primary text-lg px-8 py-4 whitespace-nowrap font-semibold"
+                        className="btn-primary text-lg px-10 py-4 whitespace-nowrap font-semibold"
                       >
                         Find Gunsmiths
                       </button>
