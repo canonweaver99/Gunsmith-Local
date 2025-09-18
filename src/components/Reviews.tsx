@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase, Review } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAnalytics } from '@/hooks/useAnalytics'
@@ -21,6 +21,8 @@ export default function Reviews({ listingId, listingName }: ReviewsProps) {
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [userHasReviewed, setUserHasReviewed] = useState(false)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [visibleIds, setVisibleIds] = useState<Record<string, boolean>>({})
   
   const [formData, setFormData] = useState({
     rating: 5,
@@ -31,6 +33,32 @@ export default function Reviews({ listingId, listingName }: ReviewsProps) {
   useEffect(() => {
     fetchReviews()
   }, [listingId])
+
+  // Observe review cards for on-scroll gloss effect
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const next: Record<string, boolean> = {}
+        entries.forEach((entry) => {
+          const id = entry.target.getAttribute('data-review-id') || ''
+          if (!id) return
+          if (entry.isIntersecting && entry.intersectionRatio > 0.4) {
+            next[id] = true
+            entry.target.classList.add('in-view')
+          }
+        })
+        if (Object.keys(next).length) {
+          setVisibleIds((prev) => ({ ...prev, ...next }))
+        }
+      },
+      { root: null, rootMargin: '0px', threshold: [0.4] }
+    )
+    const cards = container.querySelectorAll('[data-review-id]')
+    cards.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [reviews])
 
   async function fetchReviews() {
     try {
@@ -123,7 +151,7 @@ export default function Reviews({ listingId, listingName }: ReviewsProps) {
     : 0
 
   return (
-    <div className="space-y-6">
+    <div ref={containerRef} className="space-y-6">
       {/* Reviews Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -267,7 +295,11 @@ export default function Reviews({ listingId, listingName }: ReviewsProps) {
       ) : (
         <div className="space-y-4">
           {reviews.map((review) => (
-            <div key={review.id} className="card">
+            <div
+              key={review.id}
+              data-review-id={review.id}
+              className={`card gloss-card ${visibleIds[review.id] ? 'in-view' : ''}`}
+            >
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="flex items-center gap-3">

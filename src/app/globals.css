@@ -280,6 +280,18 @@
     animation: gold-sweep 0.8s ease-in-out;
     opacity: 1;
   }
+
+  /* On-scroll gloss for review cards */
+  .gloss-card { @apply relative overflow-hidden; }
+  .gloss-card::before {
+    content: '';
+    @apply absolute opacity-0;
+    top: 0; left: -150%; height: 100%; width: 50%;
+    background: linear-gradient(120deg, transparent, rgba(248,210,60,0.18), transparent);
+    transform: skewX(-20deg);
+    pointer-events: none;
+  }
+  .gloss-card.in-view::before { animation: gold-sweep 1.1s ease-out 1 both; }
 }
 
 @layer utilities {}
