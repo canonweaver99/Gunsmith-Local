@@ -43,7 +43,7 @@ function ListingsContent() {
     if (searchParams.get('fromWizard') === 'true') {
       setShowWizardMessage(true)
       
-      // Set location search
+      // Set location search (accepts city, state name/code, or zip)
       const location = searchParams.get('location')
       if (location) {
         setSearchTerm(location)
@@ -129,16 +129,26 @@ function ListingsContent() {
   function filterListings() {
     let filtered = [...listings]
 
-    // Search filter with state normalization (e.g., Texas ↔ TX)
+    // Search filter with state normalization and tokenization (supports "Austin, TX" or "78704")
     if (searchTerm) {
-      const q = String(searchTerm).toLowerCase().trim()
+      const qRaw = String(searchTerm).toLowerCase().trim()
       const STATE_NAME_TO_CODE: Record<string, string> = {
         'alabama':'al','alaska':'ak','arizona':'az','arkansas':'ar','california':'ca','colorado':'co','connecticut':'ct','delaware':'de','florida':'fl','georgia':'ga','hawaii':'hi','idaho':'id','illinois':'il','indiana':'in','iowa':'ia','kansas':'ks','kentucky':'ky','louisiana':'la','maine':'me','maryland':'md','massachusetts':'ma','michigan':'mi','minnesota':'mn','mississippi':'ms','missouri':'mo','montana':'mt','nebraska':'ne','nevada':'nv','new hampshire':'nh','new jersey':'nj','new mexico':'nm','new york':'ny','north carolina':'nc','north dakota':'nd','ohio':'oh','oklahoma':'ok','oregon':'or','pennsylvania':'pa','rhode island':'ri','south carolina':'sc','south dakota':'sd','tennessee':'tn','texas':'tx','utah':'ut','vermont':'vt','virginia':'va','washington':'wa','west virginia':'wv','wisconsin':'wi','wyoming':'wy','district of columbia':'dc'
       }
       const CODE_TO_NAME: Record<string, string> = Object.fromEntries(Object.entries(STATE_NAME_TO_CODE).map(([k,v]) => [v,k]))
-      const tokens = new Set<string>([q])
-      if (STATE_NAME_TO_CODE[q]) tokens.add(STATE_NAME_TO_CODE[q])
-      if (CODE_TO_NAME[q]) tokens.add(CODE_TO_NAME[q])
+      // Split into tokens: words and 5-digit zips
+      const baseTokens = qRaw.split(/[^a-z0-9]+/g).filter(Boolean)
+      const tokens = new Set<string>(baseTokens)
+      // Add normalized state mappings for every token
+      baseTokens.forEach(t => {
+        if (STATE_NAME_TO_CODE[t]) tokens.add(STATE_NAME_TO_CODE[t])
+        if (CODE_TO_NAME[t]) tokens.add(CODE_TO_NAME[t])
+      })
+
+      // Detect presence of explicit state in query
+      const explicitState = [...tokens].find(t => STATE_NAME_TO_CODE[t] || CODE_TO_NAME[t]) || ''
+      const zipTokens = baseTokens.filter(t => /^\d{5}$/.test(t))
+      const cityTokens = baseTokens.filter(t => /[a-z]/.test(t) && t.length >= 3)
 
       filtered = filtered.filter(listing => {
         const name = String(listing.business_name || '').toLowerCase()
@@ -146,10 +156,57 @@ function ListingsContent() {
         const city = String(listing.city || '').toLowerCase()
         const zip = String(listing.postal_code || '').toLowerCase()
         const state = String(listing.state_province || '').toLowerCase()
+        // State normalization: token matches state name or code
         const stateNorm = tokens.has(state) || tokens.has(STATE_NAME_TO_CODE[state] || '') || tokens.has(CODE_TO_NAME[state] || '')
+        // City/zip token presence
+        const cityHit = [...tokens].some(t => t.length >= 2 && city.includes(t))
+        const zipHit = [...tokens].some(t => /\d{5}/.test(t) && (zip.startsWith(t) || zip.includes(t)))
         const tagHit = (listing.tags || []).some((t: string) => String(t).toLowerCase().includes(q))
-        return name.includes(q) || desc.includes(q) || city.includes(q) || zip.includes(q) || state.includes(q) || stateNorm || tagHit
+        // Also keep original full-string includes check for convenience
+        const q = qRaw
+        return name.includes(q) || desc.includes(q) || cityHit || zipHit || state.includes(q) || stateNorm || tagHit
       })
+
+      // Broaden results: if user typed a city or zip but no explicit state, infer the state
+      if (!explicitState && (zipTokens.length > 0 || cityTokens.length > 0)) {
+        // Infer state by scanning original listings for most common state among city/zip matches
+        const stateCount: Record<string, number> = {}
+        listings.forEach(l => {
+          const state = String(l.state_province || '')
+          const zip = String(l.postal_code || '')
+          const city = String(l.city || '').toLowerCase()
+          const zipMatch = zipTokens.some(z => zip.startsWith(z.slice(0, 3)))
+          const cityMatch = cityTokens.some(ct => city.includes(ct))
+          if (zipMatch || cityMatch) {
+            if (state) stateCount[state] = (stateCount[state] || 0) + 1
+          }
+        })
+        const inferredState = Object.entries(stateCount).sort((a,b) => b[1]-a[1])[0]?.[0]
+        if (inferredState) {
+          const broadened = listings.filter(l => String(l.state_province || '').toLowerCase() === inferredState.toLowerCase())
+          // Merge broadened state results with existing filtered results
+          const mergedMap = new Map<string, Listing>()
+          filtered.forEach(l => mergedMap.set(l.id, l))
+          broadened.forEach(l => mergedMap.set(l.id, l))
+          filtered = Array.from(mergedMap.values())
+
+          // Ranking within broadened set: prioritize exact zip, then city, then same state
+          const scoreById = new Map<string, number>()
+          filtered.forEach(l => {
+            let s = 0
+            const zip = String(l.postal_code || '')
+            const city = String(l.city || '').toLowerCase()
+            if (zipTokens.some(z => zip.startsWith(z))) s += 60
+            else if (zipTokens.some(z => zip.startsWith(z.slice(0,3)))) s += 35
+            if (cityTokens.some(ct => city.includes(ct))) s += 25
+            if (String(l.state_province || '').toLowerCase() === inferredState.toLowerCase()) s += 12
+            if ((l as any).avgRating) s += ((l as any).avgRating || 0) * 4
+            if ((l as any).is_featured) s *= 1.05
+            scoreById.set(l.id, s)
+          })
+          filtered.sort((a,b) => (scoreById.get(b.id)! - scoreById.get(a.id)!))
+        }
+      }
     }
 
     // Category filter
