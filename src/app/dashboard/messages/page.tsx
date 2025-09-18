@@ -98,6 +98,9 @@ export default function MessagesPage() {
       setMessages(messages.map(msg => 
         msg.id === messageId ? { ...msg, status: 'read' } : msg
       ))
+      if (selectedMessage?.id === messageId) {
+        setSelectedMessage({ ...selectedMessage, status: 'read' })
+      }
     } catch (error) {
       console.error('Error marking message as read:', error)
     }
@@ -115,6 +118,9 @@ export default function MessagesPage() {
       setMessages(messages.map(msg => 
         msg.id === messageId ? { ...msg, status: 'replied' } : msg
       ))
+      if (selectedMessage?.id === messageId) {
+        setSelectedMessage({ ...selectedMessage, status: 'replied' })
+      }
     } catch (error) {
       console.error('Error marking message as replied:', error)
     }
