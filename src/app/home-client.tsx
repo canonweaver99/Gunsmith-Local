@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
-import GunsmithWizard from '@/components/GunsmithWizard'
 import { MapPin, Shield, Wrench, Star, CheckCircle, Award, Clock, Target } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -46,9 +45,10 @@ export default function HomePageClient() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchLocation.trim()) {
-      router.push(`/listings?location=${encodeURIComponent(searchLocation.trim())}`)
+      // Redirect to wizard with location pre-filled
+      router.push(`/wizard?location=${encodeURIComponent(searchLocation.trim())}`)
     } else {
-      router.push('/listings')
+      router.push('/wizard')
     }
   }
 
@@ -126,15 +126,10 @@ export default function HomePageClient() {
                       </button>
                     </form>
                     <p className="text-center text-sm text-gunsmith-text-muted mt-4">
-                      Or use our guided wizard below to find specialists
+                      Get matched with specialists who meet your exact needs
                     </p>
                   </div>
                 </div>
-              </div>
-              
-              {/* Gunsmith Wizard - Secondary option */}
-              <div className="max-w-4xl mx-auto">
-                <GunsmithWizard initialLocation={searchLocation} />
               </div>
               
               {/* Trust Signals */}
